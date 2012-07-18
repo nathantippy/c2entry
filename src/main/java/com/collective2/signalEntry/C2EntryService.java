@@ -13,7 +13,7 @@ import com.collective2.signalEntry.implementation.DotString;
 import com.collective2.signalEntry.implementation.InstantCommand;
 import com.collective2.signalEntry.implementation.ReversalBase;
 import com.collective2.signalEntry.implementation.SignalBase;
-import com.collective2.signalEntry.transmission.BackEndAdapter;
+import com.collective2.signalEntry.adapter.BackEndAdapter;
 
 public class C2EntryService {
 

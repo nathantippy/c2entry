@@ -19,8 +19,8 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.collective2.signalEntry.transmission.BackEndAdapter;
-import com.collective2.signalEntry.transmission.Collective2Adapter;
+import com.collective2.signalEntry.adapter.BackEndAdapter;
+import com.collective2.signalEntry.adapter.Collective2Adapter;
 
 public class LiveTest {
 

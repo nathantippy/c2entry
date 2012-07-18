@@ -1,4 +1,4 @@
-package com.collective2.signalEntry.transmission;
+package com.collective2.signalEntry.adapter;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;

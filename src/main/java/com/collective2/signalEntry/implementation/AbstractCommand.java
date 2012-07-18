@@ -11,7 +11,7 @@ import org.slf4j.LoggerFactory;
 
 import com.collective2.signalEntry.Parameter;
 import com.collective2.signalEntry.Response;
-import com.collective2.signalEntry.transmission.BackEndAdapter;
+import com.collective2.signalEntry.adapter.BackEndAdapter;
 
 public abstract class AbstractCommand {
 
