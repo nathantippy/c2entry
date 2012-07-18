@@ -4,7 +4,7 @@
  * for the full license governing this code.
  * Nathan Tippy   7/10/12
  */
-package com.collective2.signalEntry.transmission.simulationXML;
+package com.collective2.signalEntry.adapter.simulationXML;
 
 import java.util.concurrent.BlockingQueue;
 
@@ -13,11 +13,11 @@ import javax.xml.stream.events.XMLEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SimulatedResponseCancelAllPending extends SimulatedResponse {
-	private static final Logger logger = LoggerFactory.getLogger(SimulatedResponseCancelAllPending.class);
+public class SimulatedResponseCloseAllPositions extends SimulatedResponse {
+	private static final Logger logger = LoggerFactory.getLogger(SimulatedResponseCloseAllPositions.class);
     private final String status;
 
-    public SimulatedResponseCancelAllPending(String status) {
+    public SimulatedResponseCloseAllPositions(String status) {
         this.status = status;
     }
 

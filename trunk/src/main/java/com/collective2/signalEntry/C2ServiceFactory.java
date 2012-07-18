@@ -7,7 +7,7 @@
  */
 package com.collective2.signalEntry;
 
-import com.collective2.signalEntry.transmission.BackEndAdapter;
+import com.collective2.signalEntry.adapter.BackEndAdapter;
 
 public class C2ServiceFactory {
 

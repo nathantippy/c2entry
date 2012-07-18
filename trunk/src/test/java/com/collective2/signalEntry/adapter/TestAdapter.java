@@ -4,7 +4,7 @@
  * for the full license governing this code.
  * Nathan Tippy   7/14/12
  */
-package com.collective2.signalEntry.transmission;
+package com.collective2.signalEntry.adapter;
 
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -19,7 +19,7 @@ import javax.xml.stream.XMLEventReader;
 
 import com.collective2.signalEntry.Parameter;
 
-public class TestAdapter extends SimulationAdapter {
+public class TestAdapter extends StaticSimulationAdapter {
 
     // keeping it under 255 will allow calls to work in older browsers
     // modern browsers usually top out at 2048

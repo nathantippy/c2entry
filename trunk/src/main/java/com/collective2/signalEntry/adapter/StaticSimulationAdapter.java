@@ -4,12 +4,11 @@
  * for the full license governing this code.
  * Nathan Tippy   7/4/12
  */
-package com.collective2.signalEntry.transmission;
+package com.collective2.signalEntry.adapter;
 
 import static com.collective2.signalEntry.C2Element.ElementCash;
 import static com.collective2.signalEntry.C2Element.ElementEquity;
 import static com.collective2.signalEntry.C2Element.ElementMarginUsed;
-import static com.collective2.signalEntry.C2Element.ElementStatus;
 import static com.collective2.signalEntry.C2Element.ElementSystemId;
 import static com.collective2.signalEntry.C2Element.ElementSystemName;
 import static com.collective2.signalEntry.C2Element.ElementTotalEquityAvail;
@@ -25,24 +24,24 @@ import org.slf4j.LoggerFactory;
 import com.collective2.signalEntry.C2ServiceException;
 import com.collective2.signalEntry.Parameter;
 import com.collective2.signalEntry.implementation.Command;
-import com.collective2.signalEntry.transmission.simulationXML.SimulatedResponseAddToOCAGroup;
-import com.collective2.signalEntry.transmission.simulationXML.SimulatedResponseAllSystems;
-import com.collective2.signalEntry.transmission.simulationXML.SimulatedResponseCancel;
-import com.collective2.signalEntry.transmission.simulationXML.SimulatedResponseCancelAllPending;
-import com.collective2.signalEntry.transmission.simulationXML.SimulatedResponseCloseAllPositions;
-import com.collective2.signalEntry.transmission.simulationXML.SimulatedResponseFlushPendingSignals;
-import com.collective2.signalEntry.transmission.simulationXML.SimulatedResponseGetAllSignals;
-import com.collective2.signalEntry.transmission.simulationXML.SimulatedResponseGetBuyPower;
-import com.collective2.signalEntry.transmission.simulationXML.SimulatedResponseGetSystemEquity;
-import com.collective2.signalEntry.transmission.simulationXML.SimulatedResponseGetSystemHypothetical;
-import com.collective2.signalEntry.transmission.simulationXML.SimulatedResponseNewComment;
-import com.collective2.signalEntry.transmission.simulationXML.SimulatedResponsePositionStatus;
-import com.collective2.signalEntry.transmission.simulationXML.SimulatedResponseRequestOCAId;
-import com.collective2.signalEntry.transmission.simulationXML.SimulatedResponseReverse;
-import com.collective2.signalEntry.transmission.simulationXML.SimulatedResponseSendSubscriberBroadcast;
-import com.collective2.signalEntry.transmission.simulationXML.SimulatedResponseSetMinBuyPower;
-import com.collective2.signalEntry.transmission.simulationXML.SimulatedResponseSignal;
-import com.collective2.signalEntry.transmission.simulationXML.SimulatedResponseSignalStatus;
+import com.collective2.signalEntry.adapter.simulationXML.SimulatedResponseAddToOCAGroup;
+import com.collective2.signalEntry.adapter.simulationXML.SimulatedResponseAllSystems;
+import com.collective2.signalEntry.adapter.simulationXML.SimulatedResponseCancel;
+import com.collective2.signalEntry.adapter.simulationXML.SimulatedResponseCancelAllPending;
+import com.collective2.signalEntry.adapter.simulationXML.SimulatedResponseCloseAllPositions;
+import com.collective2.signalEntry.adapter.simulationXML.SimulatedResponseFlushPendingSignals;
+import com.collective2.signalEntry.adapter.simulationXML.SimulatedResponseGetAllSignals;
+import com.collective2.signalEntry.adapter.simulationXML.SimulatedResponseGetBuyPower;
+import com.collective2.signalEntry.adapter.simulationXML.SimulatedResponseGetSystemEquity;
+import com.collective2.signalEntry.adapter.simulationXML.SimulatedResponseGetSystemHypothetical;
+import com.collective2.signalEntry.adapter.simulationXML.SimulatedResponseNewComment;
+import com.collective2.signalEntry.adapter.simulationXML.SimulatedResponsePositionStatus;
+import com.collective2.signalEntry.adapter.simulationXML.SimulatedResponseRequestOCAId;
+import com.collective2.signalEntry.adapter.simulationXML.SimulatedResponseReverse;
+import com.collective2.signalEntry.adapter.simulationXML.SimulatedResponseSendSubscriberBroadcast;
+import com.collective2.signalEntry.adapter.simulationXML.SimulatedResponseSetMinBuyPower;
+import com.collective2.signalEntry.adapter.simulationXML.SimulatedResponseSignal;
+import com.collective2.signalEntry.adapter.simulationXML.SimulatedResponseSignalStatus;
 
 /**
  * Simulated response adapter for running tests without actually hitting
@@ -54,9 +53,9 @@ import com.collective2.signalEntry.transmission.simulationXML.SimulatedResponseS
  * simulator does not have to worry about any of those details.
  * 
  */
-public class SimulationAdapter extends BackEndAdapter {
+public class StaticSimulationAdapter extends BackEndAdapter {
 
-    private static final Logger logger = LoggerFactory.getLogger(SimulationAdapter.class);
+    private static final Logger logger = LoggerFactory.getLogger(StaticSimulationAdapter.class);
 
     @Override
     public XMLEventReader transmit(Map<Parameter, Object> paraMap) {

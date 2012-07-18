@@ -4,7 +4,7 @@
  * for the full license governing this code.
  * Nathan Tippy   7/4/12
  */
-package com.collective2.signalEntry.transmission;
+package com.collective2.signalEntry.adapter;
 
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
@@ -84,7 +84,7 @@ public abstract class BackEndAdapter {
     public XMLEventReader transmit() {
         assert (lock.isHeldByCurrentThread());
 
-        // validate that all required params are set before transmission
+        // validate that all required params are set before adapter
         Command activeCommand = ((Command) activeMap.get(Parameter.SignalEntryCommand));
         activeCommand.validate(activeMap);
 

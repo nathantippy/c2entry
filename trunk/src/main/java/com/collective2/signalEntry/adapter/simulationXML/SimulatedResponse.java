@@ -4,7 +4,7 @@
  * for the full license governing this code.
  * Nathan Tippy   7/7/12
  */
-package com.collective2.signalEntry.transmission.simulationXML;
+package com.collective2.signalEntry.adapter.simulationXML;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.SynchronousQueue;

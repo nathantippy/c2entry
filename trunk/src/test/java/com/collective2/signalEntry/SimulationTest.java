@@ -18,19 +18,10 @@ import static org.junit.Assert.fail;
 
 import java.math.BigDecimal;
 import java.util.EnumSet;
-import java.util.logging.Handler;
-import java.util.logging.Level;
-
-import javax.xml.stream.XMLEventReader;
-import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.events.XMLEvent;
 
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import com.collective2.signalEntry.implementation.Command;
-import com.collective2.signalEntry.transmission.TestAdapter;
+import com.collective2.signalEntry.adapter.TestAdapter;
 
 /**
  * This notice shall not be removed. See the "LICENSE.txt" file found in the
