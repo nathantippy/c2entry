@@ -22,13 +22,6 @@ public class RelativeNumber implements Serializable {
 
     }
 
-    public RelativeNumber(Number value) {
-
-        prefix = "";
-        number = value;
-
-    }
-
     public String toString() {
 
         //This is encoded when the url is built

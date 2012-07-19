@@ -107,7 +107,9 @@ public abstract class BackEndAdapter {
     public void para(Parameter parameter, Object value) {
         assert (lock.isHeldByCurrentThread());
 
-        // ((Command)activeMap.get(Parameter.SignalEntryCommand)).validateApplicable(activeMap,parameter);
+        if (Parameter.SignalEntryCommand!=parameter) {
+            ((Command)activeMap.get(Parameter.SignalEntryCommand)).validateApplicable(activeMap,parameter);
+        }
         parameter.validateValue(value);
 
         activeMap.put(parameter, value);
