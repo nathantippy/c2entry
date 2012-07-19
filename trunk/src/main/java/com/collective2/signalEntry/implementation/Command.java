@@ -96,7 +96,7 @@ public enum Command {
     },
     SignalStatus("signalstatus") {
         protected EnumSet<Parameter> paraRequired() {
-            return EnumSet.of(EMail, Password);
+            return EnumSet.of(EMail, Password, SignalId);
         }
         @Override
         protected EnumSet<Parameter> paraOptional() {

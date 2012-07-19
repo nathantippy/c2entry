@@ -18,7 +18,10 @@ import static org.junit.Assert.fail;
 
 import java.math.BigDecimal;
 import java.util.EnumSet;
+import java.util.logging.Handler;
+import java.util.logging.Logger;
 
+import org.junit.Before;
 import org.junit.Test;
 
 import com.collective2.signalEntry.adapter.TestAdapter;
@@ -40,6 +43,15 @@ public class SimulationTest {
     private final Number testNegativeNumber = -43.21;
     private final Integer testInteger = 42;
 
+
+    @Before
+    public void dumpLog() {
+        //remove loggers to speed up test
+        //same events are captured by looking at the exceptions
+        for(Handler h: Logger.getLogger("").getHandlers()) {
+             Logger.getLogger("").removeHandler(h);
+        }
+    }
 
     @Test
     public void stockSignalTest() {
@@ -350,7 +362,7 @@ public class SimulationTest {
         Reverse reverse = sentryService.reversal("msft");
 
         assertEquals("Command:http://www.collective2.com/cgi-perl/signal.mpl?cmd=reverse&systemid=1234&pw=PASSWORD&symbol=msft",reverse.toString());
-        Response response = reverse.triggerPrice(12.23d).duration(Duration.DayOrder).send();
+        Response response = reverse.triggerPrice(12.23d).duration(Duration.DayOrder).quantity(10).send();
         assertTrue(response.isOk());
 
     }
