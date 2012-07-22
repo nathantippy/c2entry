@@ -8,15 +8,24 @@ package com.collective2.signalEntry;
 
 public class C2ServiceException extends RuntimeException {
 
-    public C2ServiceException(Throwable cause) {
+    final boolean tryAgain;
+
+    public C2ServiceException(Throwable cause, boolean tryAgain) {
         super(cause);
+        this.tryAgain = tryAgain;
     }
 
-    public C2ServiceException(String message, Throwable cause) {
+    public C2ServiceException(String message, Throwable cause, boolean tryAgain) {
         super(message, cause);
+        this.tryAgain = tryAgain;
     }
 
-    public C2ServiceException(String message) {
+    public C2ServiceException(String message, boolean tryAgain) {
         super(message);
+        this.tryAgain = tryAgain;
+    }
+
+    public boolean tryAgain() {
+        return tryAgain;
     }
 }

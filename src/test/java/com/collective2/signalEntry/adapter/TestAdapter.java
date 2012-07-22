@@ -18,6 +18,7 @@ import java.util.Map;
 import javax.xml.stream.XMLEventReader;
 
 import com.collective2.signalEntry.Parameter;
+import com.collective2.signalEntry.implementation.Request;
 
 public class TestAdapter extends StaticSimulationAdapter {
 
@@ -33,10 +34,10 @@ public class TestAdapter extends StaticSimulationAdapter {
     }
 
     @Override
-    public XMLEventReader transmit(Map<Parameter, Object> paraMap) {
+    public XMLEventReader transmit(Request request) {
 
         //ensure the URL is not too long
-        URL url = buildURL(paraMap);
+        URL url = request.buildURL();
         lastURLString = url.toString();
         assertTrue("Length of url must be under " + MAX_URL_LENGTH + " to work in all supported browsers. URL: " + lastURLString, lastURLString.length() < MAX_URL_LENGTH);
 
@@ -46,13 +47,13 @@ public class TestAdapter extends StaticSimulationAdapter {
 
             ByteArrayOutputStream baost = new ByteArrayOutputStream(MAX_URL_LENGTH*MAX_SERIALIZE_OVERHEAD_FACTOR);
             ObjectOutputStream oost = new ObjectOutputStream(baost);
-            oost.writeObject(paraMap);
+            oost.writeObject(request);
         } catch (IOException e) {
             e.printStackTrace();
             fail("Unable to serialize the paraMap:" + e.getLocalizedMessage());
         }
 
-        return super.transmit(paraMap);
+        return super.transmit(request);
     }
 
 }

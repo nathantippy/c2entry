@@ -6,6 +6,8 @@
  */
 package com.collective2.signalEntry;
 
+import java.util.concurrent.Callable;
+
 public interface Reverse {
 
     Reverse duration(Duration duration);

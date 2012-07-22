@@ -250,7 +250,7 @@ public enum Command {
                                 message = "parameter "+p+" has already been set and can not be set again.";
                            }
                            logger.error(message);
-                           throw new C2ServiceException(message);
+                           throw new C2ServiceException(message,false);
                        }
                    }
                    break;
@@ -261,7 +261,7 @@ public enum Command {
             if (activeParaMap.containsKey(p)) {
                 String message = "parameter "+p+" has already been set and can not be set again.";
                 logger.error(message);
-                throw new C2ServiceException(message);
+                throw new C2ServiceException(message,false);
             }
         }
 
@@ -280,7 +280,7 @@ public enum Command {
                                 message = "parameter "+p+" has already been set and can not be set again.";
                             }
                             logger.error(message);
-                            throw new C2ServiceException(message);
+                            throw new C2ServiceException(message,false);
                         }
                     }
                     break;
@@ -291,7 +291,7 @@ public enum Command {
         if (!found) {
             String message = "parameter "+p+" is not applicable for "+name();
             logger.error(message);
-            throw new C2ServiceException(message);
+            throw new C2ServiceException(message,false);
         }
     }
 
@@ -306,7 +306,7 @@ public enum Command {
             if (!activeParaMap.containsKey(p)) {
                 String message = "required parameter "+p+" was not set.";
                 logger.error(message);
-                throw new C2ServiceException(message);
+                throw new C2ServiceException(message,false);
             }
         }
         for(EnumSet<Parameter> set:requiredExclusiveGroups) {
@@ -321,7 +321,7 @@ public enum Command {
             if (!ok) {
                 String message = "required parameter (one of these) "+ set+" was not set.";
                 logger.error(message);
-                throw new C2ServiceException(message);
+                throw new C2ServiceException(message,false);
             }
         }
     }
@@ -331,7 +331,7 @@ public enum Command {
             String message = "element "+element.localElementName()+
                              " is not part of the expected response for "+this;
             logger.error(message);
-            throw new C2ServiceException(message);
+            throw new C2ServiceException(message,false);
         }
     }
 

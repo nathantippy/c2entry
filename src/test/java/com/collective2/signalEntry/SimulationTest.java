@@ -54,6 +54,11 @@ public class SimulationTest {
     }
 
     @Test
+    public void getFactoryTest() {
+        assertEquals(factory,sentryService.serviceFactory());
+    }
+
+    @Test
     public void stockSignalTest() {
         String rootURL = "http://www.collective2.com/cgi-perl/signal.mpl?cmd=signal&systemid=1234&pw=pa55word&instrument=stock&symbol=MSFT";
         for (ActionForStock action : ActionForStock.values()) {

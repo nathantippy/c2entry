@@ -8,20 +8,15 @@ package com.collective2.signalEntry;
 
 import static com.collective2.signalEntry.C2Element.ElementOCAId;
 
-import com.collective2.signalEntry.implementation.Command;
-import com.collective2.signalEntry.implementation.DotString;
-import com.collective2.signalEntry.implementation.InstantCommand;
-import com.collective2.signalEntry.implementation.ReversalBase;
-import com.collective2.signalEntry.implementation.SignalBase;
-import com.collective2.signalEntry.adapter.BackEndAdapter;
+import com.collective2.signalEntry.implementation.*;
 
 public class C2EntryService {
 
     private final C2ServiceFactory serviceFactory;
 
-    private Integer                commonSystemId;
-    private String                 commonPassword;
-    private String                 commonEMail;
+    private Integer commonSystemId;
+    private String commonPassword;
+    private String commonEMail;
 
     public C2EntryService(C2ServiceFactory serviceFactory, String password, int systemId) {
         this.serviceFactory = serviceFactory;
@@ -61,286 +56,185 @@ public class C2EntryService {
     }
 
     public Signal stockSignal(ActionForStock action) {
-        return new SignalBase(commonSystemId, commonPassword, action, "stock", serviceFactory);
+        return new SignalBase(commonSystemId, commonPassword, action, "stock", serviceFactory.adapter());
     }
 
     public Signal optionSignal(ActionForNonStock action) {
-        return new SignalBase(commonSystemId, commonPassword, action, "option", serviceFactory);
+        return new SignalBase(commonSystemId, commonPassword, action, "option", serviceFactory.adapter());
     }
 
     public Signal futureSignal(ActionForNonStock action) {
-        return new SignalBase(commonSystemId, commonPassword, action, "future", serviceFactory);
+        return new SignalBase(commonSystemId, commonPassword, action, "future", serviceFactory.adapter());
     }
 
     public Signal forexSignal(ActionForNonStock action) {
-        return new SignalBase(commonSystemId, commonPassword, action, "forex", serviceFactory);
+        return new SignalBase(commonSystemId, commonPassword, action, "forex", serviceFactory.adapter());
     }
 
     public Reverse reversal(String symbol) {
-        return new ReversalBase(commonSystemId, commonPassword, symbol, serviceFactory);
+        return new ReversalBase(commonSystemId, commonPassword, symbol, serviceFactory.adapter());
+    }
+
+    private Response send(Request request) {
+        request.validate();
+        return new ImplResponse(serviceFactory.adapter().transmit(request), request.getCommand());
     }
 
     public Integer requestOneCancelsAnotherId() {
-        // never keep an instant command long term because it locks the adapter
-        // until the get
-        InstantCommand ic = new InstantCommand(serviceFactory) {
+        return sendRequestOneCancelsAnotherId().getInteger(ElementOCAId);
+    }
 
-            @Override
-            protected void initAdapter(BackEndAdapter adapter) {
-                adapter.para(Parameter.SignalEntryCommand, Command.RequestOCAId);
-                adapter.para(Parameter.SystemId, commonSystemId);
-                adapter.para(Parameter.Password, commonPassword);
-            }
-        };
-
-        return ic.send().getInteger(ElementOCAId);
+    public Response sendRequestOneCancelsAnotherId() {
+        Request request = new Request(Command.RequestOCAId);
+        request.put(Parameter.SystemId, commonSystemId);
+        request.put(Parameter.Password, commonPassword);
+        return send(request);
     }
 
     public boolean cancel(final Integer signalId) {
-        // never keep an instant command long term because it locks the adapter
-        // until the get
-        InstantCommand ic = new InstantCommand(serviceFactory) {
+        return sendCancel(signalId).isOk();
+    }
 
-            @Override
-            protected void initAdapter(BackEndAdapter adapter) {
-                adapter.para(Parameter.SignalEntryCommand, Command.Cancel);
-                adapter.para(Parameter.SignalId, signalId);
-                adapter.para(Parameter.SystemId, commonSystemId);
-                adapter.para(Parameter.Password, commonPassword);
-            }
-
-        };
-        return ic.send().isOk();
+    public Response sendCancel(final Integer signalId) {
+        Request request = new Request(Command.Cancel);
+        request.put(Parameter.SignalId, signalId);
+        request.put(Parameter.SystemId, commonSystemId);
+        request.put(Parameter.Password, commonPassword);
+        return send(request);
     }
 
     public boolean cancelAllPending() {
-        // never keep an instant command long term because it locks the adapter
-        // until the get
-        InstantCommand ic = new InstantCommand(serviceFactory) {
+        return sendCancelAllPending().isOk();
+    }
 
-            @Override
-            protected void initAdapter(BackEndAdapter adapter) {
-                adapter.para(Parameter.SignalEntryCommand, Command.CancelAllPending);
-                adapter.para(Parameter.SystemId, commonSystemId);
-                adapter.para(Parameter.Password, commonPassword);
-            }
-        };
-
-        return ic.send().isOk();
+    public Response sendCancelAllPending() {
+        Request request = new Request(Command.CancelAllPending);
+        request.put(Parameter.SystemId, commonSystemId);
+        request.put(Parameter.Password, commonPassword);
+        return send(request);
     }
 
     public boolean flushPendingSignals() {
-        // never keep an instant command long term because it locks the adapter
-        // until the get
-        InstantCommand ic = new InstantCommand(serviceFactory) {
+        return sendFlushPendingSignals().isOk();
+    }
 
-            @Override
-            protected void initAdapter(BackEndAdapter adapter) {
-                adapter.para(Parameter.SignalEntryCommand, Command.FlushPendingSignals);
-                adapter.para(Parameter.SystemId, commonSystemId);
-                adapter.para(Parameter.Password, commonPassword);
-            }
-        };
-
-        return ic.send().isOk();
+    public Response sendFlushPendingSignals() {
+        Request request = new Request(Command.FlushPendingSignals);
+        request.put(Parameter.SystemId, commonSystemId);
+        request.put(Parameter.Password, commonPassword);
+        return send(request);
     }
 
     public boolean closeAllPositions(final Integer signalId) {
-        // never keep an instant command long term because it locks the adapter
-        // until the get
-        InstantCommand ic = new InstantCommand(serviceFactory) {
-
-            @Override
-            protected void initAdapter(BackEndAdapter adapter) {
-                adapter.para(Parameter.SignalEntryCommand, Command.CloseAllPositions);
-                adapter.para(Parameter.SignalId, signalId);
-                adapter.para(Parameter.SystemId, commonSystemId);
-                adapter.para(Parameter.Password, commonPassword);
-            }
-        };
-
-        return ic.send().isOk();
+        Request request = new Request(Command.CloseAllPositions);
+        request.put(Parameter.SignalId, signalId);
+        request.put(Parameter.SystemId, commonSystemId);
+        request.put(Parameter.Password, commonPassword);
+        return send(request).isOk();
     }
 
     public Response buyPower() {
-        return new InstantCommand(serviceFactory) {
-
-            @Override
-            protected void initAdapter(BackEndAdapter adapter) {
-                adapter.para(Parameter.SignalEntryCommand, Command.GetBuyPower);
-                adapter.para(Parameter.SystemId, commonSystemId);
-                adapter.para(Parameter.Password, commonPassword);
-            }
-        }.send();
+        Request request = new Request(Command.GetBuyPower);
+        request.put(Parameter.SystemId, commonSystemId);
+        request.put(Parameter.Password, commonPassword);
+        return send(request);
     }
 
     public Response signalStatus(final Integer signalId, final boolean showDetails, final Related showRelated) {
-        return new InstantCommand(serviceFactory) {
-
-            @Override
-            protected void initAdapter(BackEndAdapter adapter) {
-                adapter.para(Parameter.SignalEntryCommand, Command.SignalStatus);
-                adapter.para(Parameter.EMail, commonEMail);
-                adapter.para(Parameter.Password, commonPassword);
-                adapter.para(Parameter.SignalId, signalId);
-                adapter.para(Parameter.ShowRelated, showRelated);
-                if (showDetails) {
-                    adapter.para(Parameter.ShowDetails, 1);
-                }
-            }
-        }.send();
+        Request request = new Request(Command.SignalStatus);
+        request.put(Parameter.EMail, commonEMail);
+        request.put(Parameter.Password, commonPassword);
+        request.put(Parameter.SignalId, signalId);
+        request.put(Parameter.ShowRelated, showRelated);
+        if (showDetails) {
+            request.put(Parameter.ShowDetails, 1);
+        }
+        return send(request);
     }
-    
+
     public Response signalStatus(final Integer signalId, final boolean showDetails) {
-        return new InstantCommand(serviceFactory) {
-
-            @Override
-            protected void initAdapter(BackEndAdapter adapter) {
-                adapter.para(Parameter.SignalEntryCommand, Command.SignalStatus);
-                adapter.para(Parameter.EMail, commonEMail);
-                adapter.para(Parameter.Password, commonPassword);
-                adapter.para(Parameter.SignalId, signalId);
-                if (showDetails) {
-                    adapter.para(Parameter.ShowDetails, 1);
-                }
-            }
-        }.send();
+        Request request = new Request(Command.SignalStatus);
+        request.put(Parameter.EMail, commonEMail);
+        request.put(Parameter.Password, commonPassword);
+        request.put(Parameter.SignalId, signalId);
+        if (showDetails) {
+            request.put(Parameter.ShowDetails, 1);
+        }
+        return send(request);
     }
-    
-    
-    public Response allSystems() {
-        return new InstantCommand(serviceFactory) {
 
-            @Override
-            protected void initAdapter(BackEndAdapter adapter) {
-                adapter.para(Parameter.SignalEntryCommand, Command.AllSystems);
-                adapter.para(Parameter.EMail, commonEMail);
-                adapter.para(Parameter.Password, commonPassword);
-            }
-        }.send();
+
+    public Response allSystems() {
+        Request request = new Request(Command.AllSystems);
+        request.put(Parameter.EMail, commonEMail);
+        request.put(Parameter.Password, commonPassword);
+        return send(request);
     }
 
     public Response systemHypothetical(final Integer... system) {
-
-        return new InstantCommand(serviceFactory) {
-
-            @Override
-            protected void initAdapter(BackEndAdapter adapter) {
-                adapter.para(Parameter.SignalEntryCommand, Command.GetSystemHypothetical);
-                adapter.para(Parameter.Password, commonPassword);
-                adapter.para(Parameter.EMail, commonEMail);
-                adapter.para(Parameter.Systems, new DotString<Integer>(system));
-            }
-        }.send();
+        Request request = new Request(Command.GetSystemHypothetical);
+        request.put(Parameter.Password, commonPassword);
+        request.put(Parameter.EMail, commonEMail);
+        request.put(Parameter.Systems, new DotString<Integer>(system));
+        return send(request);
 
     }
 
     public Response allSignals() {
-        // never keep an instant command long term because it locks the adapter
-        // until the get
-        return new InstantCommand(serviceFactory) {
-
-            @Override
-            protected void initAdapter(BackEndAdapter adapter) {
-                adapter.para(Parameter.SignalEntryCommand, Command.AllSignals);
-                adapter.para(Parameter.Password, commonPassword);
-                adapter.para(Parameter.EMail, commonEMail);
-            }
-        }.send();
+        Request request = new Request(Command.AllSignals);
+        request.put(Parameter.Password, commonPassword);
+        request.put(Parameter.EMail, commonEMail);
+        return send(request);
     }
 
     public boolean addToOCAGroup(final Integer signalId, final Integer OCAGroup) {
-        // never keep an instant command long term because it locks the adapter
-        // until the get
-        InstantCommand ic = new InstantCommand(serviceFactory) {
-
-            @Override
-            protected void initAdapter(BackEndAdapter adapter) {
-                adapter.para(Parameter.SignalEntryCommand, Command.AddToOCAGroup);
-                adapter.para(Parameter.Password, commonPassword);
-                adapter.para(Parameter.EMail, commonEMail);
-                adapter.para(Parameter.SignalId, signalId);
-                adapter.para(Parameter.OCAGroupId, OCAGroup);
-            }
-
-        };
-
-        return ic.send().isOk();
+        Request request = new Request(Command.AddToOCAGroup);
+        request.put(Parameter.Password, commonPassword);
+        request.put(Parameter.EMail, commonEMail);
+        request.put(Parameter.SignalId, signalId);
+        request.put(Parameter.OCAGroupId, OCAGroup);
+        return send(request).isOk();
     }
 
     public boolean setMinBuyPower(final Number buyPower) {
-        // never keep an instant command long term because it locks the adapter
-        // until the get
-        InstantCommand ic = new InstantCommand(serviceFactory) {
-
-            @Override
-            protected void initAdapter(BackEndAdapter adapter) {
-                adapter.para(Parameter.SignalEntryCommand, Command.SetMinBuyPower);
-                adapter.para(Parameter.SystemId, commonSystemId);
-                adapter.para(Parameter.Password, commonPassword);
-                adapter.para(Parameter.BuyPower, buyPower);
-            }
-
-        };
-
-        return ic.send().isOk();
+        Request request = new Request(Command.SetMinBuyPower);
+        request.put(Parameter.SystemId, commonSystemId);
+        request.put(Parameter.Password, commonPassword);
+        request.put(Parameter.BuyPower, buyPower);
+        return send(request).isOk();
     }
 
     public boolean sendSubscriberBroadcast(final String message) {
-        InstantCommand ic = new InstantCommand(serviceFactory) {
-
-            @Override
-            protected void initAdapter(BackEndAdapter adapter) {
-                adapter.para(Parameter.SignalEntryCommand, Command.SendSubscriberBroadcast);
-                adapter.para(Parameter.SystemId, commonSystemId);
-                adapter.para(Parameter.Password, commonPassword);
-                adapter.para(Parameter.EMail, commonEMail);
-                adapter.para(Parameter.Message, message);
-            }
-        };
-
-        return ic.send().isOk();
+        Request request = new Request(Command.SendSubscriberBroadcast);
+        request.put(Parameter.SystemId, commonSystemId);
+        request.put(Parameter.Password, commonPassword);
+        request.put(Parameter.EMail, commonEMail);
+        request.put(Parameter.Message, message);
+        return send(request).isOk();
     }
 
     public Response systemEquity() {
-        return new InstantCommand(serviceFactory) {
-
-            @Override
-            protected void initAdapter(BackEndAdapter adapter) {
-                adapter.para(Parameter.SignalEntryCommand, Command.GetSystemEquity);
-                adapter.para(Parameter.SystemId, commonSystemId);
-                adapter.para(Parameter.Password, commonPassword);
-            }
-        }.send();
+        Request request = new Request(Command.GetSystemEquity);
+        request.put(Parameter.SystemId, commonSystemId);
+        request.put(Parameter.Password, commonPassword);
+        return send(request);
     }
 
     public Response positionStatus(final String symbol) {
-        return new InstantCommand(serviceFactory) {
-
-            @Override
-            protected void initAdapter(BackEndAdapter adapter) {
-                adapter.para(Parameter.SignalEntryCommand, Command.PositionStatus);
-                adapter.para(Parameter.SystemId, commonSystemId);
-                adapter.para(Parameter.Password, commonPassword);
-                adapter.para(Parameter.Symbol, symbol);
-            }
-
-        }.send();
+        Request request = new Request(Command.PositionStatus);
+        request.put(Parameter.SystemId, commonSystemId);
+        request.put(Parameter.Password, commonPassword);
+        request.put(Parameter.Symbol, symbol);
+        return send(request);
     }
 
     public Response newComment(final String comment, final Integer signalId) {
-        return new InstantCommand(serviceFactory) {
-
-            @Override
-            protected void initAdapter(BackEndAdapter adapter) {
-                adapter.para(Parameter.SignalEntryCommand, Command.NewComment);
-                adapter.para(Parameter.SystemId, commonSystemId);
-                adapter.para(Parameter.Password, commonPassword);
-                adapter.para(Parameter.Commentary, comment);
-                adapter.para(Parameter.SignalId, signalId);
-
-            }
-        }.send();
+        Request request = new Request(Command.NewComment);
+        request.put(Parameter.SystemId, commonSystemId);
+        request.put(Parameter.Password, commonPassword);
+        request.put(Parameter.Commentary, comment);
+        request.put(Parameter.SignalId, signalId);
+        return send(request);
 
     }
 
