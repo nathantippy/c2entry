@@ -18,6 +18,7 @@ import java.util.*;
 import javax.xml.stream.XMLEventReader;
 
 import com.collective2.signalEntry.C2Element;
+import com.collective2.signalEntry.implementation.Request;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,15 +54,14 @@ import com.collective2.signalEntry.adapter.simulationXML.SimulatedResponseSignal
  * simulator does not have to worry about any of those details.
  * 
  */
-public class StaticSimulationAdapter extends BackEndAdapter {
+public class StaticSimulationAdapter implements BackEndAdapter {
 
     private static final Logger logger = LoggerFactory.getLogger(StaticSimulationAdapter.class);
 
     @Override
-    public XMLEventReader transmit(Map<Parameter, Object> paraMap) {
+    public XMLEventReader transmit(Request request) {
 
-        Command command = ((Command) paraMap.get(Parameter.SignalEntryCommand));
-        switch (command) {
+        switch (request.getCommand()) {
             case Signal:
                 // return fixed values a real simulator could do better here
                 // but, this is good enough for the unit tests
@@ -111,7 +111,7 @@ public class StaticSimulationAdapter extends BackEndAdapter {
                 // return fixed values a real simulator could do better here
                 // but, this is good enough for the unit tests
                 List<Map<C2Element,Object>> data = new ArrayList<Map<C2Element,Object>>();
-                String[] systemArray = paraMap.get(Parameter.Systems).toString().split("\\.");
+                String[] systemArray = request.get(Parameter.Systems).toString().split("\\.");
 
                 for(String sys:systemArray) {
                     Integer sid = Integer.parseInt(sys);
@@ -154,9 +154,9 @@ public class StaticSimulationAdapter extends BackEndAdapter {
             case SignalStatus:
                 // return fixed values a real simulator could do better here
                 // but, this is good enough for the unit tests
-                return new SimulatedResponseSignalStatus((Integer)paraMap.get(Parameter.SignalId), "Velocity Forex System", "2006-05-19 15:34:50:000", "2006-05-19 15:45:28:000", "0", "2006-05-19 22:08:53:000", 20.87);
+                return new SimulatedResponseSignalStatus((Integer)request.get(Parameter.SignalId), "Velocity Forex System", "2006-05-19 15:34:50:000", "2006-05-19 15:45:28:000", "0", "2006-05-19 22:08:53:000", 20.87);
         }
-        throw new C2ServiceException("Unspported command :" + command);
+        throw new C2ServiceException("Unspported command :" + request, false);
 
     }
 

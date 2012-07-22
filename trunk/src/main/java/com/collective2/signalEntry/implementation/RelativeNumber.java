@@ -29,7 +29,7 @@ public class RelativeNumber implements Serializable {
         //Minus %2D
 
         String value = number.toString();
-        if (prefix.isEmpty()) {
+        if (prefix.isEmpty()) { //only for BasePrice.Absolute
             return value;
         } else {
             if (value.startsWith("-")) {

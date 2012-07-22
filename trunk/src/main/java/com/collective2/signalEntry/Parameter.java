@@ -97,12 +97,12 @@ public enum Parameter {
         if (value == null) {
             String message = "Null value for parameter is not supported.";
             logger.error(message);
-            throw new C2ServiceException(message);
+            throw new C2ServiceException(message, false);
         }
         if (!type.isInstance(value)) {
             String message = "Invalid value '" + value + "' for parameter " + this.name();
             logger.error(message);
-            throw new C2ServiceException(message);
+            throw new C2ServiceException(message, false);
         }
     }
 }

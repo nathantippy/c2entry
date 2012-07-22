@@ -24,10 +24,14 @@ public class SignalLeaf extends ImplSignal {
 
     }
 
-    protected BackEndAdapter initLockedAdapter() {
-        BackEndAdapter adapter = base.initLockedAdapter();
-        adapter.para(parameter, value);
-        return adapter;
+    protected BackEndAdapter backEndAdapter() {
+        return base.backEndAdapter();
+    }
+
+    protected Request buildRequest() {
+        Request request = base.buildRequest();
+        request.put(parameter, value);
+        return request;
     }
 
 }

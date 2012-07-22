@@ -7,42 +7,43 @@
 package com.collective2.signalEntry.implementation;
 
 
-import com.collective2.signalEntry.C2ServiceFactory;
 import com.collective2.signalEntry.Parameter;
 import com.collective2.signalEntry.adapter.BackEndAdapter;
 
 public class SignalBase extends ImplSignal {
 
-    private final C2ServiceFactory factory;
+    private final BackEndAdapter adapter;
     private final Integer systemId;
     private final String password;
     private final Object action;
     private final String instrument;
 
-    public SignalBase(Integer systemId, String password, Object action, String instrument, C2ServiceFactory factory) {
+    public SignalBase(Integer systemId, String password, Object action, String instrument, BackEndAdapter adapter) {
 
-        this.factory    = factory;
+        this.adapter    = adapter;
         this.systemId   = systemId;
         this.password   = password;
         this.action     = action;
         this.instrument = instrument;
     }
 
-    protected BackEndAdapter initLockedAdapter() {
-    	
-        BackEndAdapter adapter = factory.adapter();
-        adapter.lock();
-        adapter.para(Parameter.SignalEntryCommand, Command.Signal);
-        adapter.para(Parameter.SystemId, systemId);
-        adapter.para(Parameter.Password, password);
-
-        adapter.para(Parameter.Instrument, instrument);
-        if ("stock".equals(instrument)) {
-            adapter.para(Parameter.StockAction, action);
-        } else {
-            adapter.para(Parameter.NonStockAction, action);
-        }
+    protected BackEndAdapter backEndAdapter() {
         return adapter;
+    }
+
+    protected Request buildRequest() {
+
+        Request request = new Request(Command.Signal);
+        request.put(Parameter.SystemId, systemId);
+        request.put(Parameter.Password, password);
+
+        request.put(Parameter.Instrument, instrument);
+        if ("stock".equals(instrument)) {
+            request.put(Parameter.StockAction, action);
+        } else {
+            request.put(Parameter.NonStockAction, action);
+        }
+        return request;
 
     }
 
