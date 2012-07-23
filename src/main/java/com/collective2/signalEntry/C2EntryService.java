@@ -14,6 +14,9 @@ public class C2EntryService {
 
     private final C2ServiceFactory serviceFactory;
 
+    //responsible for ensuring the order of the signals
+    private final ResponseManager responseManager;
+
     private Integer commonSystemId;
     private String commonPassword;
     private String commonEMail;
@@ -23,6 +26,7 @@ public class C2EntryService {
         this.commonPassword = password;
         this.commonSystemId = systemId;
         this.commonEMail = null;
+        this.responseManager = new ResponseManager(serviceFactory.adapter());
     }
 
     public C2EntryService(C2ServiceFactory serviceFactory, String password, String eMail) {
@@ -30,6 +34,7 @@ public class C2EntryService {
         this.commonPassword = password;
         this.commonSystemId = null;
         this.commonEMail = eMail;
+        this.responseManager = new ResponseManager(serviceFactory.adapter());
     }
 
     public C2EntryService(C2ServiceFactory serviceFactory, String password, int systemId, String eMail) {
@@ -37,6 +42,7 @@ public class C2EntryService {
         this.commonPassword = password;
         this.commonSystemId = systemId;
         this.commonEMail = eMail;
+        this.responseManager = new ResponseManager(serviceFactory.adapter());
     }
 
     public void systemId(Integer id) {
@@ -56,28 +62,27 @@ public class C2EntryService {
     }
 
     public Signal stockSignal(ActionForStock action) {
-        return new SignalBase(commonSystemId, commonPassword, action, "stock", serviceFactory.adapter());
+        return new SignalBase(commonSystemId, commonPassword, action, "stock", responseManager);
     }
 
     public Signal optionSignal(ActionForNonStock action) {
-        return new SignalBase(commonSystemId, commonPassword, action, "option", serviceFactory.adapter());
+        return new SignalBase(commonSystemId, commonPassword, action, "option", responseManager);
     }
 
     public Signal futureSignal(ActionForNonStock action) {
-        return new SignalBase(commonSystemId, commonPassword, action, "future", serviceFactory.adapter());
+        return new SignalBase(commonSystemId, commonPassword, action, "future", responseManager);
     }
 
     public Signal forexSignal(ActionForNonStock action) {
-        return new SignalBase(commonSystemId, commonPassword, action, "forex", serviceFactory.adapter());
+        return new SignalBase(commonSystemId, commonPassword, action, "forex", responseManager);
     }
 
     public Reverse reversal(String symbol) {
-        return new ReversalBase(commonSystemId, commonPassword, symbol, serviceFactory.adapter());
+        return new ReversalBase(commonSystemId, commonPassword, symbol, responseManager);
     }
 
     private Response send(Request request) {
-        request.validate();
-        return new ImplResponse(serviceFactory.adapter().transmit(request), request.getCommand());
+        return responseManager.fetchResponse(request);
     }
 
     public Integer requestOneCancelsAnotherId() {

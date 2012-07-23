@@ -10,18 +10,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.collective2.signalEntry.Response;
-import com.collective2.signalEntry.adapter.BackEndAdapter;
 
 public abstract class AbstractCommand {
 
     private final static Logger logger = LoggerFactory.getLogger(AbstractCommand.class);
 
     public Response send() {
-
-        Request request = buildRequest();
-        request.validate();
-        return new ImplResponse(backEndAdapter().transmit(request),request.getCommand());
-
+        return responseManager().fetchResponse(buildRequest());
     }
     
     public String toString() {
@@ -39,6 +34,6 @@ public abstract class AbstractCommand {
     }
 
     protected abstract Request buildRequest();
-    protected abstract BackEndAdapter backEndAdapter();
+    protected abstract ResponseManager responseManager();
 
 }

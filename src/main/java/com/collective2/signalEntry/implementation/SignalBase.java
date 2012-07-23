@@ -12,23 +12,23 @@ import com.collective2.signalEntry.adapter.BackEndAdapter;
 
 public class SignalBase extends ImplSignal {
 
-    private final BackEndAdapter adapter;
+    private final ResponseManager responseManager;
     private final Integer systemId;
     private final String password;
     private final Object action;
     private final String instrument;
 
-    public SignalBase(Integer systemId, String password, Object action, String instrument, BackEndAdapter adapter) {
+    public SignalBase(Integer systemId, String password, Object action, String instrument, ResponseManager responseManager) {
 
-        this.adapter    = adapter;
-        this.systemId   = systemId;
-        this.password   = password;
-        this.action     = action;
-        this.instrument = instrument;
+        this.responseManager = responseManager;
+        this.systemId        = systemId;
+        this.password        = password;
+        this.action          = action;
+        this.instrument      = instrument;
     }
 
-    protected BackEndAdapter backEndAdapter() {
-        return adapter;
+    protected ResponseManager responseManager() {
+        return responseManager;
     }
 
     protected Request buildRequest() {

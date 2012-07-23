@@ -11,20 +11,20 @@ import com.collective2.signalEntry.adapter.BackEndAdapter;
 
 public class ReversalBase extends ImplReversal {
 
-    private final BackEndAdapter adapter;
+    private final ResponseManager responseManager;
     private final Integer systemId;
     private final String password;
     private final String symbol;
 
-    public ReversalBase(Integer systemId, String password, String symbol, BackEndAdapter adapter) {
-        this.adapter    = adapter;
-        this.systemId   = systemId;
-        this.password   = password;
-        this.symbol     = symbol;
+    public ReversalBase(Integer systemId, String password, String symbol, ResponseManager responseManager) {
+        this.responseManager = responseManager;
+        this.systemId        = systemId;
+        this.password        = password;
+        this.symbol          = symbol;
     }
 
-    protected BackEndAdapter backEndAdapter() {
-        return adapter;
+    protected ResponseManager responseManager() {
+        return responseManager;
     }
 
     protected Request buildRequest() {

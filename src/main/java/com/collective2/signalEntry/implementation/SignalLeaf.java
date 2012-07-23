@@ -24,8 +24,8 @@ public class SignalLeaf extends ImplSignal {
 
     }
 
-    protected BackEndAdapter backEndAdapter() {
-        return base.backEndAdapter();
+    protected ResponseManager responseManager() {
+        return base.responseManager();
     }
 
     protected Request buildRequest() {
