@@ -14,6 +14,7 @@ import javax.xml.stream.XMLEventReader;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.events.XMLEvent;
 
+import com.collective2.signalEntry.adapter.BackEndAdapter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,13 +23,72 @@ import com.collective2.signalEntry.*;
 public class ImplResponse implements Response {
 
     private final static Logger  logger = LoggerFactory.getLogger(ImplResponse.class);
-    private final XMLEventReader eventReader;
-    private final Command        command;
 
-    public ImplResponse(XMLEventReader eventReader, Command command) {
-        this.eventReader = eventReader;
-        this.command = command;
+    //lazy init
+    private XMLEventReader                  eventReader;
+
+    private final Request                   request;
+    private final ResponseManager           manager;
+    private ImplResponse                    next;
+
+    //only created by ResponseManager
+    ImplResponse(ResponseManager manager, Request request) {
+        //fast fail check
+        request.validate();
+
+        this.manager = manager;
+        this.request = request;
+
     }
+
+    Request request() {
+        return request;
+    }
+
+    void transmit() {
+        synchronized (this) {
+            boolean  tryAgain = false;
+            do {
+                try {
+                     if (eventReader==null) {
+                        eventReader = manager.adapter().transmit(request);
+                        manager.finished(this);
+                     }
+                } catch (C2ServiceException e) {
+                    tryAgain = e.tryAgain();//if true wait for configured delay and try again.
+                    if (tryAgain) {
+                        try {
+                            Thread.sleep(10000l);//10 seconds, NOTE: add configuration for this
+                        } catch (InterruptedException ie) {
+                            throw e;
+                        }
+                    } else {
+                        throw e;
+                    }
+                }
+            } while (tryAgain);
+        }
+    }
+
+    public XMLEventReader getXMLEventReader() {
+
+        //before transmitting this request all previous requests must be completed
+        ImplResponse temp = manager.head();
+        while (temp!=this) {
+            synchronized (this) {
+               if (eventReader != null) {
+                   break;
+               }
+            }
+            temp.transmit(); //never call this while holding my own lock here
+            temp = temp.next();
+        }
+
+        transmit();
+        assert(eventReader!=null);
+        return eventReader;
+    }
+
 
     public Integer getInteger(C2Element element) {
         String value = getString(element);
@@ -81,7 +141,7 @@ public class ImplResponse implements Response {
      */
     public String getString(C2Element element) {
 
-        command.validate(element);
+        request.command().validate(element);
 
         XMLEventReader reader = getXMLEventReader();
         String name = "";
@@ -117,10 +177,6 @@ public class ImplResponse implements Response {
             logger.warn("Unable to close xml stream", e);
         }
         return "";
-    }
-
-    public XMLEventReader getXMLEventReader() {
-        return eventReader;
     }
 
     public Boolean isOk() {
@@ -168,4 +224,11 @@ public class ImplResponse implements Response {
 
     }
 
+    public void next(ImplResponse newResponse) {
+        next = newResponse;
+    }
+
+    public ImplResponse next() {
+        return next;
+    }
 }

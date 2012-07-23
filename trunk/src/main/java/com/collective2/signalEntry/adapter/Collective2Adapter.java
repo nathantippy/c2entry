@@ -6,7 +6,7 @@
  */
 package com.collective2.signalEntry.adapter;
 
-import java.io.IOException;
+import java.io.*;
 import java.net.URLConnection;
 import java.util.Map;
 
@@ -28,6 +28,8 @@ public class Collective2Adapter implements BackEndAdapter {
 
     private final XMLInputFactory factory;
     private final static int timeoutInMs = 1000;//one second
+
+    //must be static lock because there is only one collective2
     private final static Object lock = new Object();
 
     public Collective2Adapter() {
@@ -38,10 +40,32 @@ public class Collective2Adapter implements BackEndAdapter {
 
             try {
                 //ensure that no commands to collective2 are ever sent in parallel
+                //finish fully reading previous command and close its connection
+                //before beginning the next.
+
+                //1. helps lower connection requirements on server side.
+                //2. helps keep server from waiting on client side parse
+                //3. helps eliminate overlap of sequential signals
+
                 synchronized (lock) {
                     URLConnection connection = request.buildURL().openConnection();
                     connection.setConnectTimeout(timeoutInMs);
-                    return factory.createXMLEventReader(connection.getInputStream());
+
+                    //pull all the data off the server ASAP
+                    ByteArrayOutputStream baost = new ByteArrayOutputStream();
+
+                    InputStream is = connection.getInputStream();
+                    int bite;
+                    do {
+                       bite = is.read();
+                       if (bite==-1)  {
+                            break;
+                       }
+                       baost.write(bite);
+                    } while (bite!=-1);
+                    is.close();
+                    //now disconnected from server send finished xml to reader
+                    return factory.createXMLEventReader(new ByteArrayInputStream(baost.toByteArray()));
                 }
             } catch (XMLStreamException e) {
                 String msg = "Unable to parse XML response from Collective2. Sent:"+request;

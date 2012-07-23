@@ -61,7 +61,7 @@ public class StaticSimulationAdapter implements BackEndAdapter {
     @Override
     public XMLEventReader transmit(Request request) {
 
-        switch (request.getCommand()) {
+        switch (request.command()) {
             case Signal:
                 // return fixed values a real simulator could do better here
                 // but, this is good enough for the unit tests

@@ -22,8 +22,8 @@ public class ReversalLeaf extends ImplReversal {
         this.value = value;
     }
 
-    protected BackEndAdapter backEndAdapter() {
-        return base.backEndAdapter();
+    protected ResponseManager responseManager() {
+        return base.responseManager();
     }
 
     protected Request buildRequest() {
