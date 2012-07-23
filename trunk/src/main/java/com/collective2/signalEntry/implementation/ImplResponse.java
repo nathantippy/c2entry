@@ -52,6 +52,7 @@ public class ImplResponse implements Response {
                 try {
                      if (eventReader==null) {
                         eventReader = manager.adapter().transmit(request);
+                         //NOTE: can we check for expected state to pause futher calls?
                         manager.finished(this);
                      }
                 } catch (C2ServiceException e) {

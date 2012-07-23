@@ -67,7 +67,8 @@ public class LiveTest {
     @Test
     public void getAllSystemsTest() {
         if (sentryService != null) {
-            assertTrue(sentryService.allSystems().getString(ElementStatus).toLowerCase().startsWith("ok"));
+            String status = sentryService.allSystems().getString(ElementStatus);
+            assertTrue(status.toLowerCase().startsWith("ok"));
 
             boolean foundSystemId = false;
 
