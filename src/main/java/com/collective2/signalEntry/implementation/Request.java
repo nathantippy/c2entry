@@ -42,9 +42,45 @@ public class Request extends EnumMap<Parameter, Object> {
         return super.put(parameter, value);
     }
 
+    public Request secureClone() {
+        Request clone = (Request) super.clone();
+        if (clone.containsKey(Parameter.Password)) {
+            clone.remove((Parameter.Password));
+            clone.put(Parameter.Password,"*****");
+        }
+        return clone;
+    }
+
     public String toString() {
         return buildURL(this, true).toString();
     }
+
+    public static Request json(String json) {
+        //parse json and build request
+        return null;//TODO: build parser
+    }
+
+    public String json() {
+        StringBuilder builder = new StringBuilder();
+        builder.append('{');
+
+        for(Entry<Parameter,Object> entry: this.entrySet()) {
+           builder.append('"').append(entry.getKey().name()).append("\":");
+           if (entry.getKey().isNumber()) {
+               builder.append(entry.getValue());
+           } else {
+               builder.append('"').append(entry.getValue()).append('"');
+           }
+           builder.append(',');
+        }
+        if (builder.length()>1) {
+            builder.setLength(builder.length()-1);
+        }
+
+        builder.append('}');
+        return builder.toString();
+    }
+
 
     public URL buildURL() {
         return buildURL(this, false);
@@ -54,23 +90,22 @@ public class Request extends EnumMap<Parameter, Object> {
         StringBuilder urlFileQuery = new StringBuilder(urlFile);
 
         for (Parameter p : activeMap.keySet()) {
-            try {
-                if (Parameter.Password == p && hidePassword) {
-                    urlFileQuery.append(p.key()).append("PASSWORD");
-                } else {
-                    urlFileQuery.append(p.key());
-                    if (p.urlEncode()) {
-                        String value = activeMap.get(p).toString();
-                        urlFileQuery.append(encode(value));
-                    } else {
-                        urlFileQuery.append(activeMap.get(p));
+            if (Parameter.Password == p && hidePassword) {
+                urlFileQuery.append(p.key()).append("PASSWORD");
+            } else {
+                urlFileQuery.append(p.key());
+                if (p.shouldEncode()) {
+                    try {
+                        urlFileQuery.append(encode(activeMap.get(p)));
+                    } catch (UnsupportedEncodingException e) {
+                        // should never happen
+                        String msg = "UTF-8 is not supported on this platform?";
+                        logger.error(msg, e);
+                        throw new C2ServiceException(msg, e, false);
                     }
+                } else {
+                    urlFileQuery.append(activeMap.get(p));
                 }
-            } catch (UnsupportedEncodingException e) {
-                // should never happen
-                String msg = "UTF-8 is not supported on this platform?";
-                logger.error(msg, e);
-                throw new C2ServiceException(msg, e, false);
             }
         }
 
@@ -79,11 +114,10 @@ public class Request extends EnumMap<Parameter, Object> {
         } catch (MalformedURLException e) {
             throw new C2ServiceException(e, false);
         }
-
     }
 
-    String encode(String value) throws UnsupportedEncodingException {
-        return URLEncoder.encode(value, "UTF-8");
+    protected String encode(Object value) throws UnsupportedEncodingException {
+        return URLEncoder.encode(value.toString(), "UTF-8");
     }
 
     public void validate() {

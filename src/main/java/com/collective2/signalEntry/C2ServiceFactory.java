@@ -7,18 +7,30 @@
  */
 package com.collective2.signalEntry;
 
-import com.collective2.signalEntry.adapter.BackEndAdapter;
+import com.collective2.signalEntry.adapter.C2EntryServiceAdapter;
+import com.collective2.signalEntry.implementation.C2EntryServiceJournal;
 
 public class C2ServiceFactory {
 
-    protected final BackEndAdapter adapter;
+    protected final C2EntryServiceAdapter entryServiceAdapter;
+    protected final C2EntryServiceJournal entryServiceJournal;
 
-    public C2ServiceFactory(BackEndAdapter adapter) {
-        this.adapter = adapter;
+    public C2ServiceFactory(C2EntryServiceAdapter adapter) {
+        this.entryServiceAdapter = adapter;
+        this.entryServiceJournal = C2EntryServiceJournal.No_Op;
     }
 
-    public BackEndAdapter adapter() {
-        return adapter;
+    public C2ServiceFactory(C2EntryServiceAdapter adapter, C2EntryServiceJournal journal) {
+        this.entryServiceAdapter = adapter;
+        this.entryServiceJournal = journal;
+    }
+
+    C2EntryServiceAdapter entryServiceAdapter() {
+        return entryServiceAdapter;
+    }
+
+    C2EntryServiceJournal entryServiceJournal() {
+        return entryServiceJournal;
     }
 
     public C2EntryService signalEntryService(String password, Integer systemId) {

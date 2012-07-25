@@ -11,7 +11,7 @@ import com.collective2.signalEntry.implementation.Request;
 import javax.xml.stream.XMLEventReader;
 import java.util.Map;
 
-public interface  BackEndAdapter {
+public interface C2EntryServiceAdapter {
 
     public abstract XMLEventReader transmit(Request request);
 

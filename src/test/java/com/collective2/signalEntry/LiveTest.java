@@ -14,12 +14,12 @@ import static org.junit.Assert.fail;
 import javax.xml.stream.XMLEventReader;
 import javax.xml.stream.XMLStreamException;
 
+import com.collective2.signalEntry.adapter.C2EntryServiceAdapter;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.collective2.signalEntry.adapter.BackEndAdapter;
 import com.collective2.signalEntry.adapter.Collective2Adapter;
 
 public class LiveTest {
@@ -47,9 +47,9 @@ public class LiveTest {
 
     @BeforeClass
     public static void initService() {
-        BackEndAdapter backEnd = new Collective2Adapter();
+        C2EntryServiceAdapter backEnd = new Collective2Adapter();
         C2ServiceFactory factory = new C2ServiceFactory(backEnd);
-        assertEquals(backEnd, factory.adapter());
+        assertEquals(backEnd, factory.entryServiceAdapter());
 
         commonSystemId = System.getProperty(PROPERTY_KEY_SYSTEM_ID);
         commonPassword = System.getProperty(PROPERTY_KEY_PASSWORD);
