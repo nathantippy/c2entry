@@ -6,105 +6,153 @@
  */
 package com.collective2.signalEntry.implementation;
 
+import com.collective2.signalEntry.C2ServiceException;
+import com.collective2.signalEntry.Parameter;
 import com.collective2.signalEntry.Response;
-import com.collective2.signalEntry.adapter.BackEndAdapter;
+import com.collective2.signalEntry.adapter.C2EntryServiceAdapter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.xml.stream.XMLEventReader;
 import java.util.Iterator;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.*;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class ResponseManager {
     private static final Logger         logger = LoggerFactory.getLogger(ResponseManager.class);
-    private Thread                      daemon;
-    private final BackEndAdapter        adapter;
-    private ImplResponse                lastResponse; //tail of linked list
-    private ImplResponse                headResponse; //head of linked list of pending responses
-    private final AtomicInteger         pendingCount; //count of responses in linked list
-    private final EntryServiceJournal   journal;
 
-    public ResponseManager(BackEndAdapter adapter) {
+    private final C2EntryServiceAdapter adapter;
+    private final C2EntryServiceJournal journal;
+
+    private final Lock                  lock;
+
+    private static final String        threadName = "ResponseManager";
+    private static final ThreadFactory threadFactory = new ThreadFactory() {
+        @Override
+        public Thread newThread(Runnable r) {
+            Thread thread = new Thread(r);
+            thread.setDaemon(true);
+            thread.setName(threadName);
+            return thread;
+        }
+    };
+
+    //Must be singleThreadExecutor only because each callable must be called sequentially
+    private final ExecutorService       executor = Executors.newSingleThreadExecutor(threadFactory);
+    private final static Runnable       placeHolder = new Runnable() {
+        @Override
+        public void run() {
+        }
+    };
+
+    public ResponseManager(C2EntryServiceAdapter adapter, C2EntryServiceJournal journal, String password) {
         this.adapter        = adapter;
-        this.pendingCount   = new AtomicInteger();
-        this.journal        = EntryServiceJournal.No_Op;
+        this.journal        = journal;
+        this.lock           = new ReentrantLock();
+        reloadPendingRequests(password);
+    }
 
+    private void reloadPendingRequests(String password) {
         //reload old pending requests
         Iterator<Request> iterator = this.journal.pending();
         if (iterator.hasNext()) {
-            Request request = iterator.next();
-            headResponse = new ImplResponse(this, request);
-            lastResponse = headResponse;
+            //never modify object passed in or this may leak the password out!
+            Request request = iterator.next().secureClone();
+            if (request.containsKey(Parameter.Password)) {
+                request.remove(Parameter.Password);
+                request.put(Parameter.Password, password);
+            }
+            executor.submit(new ImplResponse(this, request)); //Note: may want to add a recovery listener here
         }
         while(iterator.hasNext()) {
-            Request request = iterator.next();
-            ImplResponse newResponse = new ImplResponse(this, request);
-            lastResponse.next(newResponse);
-            lastResponse = newResponse;
-        }
-
-    }
-
-    public BackEndAdapter adapter() {
-        return adapter;
-    }
-
-    ImplResponse head() {
-        return headResponse;
-    }
-
-    synchronized void finished(ImplResponse response) {
-        assert(response == headResponse);
-        if (headResponse == response) {
-            pendingCount.decrementAndGet();
-            journal.markSent(response.request());
-            headResponse = headResponse.next();
-            if (headResponse==null) {
-                lastResponse = null;
-                daemon = null; //cleanup thread
+            //never modify object passed in or this may leak the password out!
+            Request request = iterator.next().secureClone();
+            if (request.containsKey(Parameter.Password)) {
+                request.remove(Parameter.Password);
+                request.put(Parameter.Password, password);
             }
-        } else {
-            logger.warn("thread issue: finished response is not head.");
+            executor.submit(new ImplResponse(this, request)); //Note: may want to add a recovery listener here
         }
     }
-
 
     synchronized public Response fetchResponse(Request request) {
         ImplResponse newResponse = new ImplResponse(this, request);
-        journal.persist(request);
-        if (lastResponse == null) {
-            assert(headResponse==null);
-            headResponse = newResponse;
-            assert(headResponse!=null);
-            //start new thread to finish new list of requests
-            assert(daemon==null) : "Daemon thread already running";
-            daemon = new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    ImplResponse temp = headResponse;
-                    while (temp!=null) {
-
-                        temp.transmit();
-                        //next can be modified under this same lock
-                        synchronized(ResponseManager.this) {
-                            temp = temp.next();
-                        }
-                    }
-                    //thread exits when linked list is empty
-                }
-            });
-            daemon.setDaemon(true);
-            daemon.setName("ResponseManager");
-            daemon.start();
-
-        } else {
-            assert(headResponse!=null);
-            lastResponse.next(newResponse);
-        }
-
-        pendingCount.incrementAndGet();
-        lastResponse = newResponse;
+        journal.persist(request.secureClone());
+        executor.submit(newResponse);
         return newResponse;
     }
 
 
+
+    public void awaitPending() {
+        try {
+            //if executor has gotten down to this one then everything else is done
+            executor.submit(placeHolder).get();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        } catch (ExecutionException e) {
+            throw new C2ServiceException("awaitPending",e.getCause(),false);
+        }
+
+    }
+
+    //rarely needed in production....  if ever
+    public void shutdown() {
+        executor.shutdown();
+        try {
+            executor.awaitTermination(20,TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    public XMLEventReader xmlEventReader( final ImplResponse response) {
+        try {
+            return executor.submit(response).get();//block until eventReader has been populated.
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new C2ServiceException("xmlEventReader",e,!response.hasData());
+        } catch (ExecutionException e) {
+            if (e.getCause() instanceof C2ServiceException) {
+                throw (C2ServiceException)e.getCause();
+            } else {
+                throw new C2ServiceException("xmlEventReader",e.getCause(),!response.hasData());
+            }
+        }
+    }
+
+    public XMLEventReader transmit(Request request) {
+        //global lock that enables all processing to pause if needed.
+        lock.lock();
+        try {
+            boolean  tryAgain = false;
+            do {
+                try {
+                    XMLEventReader eventReader = adapter.transmit(request);
+                    //TODO: move unlock into here and add unlock mechanism for clearing fault?
+                    synchronized (this) {
+                        journal.markSent(request.secureClone());
+                        //TODO: what should be done if journal throws trying to clear this?
+                    }
+                    return eventReader;
+
+                } catch (C2ServiceException e) {
+                    tryAgain = e.tryAgain();//if true wait for configured delay and try again.
+                    if (tryAgain) {
+                        try {
+                            Thread.sleep(10000l);//10 seconds, NOTE: add configuration for this
+                        } catch (InterruptedException ie) {
+                            throw e;
+                        }
+                    } else {
+                        throw e;
+                    }
+                }
+            } while (tryAgain);
+            throw new C2ServiceException("Unable to execute.",true);
+        } finally {
+            lock.unlock();
+        }
+    }
 }

@@ -7,7 +7,6 @@
 package com.collective2.signalEntry.implementation;
 
 import com.collective2.signalEntry.Parameter;
-import com.collective2.signalEntry.adapter.BackEndAdapter;
 
 public class ReversalBase extends ImplReversal {
 

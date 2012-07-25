@@ -9,18 +9,18 @@ package com.collective2.signalEntry.implementation;
 import static com.collective2.signalEntry.C2Element.ElementStatus;
 
 import java.math.BigDecimal;
+import java.util.concurrent.Callable;
 
 import javax.xml.stream.XMLEventReader;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.events.XMLEvent;
 
-import com.collective2.signalEntry.adapter.BackEndAdapter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.collective2.signalEntry.*;
 
-public class ImplResponse implements Response {
+public class ImplResponse implements Response, Callable<XMLEventReader> {
 
     private final static Logger  logger = LoggerFactory.getLogger(ImplResponse.class);
 
@@ -29,7 +29,6 @@ public class ImplResponse implements Response {
 
     private final Request                   request;
     private final ResponseManager           manager;
-    private ImplResponse                    next;
 
     //only created by ResponseManager
     ImplResponse(ResponseManager manager, Request request) {
@@ -41,53 +40,25 @@ public class ImplResponse implements Response {
 
     }
 
-    Request request() {
-        return request;
+    public Request secureRequest() {
+        return request.secureClone();
     }
 
-    void transmit() {
-        synchronized (this) {
-            boolean  tryAgain = false;
-            do {
-                try {
-                     if (eventReader==null) {
-                        eventReader = manager.adapter().transmit(request);
-                         //NOTE: can we check for expected state to pause futher calls?
-                        manager.finished(this);
-                     }
-                } catch (C2ServiceException e) {
-                    tryAgain = e.tryAgain();//if true wait for configured delay and try again.
-                    if (tryAgain) {
-                        try {
-                            Thread.sleep(10000l);//10 seconds, NOTE: add configuration for this
-                        } catch (InterruptedException ie) {
-                            throw e;
-                        }
-                    } else {
-                        throw e;
-                    }
-                }
-            } while (tryAgain);
-        }
+    public boolean hasData() {
+        return eventReader!=null;
     }
+
+    public XMLEventReader call() {
+        //get the data and set it
+        if (eventReader==null) {
+            eventReader = manager.transmit(request);
+        }
+        return eventReader;
+    }
+
 
     public XMLEventReader getXMLEventReader() {
-
-        //before transmitting this request all previous requests must be completed
-        ImplResponse temp = manager.head();
-        while (temp!=this) {
-            synchronized (this) {
-               if (eventReader != null) {
-                   break;
-               }
-            }
-            temp.transmit(); //never call this while holding my own lock here
-            temp = temp.next();
-        }
-
-        transmit();
-        assert(eventReader!=null);
-        return eventReader;
+        return manager.xmlEventReader(this);
     }
 
 
@@ -225,11 +196,4 @@ public class ImplResponse implements Response {
 
     }
 
-    public void next(ImplResponse newResponse) {
-        next = newResponse;
-    }
-
-    public ImplResponse next() {
-        return next;
-    }
 }

@@ -8,6 +8,8 @@ package com.collective2.signalEntry;
 
 import org.junit.Test;
 
+import java.io.UnsupportedEncodingException;
+
 import static org.junit.Assert.*;
 
 public class ParameterTest {
@@ -33,9 +35,9 @@ public class ParameterTest {
     @Test
     public void urlEncodeTest() {
 
-        assertTrue(Parameter.EMail.urlEncode());
-        assertFalse(Parameter.Quantity.urlEncode());
-
+        assertTrue(Parameter.EMail.shouldEncode());
+        assertFalse(Parameter.Quantity.shouldEncode());
+        assertFalse(Parameter.RelativeLimitOrder.shouldEncode());
     }
 
     @Test

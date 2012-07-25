@@ -18,68 +18,45 @@ public class C2ServiceExceptionTest {
 
     @Test
     public void messageTest() {
-        try {
-            throw new C2ServiceException("hello world", false);
-        } catch (C2ServiceException e) {
-            assertEquals("hello world", e.getMessage());
-            assertFalse(e.tryAgain());
-        } catch (Exception e) {
-            fail();
-        }
 
-        try {
-            throw new C2ServiceException("hello world", true);
-        } catch (C2ServiceException e) {
-            assertEquals("hello world", e.getMessage());
-            assertTrue(e.tryAgain());
-        } catch (Exception e) {
-            fail();
-        }
+        C2ServiceException e = new C2ServiceException("hello world", false);
+
+        assertEquals("hello world", e.getMessage());
+        assertFalse(e.tryAgain());
+
+        e = new C2ServiceException("hello world", true);
+        assertEquals("hello world", e.getMessage());
+        assertTrue(e.tryAgain());
+
     }
 
     @Test
     public void causeTest() {
         Exception cause = new Exception();
-        try {
-            throw new C2ServiceException(cause,false);
-        } catch (C2ServiceException e) {
-            assertTrue(cause==e.getCause());
-            assertFalse(e.tryAgain());
-        } catch (Exception e) {
-            fail();
-        }
+        C2ServiceException e =  new C2ServiceException(cause,false);
+        assertTrue(cause==e.getCause());
+        assertFalse(e.tryAgain());
 
-        try {
-            throw new C2ServiceException(cause,true);
-        } catch (C2ServiceException e) {
-            assertTrue(cause==e.getCause());
-            assertTrue(e.tryAgain());
-        } catch (Exception e) {
-            fail();
-        }
+        e = new C2ServiceException(cause,true);
+        assertTrue(cause==e.getCause());
+        assertTrue(e.tryAgain());
+
     }
 
     @Test
     public void causeWithMessageTest() {
         Exception cause = new Exception();
         String message = "hi";
-        try {
-            throw new C2ServiceException(message, cause, true);
-        } catch (C2ServiceException e) {
-            assertTrue(cause==e.getCause());
-            assertEquals(message, e.getMessage());
-            assertTrue(e.tryAgain());
-        } catch (Exception e) {
-            fail();
-        }
-        try {
-            throw new C2ServiceException(message, cause, false);
-        } catch (C2ServiceException e) {
-            assertTrue(cause==e.getCause());
-            assertEquals(message, e.getMessage());
-            assertFalse(e.tryAgain());
-        } catch (Exception e) {
-            fail();
-        }
+        C2ServiceException e = new C2ServiceException(message, cause, true);
+        assertTrue(cause==e.getCause());
+        assertEquals(message, e.getMessage());
+        assertTrue(e.tryAgain());
+
+        e =  new C2ServiceException(message, cause, false);
+
+        assertTrue(cause==e.getCause());
+        assertEquals(message, e.getMessage());
+        assertFalse(e.tryAgain());
+
     }
 }

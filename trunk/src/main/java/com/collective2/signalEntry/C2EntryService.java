@@ -26,7 +26,9 @@ public class C2EntryService {
         this.commonPassword = password;
         this.commonSystemId = systemId;
         this.commonEMail = null;
-        this.responseManager = new ResponseManager(serviceFactory.adapter());
+        this.responseManager = new ResponseManager(serviceFactory.entryServiceAdapter(),
+                                                   serviceFactory.entryServiceJournal(),
+                                                   password);
     }
 
     public C2EntryService(C2ServiceFactory serviceFactory, String password, String eMail) {
@@ -34,7 +36,9 @@ public class C2EntryService {
         this.commonPassword = password;
         this.commonSystemId = null;
         this.commonEMail = eMail;
-        this.responseManager = new ResponseManager(serviceFactory.adapter());
+        this.responseManager = new ResponseManager(serviceFactory.entryServiceAdapter(),
+                                                   serviceFactory.entryServiceJournal(),
+                                                   password);
     }
 
     public C2EntryService(C2ServiceFactory serviceFactory, String password, int systemId, String eMail) {
@@ -42,8 +46,11 @@ public class C2EntryService {
         this.commonPassword = password;
         this.commonSystemId = systemId;
         this.commonEMail = eMail;
-        this.responseManager = new ResponseManager(serviceFactory.adapter());
+        this.responseManager = new ResponseManager(serviceFactory.entryServiceAdapter(),
+                                                   serviceFactory.entryServiceJournal(),
+                                                   password);
     }
+
 
     public void systemId(Integer id) {
         this.commonSystemId = id;
@@ -243,4 +250,11 @@ public class C2EntryService {
 
     }
 
+    public void awaitPending() {
+        responseManager.awaitPending();
+    }
+
+    void shutdown() {
+        responseManager.shutdown();
+    }
 }

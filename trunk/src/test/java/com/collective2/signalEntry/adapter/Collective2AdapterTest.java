@@ -63,5 +63,20 @@ public class Collective2AdapterTest {
         }
     }
 
+    @Test
+    public void transmitTest() {
+
+        Collective2Adapter adapter = new Collective2Adapter();
+        //mock request that does not return actual URL to collective2
+        Request mockRequest = new Request(Command.Cancel) {
+            @Override
+            public URL buildURL() {
+                return getClass().getClassLoader().getResource("staticResponse.xml");
+            };
+        };
+
+        XMLEventReader xml = adapter.transmit(mockRequest);
+        assertNotNull(xml);
+    }
 
 }

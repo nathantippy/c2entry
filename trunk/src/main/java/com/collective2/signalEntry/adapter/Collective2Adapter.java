@@ -8,7 +8,6 @@ package com.collective2.signalEntry.adapter;
 
 import java.io.*;
 import java.net.URLConnection;
-import java.util.Map;
 
 
 import javax.xml.stream.XMLEventReader;
@@ -20,9 +19,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.collective2.signalEntry.C2ServiceException;
-import com.collective2.signalEntry.Parameter;
 
-public class Collective2Adapter implements BackEndAdapter {
+public class Collective2Adapter implements C2EntryServiceAdapter {
 
     private static final Logger   logger = LoggerFactory.getLogger(Collective2Adapter.class);
 

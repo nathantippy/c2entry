@@ -8,10 +8,10 @@ package com.collective2.signalEntry;
 
 import static org.junit.Assert.assertTrue;
 
+import com.collective2.signalEntry.adapter.C2EntryServiceAdapter;
 import com.collective2.signalEntry.adapter.StaticSimulationAdapter;
 import org.junit.Test;
 
-import com.collective2.signalEntry.adapter.BackEndAdapter;
 import com.collective2.signalEntry.adapter.Collective2Adapter;
 
 public class ExamplesTest {
@@ -29,18 +29,18 @@ public class ExamplesTest {
 
             if (isLive) {
                 // connects to collective2.com and returns the responses
-                BackEndAdapter liveAdapter = new Collective2Adapter();
+                C2EntryServiceAdapter liveAdapter = new Collective2Adapter();
                 factory = new C2ServiceFactory(liveAdapter);
             } else {
                 // validates commands and returns hard coded (canned) responses
-                BackEndAdapter simulationAdapter = new StaticSimulationAdapter();
+                C2EntryServiceAdapter simulationAdapter = new StaticSimulationAdapter();
                 factory = new C2ServiceFactory(simulationAdapter);
             }
 
             if (isLive) {
-                assertTrue(factory.adapter() instanceof Collective2Adapter);
+                assertTrue(factory.entryServiceAdapter() instanceof Collective2Adapter);
             } else {
-                assertTrue(factory.adapter() instanceof StaticSimulationAdapter);
+                assertTrue(factory.entryServiceAdapter() instanceof StaticSimulationAdapter);
             }
         } while (isLive == false);
 
@@ -50,7 +50,7 @@ public class ExamplesTest {
     public void exampleServiceConstructionTest() {
 
         // validates commands and returns hard coded (canned) responses
-        BackEndAdapter simulationAdapter = new StaticSimulationAdapter();
+        C2EntryServiceAdapter simulationAdapter = new StaticSimulationAdapter();
         C2ServiceFactory factory = new C2ServiceFactory(simulationAdapter);
 
         String password = "PA55WORD";
@@ -86,7 +86,7 @@ public class ExamplesTest {
     @Test
     public void exampleServiceUsageTest() {
         // validates commands and returns hard coded (canned) responses
-        BackEndAdapter simulationAdapter = new StaticSimulationAdapter();
+        C2EntryServiceAdapter simulationAdapter = new StaticSimulationAdapter();
         C2ServiceFactory factory = new C2ServiceFactory(simulationAdapter);
 
         String password = "PA55WORD";

@@ -6,6 +6,7 @@
  */
 package com.collective2.signalEntry;
 
+import com.collective2.signalEntry.implementation.ParameterType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,96 +14,107 @@ import com.collective2.signalEntry.implementation.Command;
 import com.collective2.signalEntry.implementation.DotString;
 import com.collective2.signalEntry.implementation.RelativeNumber;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+
 public enum Parameter {
     // do not mess with this order, it controls the order in the final URL and
     // the unit tests are dependent upon it.
     // SignalEntryCcommand must be the first one 
     // because it start with the query flag ? instead of & like the others
-    SignalEntryCommand("?cmd=", Command.class),
+    SignalEntryCommand("?cmd=",             ParameterType.CommandType),
 
-    SystemId("&systemid=", Integer.class),
-    Systems("&systemid=", DotString.class),
+    SystemId("&systemid=",                  ParameterType.IntegerType),
+    Systems("&systemid=",                   ParameterType.IntDotStringType),
 
-    Password("&pw=", String.class), 
-    EMail("&c2email=", String.class),
-    SignalId("&signalid=", Integer.class),
+    Password("&pw=",                        ParameterType.StringType),
+    EMail("&c2email=",                      ParameterType.StringType),
+    SignalId("&signalid=",                  ParameterType.IntegerType),
 
-    Instrument("&instrument=", String.class), // enum to check string?
-    Symbol("&symbol=", String.class),
+    Instrument("&instrument=",              ParameterType.StringType), //TODO: change to ENUM to check string
+    Symbol("&symbol=",                      ParameterType.StringType),
 
 
-    StockAction("&action=", ActionForStock.class),
-    NonStockAction("&action=", ActionForNonStock.class),
+    StockAction("&action=",                 ParameterType.ActionForStockType),
+    NonStockAction("&action=",              ParameterType.ActionForNonStockType),
 
-    OrderDuration("&duration=", Duration.class),
+    OrderDuration("&duration=",             ParameterType.DurationType),
 
-    LimitOrder("&limit=", Number.class),
-    StopOrder("&stop=", Number.class),
-    RelativeLimitOrder("&limit=", RelativeNumber.class),
-    RelativeStopOrder("&stop=", RelativeNumber.class),
-    MarketOrder("", String.class),
+    LimitOrder("&limit=",                   ParameterType.NumberType),
+    StopOrder("&stop=",                     ParameterType.NumberType),
+    RelativeLimitOrder("&limit=",           ParameterType.RelativeNumberType),
+    RelativeStopOrder("&stop=",             ParameterType.RelativeNumberType),
+    MarketOrder("",                         ParameterType.StringType),
 
-    Dollars("&dollars=", Number.class),
-    Quantity("&quant=", Integer.class),
-    AccountPercent("&accountpercent=", Number.class),
+    Dollars("&dollars=",                    ParameterType.NumberType),
+    Quantity("&quant=",                     ParameterType.IntegerType),
+    AccountPercent("&accountpercent=",      ParameterType.NumberType),
 
-    TriggerPrice("&triggerprice=", Number.class),
+    TriggerPrice("&triggerprice=",          ParameterType.NumberType),
 
-    OCAId("&ocaid=", Integer.class),
+    OCAId("&ocaid=",                        ParameterType.IntegerType),
 
-    StopLoss("&stoploss=", Number.class), 
-    ProfitTarget("&profittarget=", Number.class),
+    StopLoss("&stoploss=",                  ParameterType.NumberType),
+    ProfitTarget("&profittarget=",          ParameterType.NumberType),
 
-    RelativeStopLoss("&stoploss=", RelativeNumber.class),
-    RelativeProfitTarget("&profittarget=", RelativeNumber.class),
+    RelativeStopLoss("&stoploss=",          ParameterType.RelativeNumberType),
+    RelativeProfitTarget("&profittarget=",  ParameterType.RelativeNumberType),
 
-    ForceNoOCA("&forcenooca=", Integer.class),
+    ForceNoOCA("&forcenooca=",              ParameterType.IntegerType),
 
-    Delay("&delay=", Integer.class), ParkUntil("&parkuntil=", Number.class),
-    CancelsAt("&cancelsat=", Number.class),
-    CancelsAtRelative("&cancelsatrelative=", Number.class), 
-    ParkUntilDateTime("&parkuntildatetime=", String.class),
+    Delay("&delay=",                        ParameterType.IntegerType),
+    ParkUntil("&parkuntil=",                ParameterType.NumberType),
+    CancelsAt("&cancelsat=",                ParameterType.NumberType),
+    CancelsAtRelative("&cancelsatrelative=",ParameterType.NumberType),
+    ParkUntilDateTime("&parkuntildatetime=",ParameterType.StringType), //TODO: needs a better type than string
 
-    ShowRelated("&showrelated=", Related.class), 
-    ShowDetails("&showdetails=", Integer.class), // 1 is true
+    ShowRelated("&showrelated=",            ParameterType.RelatedType),
+    ShowDetails("&showdetails=",            ParameterType.IntegerType), // 1 is true
 
-    XReplace("&xreplace=", Integer.class),
+    XReplace("&xreplace=",                  ParameterType.IntegerType),
 
-    ConditionalUpon("&conditionalupon=", Integer.class),
+    ConditionalUpon("&conditionalupon=",    ParameterType.IntegerType),
 
-    OCAGroupId("&ocagroupid=", Integer.class),
-    Commentary("&commentary=", String.class),
+    OCAGroupId("&ocagroupid=",              ParameterType.IntegerType),
+    Commentary("&commentary=",              ParameterType.StringType),
 
-    BuyPower("&buypower=", Number.class),
-    Message("&message=", String.class);
+    BuyPower("&buypower=",                  ParameterType.NumberType),
+    Message("&message=",                    ParameterType.StringType);
 
     private static final Logger logger = LoggerFactory.getLogger(Parameter.class);
     private final String        URLKey;
-    private final Class         type;
+    private final ParameterType type;
 
-    private Parameter(String URLKey, Class clazz) {
+    private Parameter(String URLKey, ParameterType type) {
         this.URLKey = URLKey;
-        this.type = clazz;
+        this.type = type;
     }
 
     public String key() {
         return URLKey;
     }
 
-    public boolean urlEncode() {
-        return type == String.class;
+    public Object parse(String value) {
+        return type.parse(value);
+    }
+
+    public boolean shouldEncode() {
+        return type.isClass(String.class);
+    }
+
+    public String json(Object value) {
+        if (shouldEncode()) {
+            return name()+":\""+value.toString()+'"';
+        } else {
+            return name()+':'+value.toString();
+        }
     }
 
     public void validateValue(Object value) {
-        if (value == null) {
-            String message = "Null value for parameter is not supported.";
-            logger.error(message);
-            throw new C2ServiceException(message, false);
-        }
-        if (!type.isInstance(value)) {
-            String message = "Invalid value '" + value + "' for parameter " + this.name();
-            logger.error(message);
-            throw new C2ServiceException(message, false);
-        }
+        type.validate(value);
+    }
+
+    public boolean isNumber() {
+        return type.isClass(Number.class);
     }
 }

@@ -9,8 +9,8 @@ package com.collective2.signalEntry.implementation;
 import java.util.Collections;
 import java.util.Iterator;
 
-public interface EntryServiceJournal {
-    EntryServiceJournal No_Op = new EntryServiceJournal() {
+public interface C2EntryServiceJournal {
+    C2EntryServiceJournal No_Op = new C2EntryServiceJournal() {
         @Override
         public Iterator<Request> pending() {
             return Collections.emptyIterator();

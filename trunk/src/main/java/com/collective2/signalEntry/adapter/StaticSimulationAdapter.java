@@ -24,7 +24,6 @@ import org.slf4j.LoggerFactory;
 
 import com.collective2.signalEntry.C2ServiceException;
 import com.collective2.signalEntry.Parameter;
-import com.collective2.signalEntry.implementation.Command;
 import com.collective2.signalEntry.adapter.simulationXML.SimulatedResponseAddToOCAGroup;
 import com.collective2.signalEntry.adapter.simulationXML.SimulatedResponseAllSystems;
 import com.collective2.signalEntry.adapter.simulationXML.SimulatedResponseCancel;
@@ -54,7 +53,7 @@ import com.collective2.signalEntry.adapter.simulationXML.SimulatedResponseSignal
  * simulator does not have to worry about any of those details.
  * 
  */
-public class StaticSimulationAdapter implements BackEndAdapter {
+public class StaticSimulationAdapter implements C2EntryServiceAdapter {
 
     private static final Logger logger = LoggerFactory.getLogger(StaticSimulationAdapter.class);
 
