@@ -102,14 +102,6 @@ public enum Parameter {
         return type.isClass(String.class);
     }
 
-    public String json(Object value) {
-        if (shouldEncode()) {
-            return name()+":\""+value.toString()+'"';
-        } else {
-            return name()+':'+value.toString();
-        }
-    }
-
     public void validateValue(Object value) {
         type.validate(value);
     }

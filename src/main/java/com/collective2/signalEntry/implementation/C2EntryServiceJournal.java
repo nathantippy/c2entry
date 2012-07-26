@@ -6,24 +6,31 @@
  */
 package com.collective2.signalEntry.implementation;
 
+import com.collective2.signalEntry.Parameter;
+
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.List;
 
 public interface C2EntryServiceJournal {
-    C2EntryServiceJournal No_Op = new C2EntryServiceJournal() {
+    C2EntryServiceJournal memoryJournal =new C2EntryServiceJournal() {
+
+        List<Request> list = new ArrayList<Request>();
+
         @Override
         public Iterator<Request> pending() {
-            return Collections.emptyIterator();
+            return list.iterator();
         }
 
         @Override
         public void persist(Request request) {
-            //do nothing
+            list.add(request);
         }
 
         @Override
         public void markSent(Request request) {
-           //do nothing
+            list.remove(0);
         }
     };
 

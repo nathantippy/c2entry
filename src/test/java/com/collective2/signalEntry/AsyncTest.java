@@ -70,20 +70,6 @@ public class AsyncTest {
     }
 
     @Test
-    public void jsonTest() {
-
-        Request request = new Request(Command.Cancel);
-        request.put(Parameter.SignalId,1234);
-        request.put(Parameter.SystemId,5432);
-        request.put(Parameter.Password,"toomanysecrets");
-
-        //password is never written out to saved record
-        assertEquals("{\"SignalEntryCommand\":\"cancel\",\"SystemId\":5432,\"Password\":\"*****\",\"SignalId\":1234}", request.secureClone().json());
-
-    }
-
-
-    @Test
     public void exampleOffLinePersistTest() {
 
         final ReentrantLock lock = new ReentrantLock();
@@ -108,26 +94,27 @@ public class AsyncTest {
         };
 
         C2EntryServiceJournal journal = new C2EntryServiceJournal() {
-            List<Request> list = new ArrayList<Request>();
 
             @Override
             public Iterator<Request> pending() {
-                return list.iterator();
+                return C2EntryServiceJournal.memoryJournal.pending();
             }
 
             @Override
             public void persist(Request request) {
                 assertEquals("*****",request.get(Parameter.Password));
 
-                list.add(request);
+                C2EntryServiceJournal.memoryJournal.persist(request);
             }
 
             @Override
             public void markSent(Request request) {
 
-                assertEquals("\n"+request.json()+"\n"+list.get(0).json() ,
-                                  request,            list.get(0));
-                list.remove(0);
+                Request oldest = C2EntryServiceJournal.memoryJournal.pending().next();
+                assertEquals("\n"+request+"\n"+oldest ,
+                                  request,     oldest);
+
+                C2EntryServiceJournal.memoryJournal.markSent(request);
             }
         };
 

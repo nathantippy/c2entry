@@ -15,6 +15,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.Map;
 
@@ -55,32 +56,48 @@ public class Request extends EnumMap<Parameter, Object> {
         return buildURL(this, true).toString();
     }
 
-    public static Request json(String json) {
-        //parse json and build request
-        return null;//TODO: build parser
-    }
+    public static Request parseURL(String url) {
 
-    public String json() {
-        StringBuilder builder = new StringBuilder();
-        builder.append('{');
-
-        for(Entry<Parameter,Object> entry: this.entrySet()) {
-           builder.append('"').append(entry.getKey().name()).append("\":");
-           if (entry.getKey().isNumber()) {
-               builder.append(entry.getValue());
-           } else {
-               builder.append('"').append(entry.getValue()).append('"');
-           }
-           builder.append(',');
+        String[] split = url.split("\\?|&");
+        if (split.length<=0 || !split[0].endsWith("signal.mpl")) {
+            throw new C2ServiceException("Can not parse url base "+url,false);
         }
-        if (builder.length()>1) {
-            builder.setLength(builder.length()-1);
+        //pull out the command from index 1
+        Command command = null;
+        if (split[1].startsWith("cmd=")) {
+            command = (Command)Parameter.SignalEntryCommand.parse(split[1].substring(4));
+         } else {
+            throw new C2ServiceException("Can not parse out command "+url,false);
         }
 
-        builder.append('}');
-        return builder.toString();
+
+        //all the fields start at 2
+        Request request = new Request(command);
+
+        //do not process zero or one
+        int i = split.length;
+        while(--i>1) {
+            String[] arg = split[i].split("=");
+            String endsWith = arg[0]+'=';
+
+            Parameter found = lookupParameter(endsWith);
+            Object value = found.parse(arg[1]);
+            request.put(found,value);
+        }
+
+        return request;
     }
 
+    private static Parameter lookupParameter(String endsWith) {
+        Parameter found = null;
+        for(Parameter p:Parameter.values()) {
+            if (p.key().endsWith(endsWith)) {
+                found = p;
+                break;
+            }
+        }
+        return found;
+    }
 
     public URL buildURL() {
         return buildURL(this, false);

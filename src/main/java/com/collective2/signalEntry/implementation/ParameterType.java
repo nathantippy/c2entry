@@ -29,7 +29,7 @@ public enum ParameterType {
     CommandType(Command.class) {
         @Override
         public Object parse(String stringValue) {
-            return Command.valueOf(stringValue);
+            return lookupEnum(stringValue, Command.values());
         }
     },
     IntDotStringType(DotString.class) {
@@ -49,19 +49,19 @@ public enum ParameterType {
     ActionForStockType(ActionForStock.class) {
         @Override
         public Object parse(String stringValue) {
-            return ActionForStock.valueOf(stringValue);
+            return lookupEnum(stringValue, ActionForStock.values());
         }
     },
     ActionForNonStockType(ActionForNonStock.class) {
         @Override
         public Object parse(String stringValue) {
-            return ActionForNonStock.valueOf(stringValue);
+            return lookupEnum(stringValue, ActionForNonStock.values());
         }
     },
     DurationType(Duration.class) {
         @Override
         public Object parse(String stringValue) {
-            return Duration.valueOf(stringValue);
+            return lookupEnum(stringValue, Duration.values());
         }
     },
     NumberType(Number.class) {
@@ -79,9 +79,18 @@ public enum ParameterType {
     RelatedType(Related.class) {
         @Override
         public Object parse(String stringValue) {
-            return Related.valueOf(stringValue);
+            return lookupEnum(stringValue, Related.values());
         }
     };
+
+    private static Object lookupEnum(String stringValue, Enum[] values) {
+        for(Enum e:values) {
+            if (e.name().equalsIgnoreCase(stringValue)) {
+                return e;
+            }
+        }
+        throw new C2ServiceException("Unable to find:"+stringValue,false);
+    }
 
     private final Class clazz;
 
