@@ -123,8 +123,7 @@ public class ImplResponse implements Response, Callable<XMLEventReader> {
             try {
                 event = reader.nextEvent();
             } catch (XMLStreamException e) {
-                e.printStackTrace(); // To change body of catch statement use
-                                     // File | Settings | File Templates.
+                throw new C2ServiceException("Unable to read xml",e,false);
             }
             if (event != null) {
                 if (event.isStartElement()) {
@@ -135,9 +134,7 @@ public class ImplResponse implements Response, Callable<XMLEventReader> {
                     try {
                         reader.close();
                     } catch (XMLStreamException e) {
-                        e.printStackTrace(); // To change body of catch
-                                             // statement use File | Settings |
-                                             // File Templates.
+                        logger.warn("Unable to close xml stream", e);
                     }
                     return event.asCharacters().getData();
                 }

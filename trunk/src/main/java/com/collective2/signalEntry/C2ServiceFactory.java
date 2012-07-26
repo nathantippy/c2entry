@@ -17,7 +17,7 @@ public class C2ServiceFactory {
 
     public C2ServiceFactory(C2EntryServiceAdapter adapter) {
         this.entryServiceAdapter = adapter;
-        this.entryServiceJournal = C2EntryServiceJournal.No_Op;
+        this.entryServiceJournal = C2EntryServiceJournal.memoryJournal;
     }
 
     public C2ServiceFactory(C2EntryServiceAdapter adapter, C2EntryServiceJournal journal) {

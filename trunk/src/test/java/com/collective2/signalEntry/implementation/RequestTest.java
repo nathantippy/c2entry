@@ -52,4 +52,17 @@ public class RequestTest {
         }
     }
 
+    @Test
+    public void urlParseTest() {
+
+        Request request = new Request(Command.Cancel);
+        request.put(Parameter.SignalId,1234);
+        request.put(Parameter.SystemId,5432);
+        request.put(Parameter.Password,"toomanysecrets");
+
+        String urlString = request.buildURL().toString();
+        Request rebuilt = request.parseURL(urlString);
+
+        assertEquals(request,rebuilt);
+    }
 }
