@@ -92,11 +92,11 @@ public class C2EntryService {
         return responseManager.fetchResponse(request);
     }
 
-    public Integer requestOneCancelsAnotherId() {
-        return sendRequestOneCancelsAnotherId().getInteger(ElementOCAId);
+    public Integer oneCancelsAnotherId() {
+        return sendOneCancelsAnotherIdRequest().getInteger(ElementOCAId);
     }
 
-    public Response sendRequestOneCancelsAnotherId() {
+    public Response sendOneCancelsAnotherIdRequest() {
         Request request = new Request(Command.RequestOCAId);
         request.put(Parameter.SystemId, commonSystemId);
         request.put(Parameter.Password, commonPassword);
@@ -104,10 +104,10 @@ public class C2EntryService {
     }
 
     public boolean cancel(final Integer signalId) {
-        return sendCancel(signalId).isOk();
+        return sendCancelRequest(signalId).isOk();
     }
 
-    public Response sendCancel(final Integer signalId) {
+    public Response sendCancelRequest(final Integer signalId) {
         Request request = new Request(Command.Cancel);
         request.put(Parameter.SignalId, signalId);
         request.put(Parameter.SystemId, commonSystemId);
@@ -116,10 +116,10 @@ public class C2EntryService {
     }
 
     public boolean cancelAllPending() {
-        return sendCancelAllPending().isOk();
+        return sendCancelAllPendingRequest().isOk();
     }
 
-    public Response sendCancelAllPending() {
+    public Response sendCancelAllPendingRequest() {
         Request request = new Request(Command.CancelAllPending);
         request.put(Parameter.SystemId, commonSystemId);
         request.put(Parameter.Password, commonPassword);
@@ -127,10 +127,10 @@ public class C2EntryService {
     }
 
     public boolean flushPendingSignals() {
-        return sendFlushPendingSignals().isOk();
+        return sendFlushPendingSignalsRequest().isOk();
     }
 
-    public Response sendFlushPendingSignals() {
+    public Response sendFlushPendingSignalsRequest() {
         Request request = new Request(Command.FlushPendingSignals);
         request.put(Parameter.SystemId, commonSystemId);
         request.put(Parameter.Password, commonPassword);
@@ -138,21 +138,25 @@ public class C2EntryService {
     }
 
     public boolean closeAllPositions(final Integer signalId) {
+       return sendCloseAllPositionsRequest(signalId).isOk();
+    }
+
+    public Response sendCloseAllPositionsRequest(final Integer signalId) {
         Request request = new Request(Command.CloseAllPositions);
         request.put(Parameter.SignalId, signalId);
         request.put(Parameter.SystemId, commonSystemId);
         request.put(Parameter.Password, commonPassword);
-        return send(request).isOk();
+        return send(request);
     }
 
-    public Response buyPower() {
+    public Response sendBuyPowerRequest() {
         Request request = new Request(Command.GetBuyPower);
         request.put(Parameter.SystemId, commonSystemId);
         request.put(Parameter.Password, commonPassword);
         return send(request);
     }
 
-    public Response signalStatus(final Integer signalId, final boolean showDetails, final Related showRelated) {
+    public Response sendSignalStatusRequest(final Integer signalId, final boolean showDetails, final Related showRelated) {
         Request request = new Request(Command.SignalStatus);
         request.put(Parameter.EMail, commonEMail);
         request.put(Parameter.Password, commonPassword);
@@ -164,7 +168,7 @@ public class C2EntryService {
         return send(request);
     }
 
-    public Response signalStatus(final Integer signalId, final boolean showDetails) {
+    public Response sendSignalStatusRequest(final Integer signalId, final boolean showDetails) {
         Request request = new Request(Command.SignalStatus);
         request.put(Parameter.EMail, commonEMail);
         request.put(Parameter.Password, commonPassword);
@@ -176,14 +180,14 @@ public class C2EntryService {
     }
 
 
-    public Response allSystems() {
+    public Response sendAllSystemsRequest() {
         Request request = new Request(Command.AllSystems);
         request.put(Parameter.EMail, commonEMail);
         request.put(Parameter.Password, commonPassword);
         return send(request);
     }
 
-    public Response systemHypothetical(final Integer... system) {
+    public Response sendSystemHypotheticalRequest(final Integer... system) {
         Request request = new Request(Command.GetSystemHypothetical);
         request.put(Parameter.Password, commonPassword);
         request.put(Parameter.EMail, commonEMail);
@@ -192,7 +196,7 @@ public class C2EntryService {
 
     }
 
-    public Response allSignals() {
+    public Response sendAllSignalsRequest() {
         Request request = new Request(Command.AllSignals);
         request.put(Parameter.Password, commonPassword);
         request.put(Parameter.EMail, commonEMail);
@@ -200,39 +204,50 @@ public class C2EntryService {
     }
 
     public boolean addToOCAGroup(final Integer signalId, final Integer OCAGroup) {
+        return sendAddToOCAGroupRequest(signalId,OCAGroup).isOk();
+    }
+    public Response sendAddToOCAGroupRequest(final Integer signalId, final Integer OCAGroup) {
         Request request = new Request(Command.AddToOCAGroup);
         request.put(Parameter.Password, commonPassword);
         request.put(Parameter.EMail, commonEMail);
         request.put(Parameter.SignalId, signalId);
         request.put(Parameter.OCAGroupId, OCAGroup);
-        return send(request).isOk();
+        return send(request);
     }
 
     public boolean setMinBuyPower(final Number buyPower) {
+        return sendSetMinBuyPowerRequest(buyPower).isOk();
+    }
+
+    public Response sendSetMinBuyPowerRequest(final Number buyPower) {
         Request request = new Request(Command.SetMinBuyPower);
         request.put(Parameter.SystemId, commonSystemId);
         request.put(Parameter.Password, commonPassword);
         request.put(Parameter.BuyPower, buyPower);
-        return send(request).isOk();
+        return send(request);
     }
 
-    public boolean sendSubscriberBroadcast(final String message) {
+    public boolean subscriberBroadcast(final String message) {
+        return sendSubscriberBroadcastRequest(message).isOk();
+    }
+
+    public Response sendSubscriberBroadcastRequest(final String message) {
         Request request = new Request(Command.SendSubscriberBroadcast);
         request.put(Parameter.SystemId, commonSystemId);
         request.put(Parameter.Password, commonPassword);
         request.put(Parameter.EMail, commonEMail);
         request.put(Parameter.Message, message);
-        return send(request).isOk();
+        return send(request);
     }
 
-    public Response systemEquity() {
+    public Response sendSystemEquityRequest() {
         Request request = new Request(Command.GetSystemEquity);
         request.put(Parameter.SystemId, commonSystemId);
         request.put(Parameter.Password, commonPassword);
         return send(request);
     }
 
-    public Response positionStatus(final String symbol) {
+    public Response sendPositionStatusRequest(final String symbol) {
         Request request = new Request(Command.PositionStatus);
         request.put(Parameter.SystemId, commonSystemId);
         request.put(Parameter.Password, commonPassword);
@@ -240,7 +255,7 @@ public class C2EntryService {
         return send(request);
     }
 
-    public Response newComment(final String comment, final Integer signalId) {
+    public Response sendNewCommentRequest(final String comment, final Integer signalId) {
         Request request = new Request(Command.NewComment);
         request.put(Parameter.SystemId, commonSystemId);
         request.put(Parameter.Password, commonPassword);

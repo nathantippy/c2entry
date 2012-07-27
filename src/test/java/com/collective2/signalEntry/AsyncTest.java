@@ -116,6 +116,11 @@ public class AsyncTest {
 
                 C2EntryServiceJournal.memoryJournal.markSent(request);
             }
+
+            @Override
+            public void drop() {
+                C2EntryServiceJournal.memoryJournal.drop();
+            }
         };
 
         C2ServiceFactory factory = new C2ServiceFactory(simulationAdapter, journal);
@@ -127,8 +132,8 @@ public class AsyncTest {
 
         lock.lock(); //prevent transmit
 
-        ImplResponse allSys = (ImplResponse)sentryService.allSystems();
-        ImplResponse allSig = (ImplResponse)sentryService.allSignals();
+        ImplResponse allSys = (ImplResponse)sentryService.sendAllSystemsRequest();
+        ImplResponse allSig = (ImplResponse)sentryService.sendAllSignalsRequest();
 
         //check that everything got saved
         Iterator<Request> pending = journal.pending();

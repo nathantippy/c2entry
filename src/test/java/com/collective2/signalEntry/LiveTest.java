@@ -67,12 +67,12 @@ public class LiveTest {
     @Test
     public void getAllSystemsTest() {
         if (sentryService != null) {
-            String status = sentryService.allSystems().getString(ElementStatus);
+            String status = sentryService.sendAllSystemsRequest().getString(ElementStatus);
             assertTrue(status.toLowerCase().startsWith("ok"));
 
             boolean foundSystemId = false;
 
-            XMLEventReader reader = sentryService.allSystems().getXMLEventReader();
+            XMLEventReader reader = sentryService.sendAllSystemsRequest().getXMLEventReader();
             String lastItem = "";
             while (reader.hasNext()) {
                 String item = reader.next().toString();
@@ -94,7 +94,7 @@ public class LiveTest {
         if (sentryService != null) {
             
             Integer systemId = Integer.parseInt(commonSystemId);
-            Response response = sentryService.systemHypothetical(systemId);
+            Response response = sentryService.sendSystemHypotheticalRequest(systemId);
             XMLEventReader reader = response.getXMLEventReader();
             while (reader.hasNext()) {
                 String peekLine = null;
@@ -114,7 +114,7 @@ public class LiveTest {
     @Test
     public void allSignalsTest() {
         if (sentryService!=null) {
-            assertTrue(sentryService.allSignals().isOk());
+            assertTrue(sentryService.sendAllSignalsRequest().isOk());
         }
     }
     
