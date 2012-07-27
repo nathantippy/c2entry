@@ -24,8 +24,8 @@ public class ResponseManager {
 
     private final C2EntryServiceAdapter adapter;
     private final C2EntryServiceJournal journal;
+    private C2ServiceException          haltingException;
 
-    private final Lock                  lock;
 
     private static final String        threadName = "ResponseManager";
     private static final ThreadFactory threadFactory = new ThreadFactory() {
@@ -39,7 +39,7 @@ public class ResponseManager {
     };
 
     //Must be singleThreadExecutor only because each callable must be called sequentially
-    private final ExecutorService       executor = Executors.newSingleThreadExecutor(threadFactory);
+    private ExecutorService             executor = Executors.newSingleThreadExecutor(threadFactory);
     private final static Runnable       placeHolder = new Runnable() {
         @Override
         public void run() {
@@ -49,9 +49,20 @@ public class ResponseManager {
     public ResponseManager(C2EntryServiceAdapter adapter, C2EntryServiceJournal journal, String password) {
         this.adapter        = adapter;
         this.journal        = journal;
-        this.lock           = new ReentrantLock();
         reloadPendingRequests(password);
     }
+
+    public Exception getHaltingException(){
+        return haltingException;
+    }
+
+    public void reset() {
+        //dumps all pending, after getting halting exception journal can be asked for pending if desired.
+        this.journal.drop();
+        this.executor.shutdownNow();
+        this.executor = Executors.newSingleThreadExecutor(threadFactory);
+    }
+
 
     private void reloadPendingRequests(String password) {
         //reload old pending requests
@@ -123,36 +134,43 @@ public class ResponseManager {
     }
 
     public XMLEventReader transmit(Request request) {
-        //global lock that enables all processing to pause if needed.
-        lock.lock();
-        try {
-            boolean  tryAgain = false;
-            do {
-                try {
-                    XMLEventReader eventReader = adapter.transmit(request);
-                    //TODO: move unlock into here and add unlock mechanism for clearing fault?
-                    synchronized (this) {
-                        journal.markSent(request.secureClone());
-                        //TODO: what should be done if journal throws trying to clear this?
-                    }
-                    return eventReader;
-
-                } catch (C2ServiceException e) {
-                    tryAgain = e.tryAgain();//if true wait for configured delay and try again.
-                    if (tryAgain) {
-                        try {
-                            Thread.sleep(10000l);//10 seconds, NOTE: add configuration for this
-                        } catch (InterruptedException ie) {
-                            throw e;
-                        }
-                    } else {
-                        throw e;
-                    }
-                }
-            } while (tryAgain);
-            throw new C2ServiceException("Unable to execute.",true);
-        } finally {
-            lock.unlock();
+        //all down stream requests must see the same halting exception until its reset.
+        if (haltingException !=null ) {
+            throw haltingException;
         }
+
+        boolean  tryAgain = false;
+        do {
+            try {
+                //exceptions thrown here are because
+                // * the network is down and we should try later
+                // * the response was not readable - must stop all
+                XMLEventReader eventReader = adapter.transmit(request);
+                synchronized (this) {
+                    //exceptions thrown here are because
+                    // * database was unable to change flag on request to sent - must stop all
+                    journal.markSent(request.secureClone());
+                }
+                return eventReader;
+
+            } catch (C2ServiceException e) {
+                tryAgain = e.tryAgain();//if true wait for configured delay and try again.
+                if (tryAgain) {
+                    try {
+                        Thread.sleep(10000l);//10 seconds, NOTE: add configuration for this
+                    } catch (InterruptedException ie) {
+                        throw e; //this is not a halting exception
+                    }
+                } else {
+                    haltingException = e;
+                    throw haltingException;
+                }
+            } catch (Exception ex) {
+                haltingException = new C2ServiceException(ex,false);
+                throw haltingException;
+            }
+        } while (tryAgain);
+        throw new C2ServiceException("Unable to execute.",true);
+
     }
 }

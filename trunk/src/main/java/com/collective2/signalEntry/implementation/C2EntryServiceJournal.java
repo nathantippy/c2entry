@@ -32,12 +32,16 @@ public interface C2EntryServiceJournal {
         public void markSent(Request request) {
             list.remove(0);
         }
+
+        @Override
+        public void drop() {
+            list.clear();
+        }
     };
 
 
     Iterator<Request> pending();
     void persist(Request request);
     void markSent(Request request);
-
-
+    void drop();
 }

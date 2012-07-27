@@ -50,7 +50,7 @@ public class ImplResponse implements Response, Callable<XMLEventReader> {
 
     public XMLEventReader call() {
         //get the data and set it
-        if (eventReader==null) {
+        if (eventReader==null) {  //only halt exceptions
             eventReader = manager.transmit(request);
         }
         return eventReader;
@@ -169,14 +169,19 @@ public class ImplResponse implements Response, Callable<XMLEventReader> {
                 if (event.isEndElement()) {
                     tabs--;
                 }
-                builder.append("\n");
+
                 int x = tabs;
                 while (--x > 0) {
                     builder.append("  ");
                 }
-                String line = event.toString().trim();
-                if (line.length()>0) {
-                    builder.append(line);
+                if (event.isEndDocument()) {
+                    builder.append("\n");
+                } else {
+                    String line = event.toString().trim();
+                    if (line.length()>0) {
+                        builder.append(line);
+                        builder.append("\n");
+                    }
                 }
 
                 if (event.isStartElement()) {
@@ -188,7 +193,6 @@ public class ImplResponse implements Response, Callable<XMLEventReader> {
             } catch (XMLStreamException e) {
                 logger.warn("Unable to close xml stream", e);
             }
-            builder.append("/n");
             return builder.toString();
 
     }

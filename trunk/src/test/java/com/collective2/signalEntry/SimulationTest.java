@@ -16,8 +16,13 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.List;
+import java.util.Set;
 import java.util.logging.Handler;
 import java.util.logging.Logger;
 
@@ -25,6 +30,11 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.collective2.signalEntry.adapter.TestAdapter;
+
+import javax.xml.stream.XMLEventReader;
+import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.events.StartElement;
+import javax.xml.stream.events.XMLEvent;
 
 /**
  * This notice shall not be removed. See the "LICENSE.txt" file found in the
@@ -42,7 +52,6 @@ public class SimulationTest {
     private final Number testNumber = 12.34;
     private final Number testNegativeNumber = -43.21;
     private final Integer testInteger = 42;
-
 
     @Before
     public void dumpLog() {
@@ -198,6 +207,8 @@ public class SimulationTest {
         allReq.oneCancelsAnother(testInteger).send().getInteger(ElementSignalId);
         assertEquals(allReqURL + "&ocaid=" + testInteger, backEnd.getLastURLString());
 
+        validateXML(allReq.oneCancelsAnother(testInteger).send().getXML());
+
         allReq.conditionalUpon(testInteger).send().getInteger(ElementSignalId);
         assertEquals(allReqURL + "&conditionalupon=" + testInteger, backEnd.getLastURLString());
 
@@ -236,6 +247,8 @@ public class SimulationTest {
 
         allReq.profitTarget(BasePrice.Opening, testNegativeNumber, true).send().getInteger(ElementSignalId); // ForceNoOCA
         assertEquals(allReqURL + "&profittarget=O%2D" + Math.abs(testNegativeNumber.doubleValue()) + "&forcenooca=1", backEnd.getLastURLString());
+
+        validateXML(allReq.profitTarget(BasePrice.Opening, testNegativeNumber, true).send().getXML());
     }
 
     @Test
@@ -245,40 +258,74 @@ public class SimulationTest {
          * <buypower>68300.00</buypower> </collective2>
          */
 
-        String status = sentryService.buyPower().getString(ElementStatus);
+        String status = sentryService.sendBuyPowerRequest().getString(ElementStatus);
         assertFalse("status was:" + status, status.isEmpty());
 
-        assertTrue(sentryService.buyPower().isOk());
+        assertTrue(sentryService.sendBuyPowerRequest().isOk());
 
-        Long calctime = sentryService.buyPower().getLong(ElementCalcTime);
-        assertTrue(sentryService.buyPower().getXML(), calctime > 0);
+        Long calctime = sentryService.sendBuyPowerRequest().getLong(ElementCalcTime);
+        assertTrue(sentryService.sendBuyPowerRequest().getXML(), calctime > 0);
 
-        Double doubleBuyPower = sentryService.buyPower().getDouble(ElementBuyPower);
-        assertFalse(sentryService.buyPower().getXML(), Double.isNaN(doubleBuyPower));
+        Double doubleBuyPower = sentryService.sendBuyPowerRequest().getDouble(ElementBuyPower);
+        assertFalse(sentryService.sendBuyPowerRequest().getXML(), Double.isNaN(doubleBuyPower));
 
-        BigDecimal bigDecimalBuyPower = sentryService.buyPower().getBigDecimal(ElementBuyPower);
-        assertTrue(sentryService.buyPower().getXML(), bigDecimalBuyPower.compareTo(BigDecimal.ZERO) != 0);
+        BigDecimal bigDecimalBuyPower = sentryService.sendBuyPowerRequest().getBigDecimal(ElementBuyPower);
+        assertTrue(sentryService.sendBuyPowerRequest().getXML(), bigDecimalBuyPower.compareTo(BigDecimal.ZERO) != 0);
 
     }
 
+    public void validateXML(String xml) {
+        //test method walks all the returned xml.
+        //the stax parser will end as soon as what was looked for is found
+        //therefore without this method none of the xml blocks will
+        //ever be read all the way to the end.
+        try {
+            List<StartElement> stack = new ArrayList<StartElement>();
+            InputStream stream = new ByteArrayInputStream(xml.getBytes());
+            XMLEventReader reader = XMLInputFactory.newInstance().createXMLEventReader(stream);
+            while (reader.hasNext()) {
+                XMLEvent event = reader.nextEvent();
+                if (event.isStartElement()) {
 
+                    StartElement startElement = event.asStartElement();
+                    stack.add(startElement);
+
+                }
+                if (event.isEndElement()) {
+
+                    StartElement top = stack.remove(stack.size()-1);
+                    assertEquals(top.getName(),event.asEndElement().getName());
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail();
+        }
+    }
 
     @Test
     public void allSignalsTest() {
-        assertTrue(sentryService.allSignals().isOk());
+        assertTrue(sentryService.sendAllSignalsRequest().isOk());
+
+        int firstSignalId = sentryService.sendAllSignalsRequest().getInteger(C2Element.ElementSignalId);
+        assertTrue(firstSignalId>0);
+
+        validateXML(sentryService.sendAllSignalsRequest().getXML());
 
     }
 
     @Test
     public void allSystemsTest() {
-        assertTrue(sentryService.allSystems().isOk());
+        assertTrue(sentryService.sendAllSystemsRequest().isOk());
+        validateXML(sentryService.sendAllSystemsRequest().getXML());
     }
 
     @Test
     public void positionStatusTest() {
 
         String symbol = "msft";
-        assertTrue(sentryService.positionStatus(symbol).isOk());
+        assertTrue(sentryService.sendPositionStatusRequest(symbol).isOk());
+        validateXML(sentryService.sendPositionStatusRequest(symbol).getXML());
     }
 
     @Test
@@ -286,18 +333,21 @@ public class SimulationTest {
         Integer OCAGroupId = 2;
         Integer signalId = 1;
         assertTrue(sentryService.addToOCAGroup(signalId, OCAGroupId));
+        validateXML(sentryService.sendAddToOCAGroupRequest(signalId,OCAGroupId).getXML());
     }
 
     @Test
     public void signalStatusTest() {
         Integer signalId = 314159;
-        assertEquals(signalId, sentryService.signalStatus(signalId, true, Related.Children).getInteger(ElementSignalId));
-        assertEquals(signalId, sentryService.signalStatus(signalId, true, Related.Parent).getInteger(ElementSignalId));
-        assertEquals(signalId, sentryService.signalStatus(signalId, false, Related.Children).getInteger(ElementSignalId));
-        assertEquals(signalId, sentryService.signalStatus(signalId, false, Related.Parent).getInteger(ElementSignalId));
+        assertEquals(signalId, sentryService.sendSignalStatusRequest(signalId, true, Related.Children).getInteger(ElementSignalId));
+        assertEquals(signalId, sentryService.sendSignalStatusRequest(signalId, true, Related.Parent).getInteger(ElementSignalId));
+        assertEquals(signalId, sentryService.sendSignalStatusRequest(signalId, false, Related.Children).getInteger(ElementSignalId));
+        assertEquals(signalId, sentryService.sendSignalStatusRequest(signalId, false, Related.Parent).getInteger(ElementSignalId));
         
-        assertEquals(signalId, sentryService.signalStatus(signalId, true).getInteger(ElementSignalId));
-        assertEquals(signalId, sentryService.signalStatus(signalId, false).getInteger(ElementSignalId));
+        assertEquals(signalId, sentryService.sendSignalStatusRequest(signalId, true).getInteger(ElementSignalId));
+        assertEquals(signalId, sentryService.sendSignalStatusRequest(signalId, false).getInteger(ElementSignalId));
+
+        validateXML(sentryService.sendSignalStatusRequest(signalId, false).getXML());
     }
 
     @Test
@@ -309,46 +359,54 @@ public class SimulationTest {
 
     @Test
     public void requestOCAIdTest() {
-        Integer id = sentryService.requestOneCancelsAnotherId();
+        Integer id = sentryService.oneCancelsAnotherId();
         assertTrue(id > 0);
+        validateXML(sentryService.sendOneCancelsAnotherIdRequest().getXML());
     }
 
     @Test
     public void cancelTest() {
         Integer signalId = 1;
         assertTrue(sentryService.cancel(signalId));
+        validateXML(sentryService.sendCancelRequest(signalId).getXML());
     }
 
     @Test
     public void cancelAllPendingTest() {
         assertTrue(sentryService.cancelAllPending());
+        validateXML(sentryService.sendCancelAllPendingRequest().getXML());
     }
 
     @Test
     public void closeAllPositionsTest() {
         Integer signalId = 1;
         assertTrue(sentryService.closeAllPositions(signalId));
+        validateXML(sentryService.sendCloseAllPositionsRequest(signalId).getXML());
     }
 
     @Test
     public void flushPendingSignalsTest() {
         assertTrue(sentryService.flushPendingSignals());
+        validateXML(sentryService.sendFlushPendingSignalsRequest().getXML());
     }
 
     @Test
     public void newCommentTest() {
         String comment = "hello";
         Integer signalId = 1;
-        assertTrue(sentryService.newComment(comment,signalId).isOk());
-        assertTrue(sentryService.newComment(comment,signalId).getInteger(C2Element.ElementSignalId)>0);
+        assertTrue(sentryService.sendNewCommentRequest(comment,signalId).isOk());
+        assertTrue(sentryService.sendNewCommentRequest(comment,signalId).getInteger(C2Element.ElementSignalId)>0);
+        validateXML(sentryService.sendNewCommentRequest(comment,signalId).getXML());
+
     }
 
     @Test
     public void systemEquityTest() {
 
-        assertTrue(sentryService.systemEquity().isOk());
-        assertTrue(sentryService.systemEquity().getLong(C2Element.ElementCalcTime)>0);
-        assertFalse(Double.isNaN(sentryService.systemEquity().getDouble(C2Element.ElementSystemEquity)));
+        assertTrue(sentryService.sendSystemEquityRequest().isOk());
+        assertTrue(sentryService.sendSystemEquityRequest().getLong(C2Element.ElementCalcTime)>0);
+        assertFalse(Double.isNaN(sentryService.sendSystemEquityRequest().getDouble(C2Element.ElementSystemEquity)));
+        validateXML(sentryService.sendSystemEquityRequest().getXML());
     }
 
 
@@ -356,9 +414,9 @@ public class SimulationTest {
     @Test
     public void hypoTest() {
         
-        assertTrue(sentryService.systemHypothetical(1,2,3,4).getXML(),sentryService.systemHypothetical(1,2,3,4).getInteger(C2Element.ElementSystemId)>0);
-        assertTrue(sentryService.systemHypothetical(1,2,3,4).getDouble(C2Element.ElementEquity)>0);
-        
+        assertTrue(sentryService.sendSystemHypotheticalRequest(1,2,3,4).getXML(),sentryService.sendSystemHypotheticalRequest(1,2,3,4).getInteger(C2Element.ElementSystemId)>0);
+        assertTrue(sentryService.sendSystemHypotheticalRequest(1,2,3,4).getDouble(C2Element.ElementEquity)>0);
+        validateXML(sentryService.sendSystemHypotheticalRequest(1,2,3,4).getXML());
     }
 
     @Test
@@ -369,14 +427,16 @@ public class SimulationTest {
         assertEquals("Command:http://www.collective2.com/cgi-perl/signal.mpl?cmd=reverse&systemid=1234&pw=PASSWORD&symbol=msft",reverse.toString());
         Response response = reverse.triggerPrice(12.23d).duration(Duration.DayOrder).quantity(10).send();
         assertTrue(response.isOk());
-
+        validateXML(reverse.triggerPrice(12.23d).duration(Duration.DayOrder).quantity(10).send().getXML());
     }
 
     @Test
     public void sendSubscriberBroadcastTest() {
 
         String message = "hello world";
-        assertTrue(sentryService.sendSubscriberBroadcast(message));
+        assertTrue(sentryService.sendSubscriberBroadcastRequest(message).isOk());
+        validateXML(sentryService.sendSubscriberBroadcastRequest(message).getXML());
+
 
     }
 
