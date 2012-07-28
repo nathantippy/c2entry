@@ -36,8 +36,7 @@ public enum ParameterType {
         @Override
         public Object parse(String stringValue) {
 
-            String[] parts = stringValue.split(".");
-
+            String[] parts = stringValue.split("\\.");
             int i = parts.length;
             Integer[] data = new Integer[i];
             while (--i>=0) {
@@ -81,15 +80,47 @@ public enum ParameterType {
         public Object parse(String stringValue) {
             return lookupEnum(stringValue, Related.values());
         }
+    },
+    InstrumentType(Instrument.class) {
+        @Override
+        public Object parse(String stringValue) {
+            return lookupEnum(stringValue, Instrument.values());
+        }
+    },
+    DigitsFixed14(String.class) {
+        @Override
+        public Object parse(String stringValue) {
+            if (stringValue.length()!=14) {
+                throw new ArrayIndexOutOfBoundsException("Must be exactly 14 chars long.");
+            }
+            int i = stringValue.length();
+            while(--i>=0) {
+                if (stringValue.charAt(i)<'0' || stringValue.charAt(i)>'9') {
+                    throw new C2ServiceException("Unable to parse should be 14 digits but found: "+stringValue,false);
+                }
+            }
+            return stringValue;
+        }
+        @Override
+        public void validate(Object value) {
+            super.validate(value);
+            String temp = value.toString();
+            int i = temp.length();
+            while(--i>=0) {
+                if (temp.charAt(i)<'0' || temp.charAt(i)>'9') {
+                    throw new C2ServiceException("Unable to parse should be 14 digits but found: "+temp,false);
+                }
+            }
+        }
     };
 
     private static Object lookupEnum(String stringValue, Enum[] values) {
         for(Enum e:values) {
-            if (e.name().equalsIgnoreCase(stringValue)) {
+            if (e.toString().equalsIgnoreCase(stringValue)) {
                 return e;
             }
         }
-        throw new C2ServiceException("Unable to find:"+stringValue,false);
+        throw new C2ServiceException("Unable to find:"+stringValue+" in "+values.getClass(),false);
     }
 
     private final Class clazz;

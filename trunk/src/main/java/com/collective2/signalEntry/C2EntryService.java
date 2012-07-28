@@ -7,6 +7,7 @@
 package com.collective2.signalEntry;
 
 import static com.collective2.signalEntry.C2Element.ElementOCAId;
+import static com.collective2.signalEntry.Instrument.*;
 
 import com.collective2.signalEntry.implementation.*;
 
@@ -16,6 +17,7 @@ public class C2EntryService {
 
     //responsible for ensuring the order of the signals
     private final ResponseManager responseManager;
+    private final static long networkDownRetryDelay = 10000l;//try every 10 seconds
 
     private Integer commonSystemId;
     private String commonPassword;
@@ -28,7 +30,7 @@ public class C2EntryService {
         this.commonEMail = null;
         this.responseManager = new ResponseManager(serviceFactory.entryServiceAdapter(),
                                                    serviceFactory.entryServiceJournal(),
-                                                   password);
+                                                   password,networkDownRetryDelay);
     }
 
     public C2EntryService(C2ServiceFactory serviceFactory, String password, String eMail) {
@@ -38,7 +40,7 @@ public class C2EntryService {
         this.commonEMail = eMail;
         this.responseManager = new ResponseManager(serviceFactory.entryServiceAdapter(),
                                                    serviceFactory.entryServiceJournal(),
-                                                   password);
+                                                   password,networkDownRetryDelay);
     }
 
     public C2EntryService(C2ServiceFactory serviceFactory, String password, int systemId, String eMail) {
@@ -48,7 +50,7 @@ public class C2EntryService {
         this.commonEMail = eMail;
         this.responseManager = new ResponseManager(serviceFactory.entryServiceAdapter(),
                                                    serviceFactory.entryServiceJournal(),
-                                                   password);
+                                                   password,networkDownRetryDelay);
     }
 
 
@@ -69,19 +71,19 @@ public class C2EntryService {
     }
 
     public Signal stockSignal(ActionForStock action) {
-        return new SignalBase(commonSystemId, commonPassword, action, "stock", responseManager);
+        return new SignalBase(commonSystemId, commonPassword, action, Stock, responseManager);
     }
 
     public Signal optionSignal(ActionForNonStock action) {
-        return new SignalBase(commonSystemId, commonPassword, action, "option", responseManager);
+        return new SignalBase(commonSystemId, commonPassword, action, Option, responseManager);
     }
 
     public Signal futureSignal(ActionForNonStock action) {
-        return new SignalBase(commonSystemId, commonPassword, action, "future", responseManager);
+        return new SignalBase(commonSystemId, commonPassword, action, Future, responseManager);
     }
 
     public Signal forexSignal(ActionForNonStock action) {
-        return new SignalBase(commonSystemId, commonPassword, action, "forex", responseManager);
+        return new SignalBase(commonSystemId, commonPassword, action, Forex, responseManager);
     }
 
     public Reverse reversal(String symbol) {

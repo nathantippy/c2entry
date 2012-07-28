@@ -8,7 +8,8 @@
 package com.collective2.signalEntry;
 
 import com.collective2.signalEntry.adapter.C2EntryServiceAdapter;
-import com.collective2.signalEntry.implementation.C2EntryServiceJournal;
+import com.collective2.signalEntry.journal.C2EntryServiceJournal;
+import com.collective2.signalEntry.journal.C2EntryServiceMemoryJournal;
 
 public class C2ServiceFactory {
 
@@ -17,7 +18,7 @@ public class C2ServiceFactory {
 
     public C2ServiceFactory(C2EntryServiceAdapter adapter) {
         this.entryServiceAdapter = adapter;
-        this.entryServiceJournal = C2EntryServiceJournal.memoryJournal;
+        this.entryServiceJournal = new C2EntryServiceMemoryJournal();
     }
 
     public C2ServiceFactory(C2EntryServiceAdapter adapter, C2EntryServiceJournal journal) {
