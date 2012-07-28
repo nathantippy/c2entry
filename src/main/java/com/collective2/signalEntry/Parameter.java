@@ -31,9 +31,8 @@ public enum Parameter {
     EMail("&c2email=",                      ParameterType.StringType),
     SignalId("&signalid=",                  ParameterType.IntegerType),
 
-    Instrument("&instrument=",              ParameterType.StringType), //TODO: change to ENUM to check string
+    Instrument("&instrument=",              ParameterType.InstrumentType),
     Symbol("&symbol=",                      ParameterType.StringType),
-
 
     StockAction("&action=",                 ParameterType.ActionForStockType),
     NonStockAction("&action=",              ParameterType.ActionForNonStockType),
@@ -66,8 +65,8 @@ public enum Parameter {
     ParkUntil("&parkuntil=",                ParameterType.NumberType),
     CancelsAt("&cancelsat=",                ParameterType.NumberType),
     CancelsAtRelative("&cancelsatrelative=",ParameterType.NumberType),
-    ParkUntilDateTime("&parkuntildatetime=",ParameterType.StringType), //TODO: needs a better type than string
-
+    ParkUntilDateTime("&parkuntildatetime=",ParameterType.DigitsFixed14), //parkuntildatetime=YYYYMMDDhhmmss
+                                                                          //parkuntildatetime=20060618093115
     ShowRelated("&showrelated=",            ParameterType.RelatedType),
     ShowDetails("&showdetails=",            ParameterType.IntegerType), // 1 is true
 

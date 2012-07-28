@@ -8,10 +8,10 @@ package com.collective2.signalEntry;
 
 import com.collective2.signalEntry.adapter.C2EntryServiceAdapter;
 import com.collective2.signalEntry.adapter.StaticSimulationAdapter;
-import com.collective2.signalEntry.implementation.C2EntryServiceJournal;
-import com.collective2.signalEntry.implementation.Command;
+import com.collective2.signalEntry.journal.C2EntryServiceJournal;
 import com.collective2.signalEntry.implementation.ImplResponse;
 import com.collective2.signalEntry.implementation.Request;
+import com.collective2.signalEntry.journal.C2EntryServiceMemoryJournal;
 import org.junit.Test;
 
 import javax.xml.stream.XMLEventReader;
@@ -65,7 +65,7 @@ public class AsyncTest {
         //ask about one in the middle
         Integer signalId5 = responseList.get(5).getInteger(C2Element.ElementSignalId);
 
-        //all 10 should still be transmitted in order, checked by the adapter above.
+        //all 10 are still transmitted in order, checked by the adapter above.
 
     }
 
@@ -93,33 +93,33 @@ public class AsyncTest {
             }
         };
 
-        C2EntryServiceJournal journal = new C2EntryServiceJournal() {
+        C2EntryServiceJournal journal = new C2EntryServiceMemoryJournal() {
 
             @Override
             public Iterator<Request> pending() {
-                return C2EntryServiceJournal.memoryJournal.pending();
+                return super.pending();
             }
 
             @Override
-            public void persist(Request request) {
+            public void append(Request request) {
                 assertEquals("*****",request.get(Parameter.Password));
 
-                C2EntryServiceJournal.memoryJournal.persist(request);
+                super.append(request);
             }
 
             @Override
             public void markSent(Request request) {
 
-                Request oldest = C2EntryServiceJournal.memoryJournal.pending().next();
+                Request oldest = super.pending().next();
                 assertEquals("\n"+request+"\n"+oldest ,
                                   request,     oldest);
 
-                C2EntryServiceJournal.memoryJournal.markSent(request);
+                super.markSent(request);
             }
 
             @Override
-            public void drop() {
-                C2EntryServiceJournal.memoryJournal.drop();
+            public void dropPending() {
+                super.dropPending();
             }
         };
 
@@ -155,11 +155,5 @@ public class AsyncTest {
         sentryService.awaitPending();
 
         assertFalse(journal.pending().hasNext());
-
     }
-
-    //TODO: add setters for timeout and delay between each trial
-    //TODO: build Journal implemenation to flat file useing JSON encoding.
-
-
 }

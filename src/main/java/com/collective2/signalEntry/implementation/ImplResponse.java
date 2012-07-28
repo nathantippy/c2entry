@@ -52,6 +52,7 @@ public class ImplResponse implements Response, Callable<XMLEventReader> {
         //get the data and set it
         if (eventReader==null) {  //only halt exceptions
             eventReader = manager.transmit(request);
+            //retry is forever, only interrupt can stop it
         }
         return eventReader;
     }

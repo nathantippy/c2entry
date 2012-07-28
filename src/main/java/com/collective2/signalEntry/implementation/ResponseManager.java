@@ -10,14 +10,13 @@ import com.collective2.signalEntry.C2ServiceException;
 import com.collective2.signalEntry.Parameter;
 import com.collective2.signalEntry.Response;
 import com.collective2.signalEntry.adapter.C2EntryServiceAdapter;
+import com.collective2.signalEntry.journal.C2EntryServiceJournal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.xml.stream.XMLEventReader;
 import java.util.Iterator;
 import java.util.concurrent.*;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 public class ResponseManager {
     private static final Logger         logger = LoggerFactory.getLogger(ResponseManager.class);
@@ -25,9 +24,10 @@ public class ResponseManager {
     private final C2EntryServiceAdapter adapter;
     private final C2EntryServiceJournal journal;
     private C2ServiceException          haltingException;
+    private final long                  networkDownRetryDelay;
 
 
-    private static final String        threadName = "ResponseManager";
+    private static final String        threadName = "C2EntryServiceResponseManager";
     private static final ThreadFactory threadFactory = new ThreadFactory() {
         @Override
         public Thread newThread(Runnable r) {
@@ -46,9 +46,10 @@ public class ResponseManager {
         }
     };
 
-    public ResponseManager(C2EntryServiceAdapter adapter, C2EntryServiceJournal journal, String password) {
-        this.adapter        = adapter;
-        this.journal        = journal;
+    public ResponseManager(C2EntryServiceAdapter adapter, C2EntryServiceJournal journal, String password, long networkDownRetryDelay) {
+        this.adapter                = adapter;
+        this.journal                = journal;
+        this.networkDownRetryDelay  = networkDownRetryDelay;
         reloadPendingRequests(password);
     }
 
@@ -58,7 +59,7 @@ public class ResponseManager {
 
     public void reset() {
         //dumps all pending, after getting halting exception journal can be asked for pending if desired.
-        this.journal.drop();
+        this.journal.dropPending();
         this.executor.shutdownNow();
         this.executor = Executors.newSingleThreadExecutor(threadFactory);
     }
@@ -87,10 +88,12 @@ public class ResponseManager {
         }
     }
 
-    synchronized public Response fetchResponse(Request request) {
+    public Response fetchResponse(Request request) {
         ImplResponse newResponse = new ImplResponse(this, request);
-        journal.persist(request.secureClone());
-        executor.submit(newResponse);
+        synchronized (this) {
+            journal.append(request.secureClone());
+            executor.submit(newResponse);
+        }
         return newResponse;
     }
 
@@ -142,6 +145,7 @@ public class ResponseManager {
         boolean  tryAgain = false;
         do {
             try {
+                journal.awaitApproval(request.secureClone());
                 //exceptions thrown here are because
                 // * the network is down and we should try later
                 // * the response was not readable - must stop all
@@ -157,7 +161,7 @@ public class ResponseManager {
                 tryAgain = e.tryAgain();//if true wait for configured delay and try again.
                 if (tryAgain) {
                     try {
-                        Thread.sleep(10000l);//10 seconds, NOTE: add configuration for this
+                        Thread.sleep(networkDownRetryDelay);
                     } catch (InterruptedException ie) {
                         throw e; //this is not a halting exception
                     }

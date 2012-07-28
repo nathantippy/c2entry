@@ -7,12 +7,13 @@
 package com.collective2.signalEntry.implementation;
 
 import java.io.Serializable;
+import java.util.Arrays;
 
 public class DotString<T extends Serializable> implements Serializable {
 
     final T[] data;
 
-    public DotString(T[] data) {
+    public DotString(T ... data) {
         this.data = data;
     }
 
@@ -28,4 +29,20 @@ public class DotString<T extends Serializable> implements Serializable {
         return builder.toString();
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        DotString dotString = (DotString) o;
+
+        if (!Arrays.equals(data, dotString.data)) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        return data != null ? Arrays.hashCode(data) : 0;
+    }
 }

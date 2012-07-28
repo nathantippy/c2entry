@@ -7,7 +7,11 @@
 package com.collective2.signalEntry.adapter;
 
 import java.io.*;
+import java.net.URL;
 import java.net.URLConnection;
+import java.nio.channels.Channels;
+import java.nio.channels.ReadableByteChannel;
+import java.nio.channels.SocketChannel;
 
 
 import javax.xml.stream.XMLEventReader;
@@ -26,9 +30,10 @@ public class Collective2Adapter implements C2EntryServiceAdapter {
 
     private final XMLInputFactory factory;
     private final static int timeoutInMs = 1000;//one second
+    private final static int bufferSize =   320;//do not set any smaller, if needed do set bigger
 
     //must be static lock because there is only one collective2
-    private final static Object lock = new Object();
+    private final Object lock = new Object();
 
     public Collective2Adapter() {
         factory = XMLInputFactory.newInstance();
@@ -36,10 +41,6 @@ public class Collective2Adapter implements C2EntryServiceAdapter {
 
     public XMLEventReader transmit(Request request) {
 
-        //pull all the data off the server ASAP and keep it here
-        ByteArrayOutputStream baost = new ByteArrayOutputStream(128);
-
-        try {
                 //ensure that no commands to collective2 are ever sent in parallel
                 //finish fully reading previous command and close its connection
                 //before beginning the next.
@@ -48,34 +49,65 @@ public class Collective2Adapter implements C2EntryServiceAdapter {
                 //2. keep server from waiting on client side parse
                 //3. eliminate overlap of sequential signals
                 //4. holds full response for debug in case of parse error
+                //5. no extra data copy for smallest and most common response size
 
+                URL url = request.buildURL();
                 synchronized (lock) {
-                    URLConnection connection = request.buildURL().openConnection();
-                    connection.setConnectTimeout(timeoutInMs);
-                    InputStream is = connection.getInputStream();
+                    InputStream is = null;
+                    int curSize = bufferSize;
+                    int readSize = curSize;
+                    byte[] buffer = new byte[curSize];
+                    int count = 0;
+                    int readOff = 0;
+                    try{
+                        URLConnection connection = url.openConnection();
+                        connection.setConnectTimeout(timeoutInMs);
+                        is = connection.getInputStream();
 
-                    int bite;
-                    do {
-                       bite = is.read();
-                       if (bite==-1)  {
-                            break;
-                       }
-                       baost.write(bite);
-                    } while (bite!=-1);
-                    is.close();
-                    //now disconnected from server send finished xml to reader
-                    return factory.createXMLEventReader(new ByteArrayInputStream(baost.toByteArray()));
+                        //the longer the response the slower the pull but the majority
+                        //of responses are short and will never require a second copy.
+
+                        while ((count = is.read(buffer,readOff,readSize))>0 ) {
+
+                            readOff += count;
+                            readSize -= count;
+
+                            if (readSize==0) {
+                                //remove this after doing more testing with live systems.
+                                //logger.warn(readOff+" fectch more:"+new String(buffer,0,readOff));
+
+                                //not enough space
+                                int newSize = curSize*2;
+                                byte[] newBuffer = new byte[newSize];
+
+                                System.arraycopy(buffer,0,newBuffer,0,curSize);
+
+                                readOff = curSize;  //the length read so far is the index where we start next
+                                readSize = curSize; //we doubled the cur size so this is how much more we need
+                                curSize = newSize;  //new larger size
+                                buffer = newBuffer; //new buffer of the larger size
+                            }
+                        }
+                        return factory.createXMLEventReader(new ByteArrayInputStream(buffer,0,readOff));
+
+                    } catch (XMLStreamException e) {
+                        String msg = "Unable to parse XML response from Collective2. Sent:"+request+" Received:"+new String(buffer,0,readOff+count);
+                        logger.error(msg, e);
+                        throw new C2ServiceException(msg, e, false); //do not send again
+                    } catch (IOException e) {
+                        String msg = "Unable to transmit request to Collective2. Attempted:"+request;
+                        logger.error(msg, e);
+                        throw new C2ServiceException(msg, e, true); //caller should try again later
+                    } finally {
+                        if (is!=null) {
+                            try {
+                                is.close();
+                            } catch (IOException e) {
+                                logger.warn("Unable to close connection", e);
+                            }
+                        }
+                    }
                 }
-            } catch (XMLStreamException e) {
-                String msg = "Unable to parse XML response from Collective2. Sent:"+request+" Received:"+baost.toString();
-                logger.error(msg, e);
-                throw new C2ServiceException(msg, e, false); //do not send again
-            } catch (IOException e) {
-                String msg = "Unable to transmit request to Collective2. Attempted:"+request;
-                logger.error(msg, e);
-                throw new C2ServiceException(msg, e, true); //caller should try again later
-            }
-
     }
 
 }
