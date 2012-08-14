@@ -29,7 +29,7 @@ public class SimulatedResponseAddToOCAGroup extends SimulatedResponse {
         /*
         <collective2>
             <status>OK</status>
-            <details>Signal 12345 now added to ocagroup 9876</details>
+            <details>Order 12345 now added to ocagroup 9876</details>
         </collective2>
          */
         try {

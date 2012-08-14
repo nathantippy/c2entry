@@ -9,6 +9,7 @@ package com.collective2.signalEntry;
 public class C2ServiceException extends RuntimeException {
 
     final boolean tryAgain;
+    RuntimeException overideCause;
 
     public C2ServiceException(Throwable cause, boolean tryAgain) {
         super(cause);
@@ -27,5 +28,17 @@ public class C2ServiceException extends RuntimeException {
 
     public boolean tryAgain() {
         return tryAgain;
+    }
+
+    @Override
+    public synchronized Throwable getCause() {
+        if (overideCause != null) {
+            return overideCause;
+        }
+        return super.getCause();
+    }
+
+    public void overrideCause(RuntimeException c2se) {
+        overideCause = c2se;
     }
 }

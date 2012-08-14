@@ -10,6 +10,8 @@ package com.collective2.signalEntry.implementation;
 import com.collective2.signalEntry.*;
 import org.junit.Test;
 
+import java.math.BigDecimal;
+
 import static org.junit.Assert.assertEquals;
 
 public class ParameterTypeTest {
@@ -48,11 +50,14 @@ public class ParameterTypeTest {
                 case NumberType:
                     input = new Double(12.3);
                     break;
+                case MoneyType:
+                    input = new BigDecimal("42.42");
+                    break;
                 case RelatedType:
                     input = Related.Children;
                     break;
                 case RelativeNumberType:
-                    input = new RelativeNumber(BasePrice.Opening,123);
+                    input = new RelativeNumber(BasePrice.SessionOpenPlus,new BigDecimal(123));
                     break;
                 case StringType:
                     input = "this is a stick.";

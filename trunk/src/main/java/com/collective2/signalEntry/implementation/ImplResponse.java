@@ -9,6 +9,8 @@ package com.collective2.signalEntry.implementation;
 import static com.collective2.signalEntry.C2Element.ElementStatus;
 
 import java.math.BigDecimal;
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.concurrent.Callable;
 
 import javax.xml.stream.XMLEventReader;
@@ -29,15 +31,22 @@ public class ImplResponse implements Response, Callable<XMLEventReader> {
 
     private final Request                   request;
     private final ResponseManager           manager;
+    private C2ServiceException optionalStackTrace;
 
     //only created by ResponseManager
     ImplResponse(ResponseManager manager, Request request) {
         //fast fail check
         request.validate();
-
+        assert(keepStack());//stack trace only needed when diagnosing problems requiring knowledge of where request was made.
         this.manager = manager;
         this.request = request;
 
+    }
+
+    private boolean keepStack() {
+        //when assertions are on keep a stack of where this request was created so a full stack trace can be provided
+        optionalStackTrace = new C2ServiceException("Originating Call Stack",false);
+        return true;
     }
 
     public Request secureRequest() {
@@ -49,10 +58,23 @@ public class ImplResponse implements Response, Callable<XMLEventReader> {
     }
 
     public XMLEventReader call() {
-        //get the data and set it
-        if (eventReader==null) {  //only halt exceptions
-            eventReader = manager.transmit(request);
-            //retry is forever, only interrupt can stop it
+        try {
+            //was validated upon construction but assert it was not changed in the meantime
+            assert(request.validate());
+
+            //get the data and set it
+            if (eventReader==null) {
+                    //only halt exceptions are thrown from in here
+                    eventReader = manager.transmit(request);
+                    //retry is forever, only interrupt can stop it
+            }
+        } catch (RuntimeException e) {
+            if (optionalStackTrace!=null) {
+                optionalStackTrace.overrideCause(e);
+                throw optionalStackTrace;
+            } else {
+                throw e;
+            }
         }
         return eventReader;
     }
@@ -188,13 +210,46 @@ public class ImplResponse implements Response, Callable<XMLEventReader> {
                 if (event.isStartElement()) {
                     tabs++;
                 }
-            }
+            }      //TODO: change to finally block
             try {
                 reader.close();
             } catch (XMLStreamException e) {
                 logger.warn("Unable to close xml stream", e);
             }
             return builder.toString();
+
+    }
+
+    @Override
+    public void visitC2Elements(C2ElementVisitor c2ElementVisitor) {
+        XMLEventReader reader = getXMLEventReader();
+        try {
+            Deque<String> stack = new ArrayDeque<String>();
+            while (reader.hasNext()) {
+                XMLEvent event =  reader.nextEvent();
+                if (event.isEndElement()) {
+                    stack.pop();
+                } else if (event.isStartElement()) {
+                    stack.push(event.asStartElement().getName().getLocalPart());
+                } else if (event.isCharacters()) {
+                    String data = event.asCharacters().getData().trim();
+                    C2Element element = C2Element.binaryLookup(stack.peek());
+                    if (element != null) {
+
+                        c2ElementVisitor.visit(element, data, stack);
+                    }
+
+                }
+            }
+        } catch (XMLStreamException e) {
+            logger.warn("visitC2Elements",e);
+        } finally {
+            try {
+                reader.close();
+            } catch (XMLStreamException e) {
+                logger.warn("Unable to close xml stream", e);
+            }
+        }
 
     }
 

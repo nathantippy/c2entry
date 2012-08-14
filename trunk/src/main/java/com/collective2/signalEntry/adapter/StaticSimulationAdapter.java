@@ -64,7 +64,7 @@ public class StaticSimulationAdapter implements C2EntryServiceAdapter {
             case Signal:
                 // return fixed values a real simulator could do better here
                 // but, this is good enough for the unit tests
-                return new SimulatedResponseSignal(10344682, "Signal 10344682 accepted for immediate processing.");
+                return new SimulatedResponseSignal(10344682, "Order 10344682 accepted for immediate processing.");
             case GetBuyPower:
                 // return fixed values a real simulator could do better here
                 // but, this is good enough for the unit tests
@@ -72,7 +72,7 @@ public class StaticSimulationAdapter implements C2EntryServiceAdapter {
             case AddToOCAGroup:
                 // return fixed values a real simulator could do better here
                 // but, this is good enough for the unit tests
-                return new SimulatedResponseAddToOCAGroup("OK", "Signal 12345 now added to ocagroup 9876");
+                return new SimulatedResponseAddToOCAGroup("OK", "Order 12345 now added to ocagroup 9876");
             case AllSystems:
                 // return fixed values a real simulator could do better here
                 // but, this is good enough for the unit tests
@@ -129,11 +129,11 @@ public class StaticSimulationAdapter implements C2EntryServiceAdapter {
             case NewComment:
                 // return fixed values a real simulator could do better here
                 // but, this is good enough for the unit tests
-                return new SimulatedResponseNewComment("OK: Signal  29148580 comment created", 29148580, "");
+                return new SimulatedResponseNewComment("OK: Order  29148580 comment created", 29148580, "");
             case PositionStatus:
                 // return fixed values a real simulator could do better here
                 // but, this is good enough for the unit tests
-                return new SimulatedResponsePositionStatus("OK", "2006-09-11 10:40:35:000", "EURUSD", 4);
+                return new SimulatedResponsePositionStatus("OK", System.currentTimeMillis(), "EURUSD", 4);
             case RequestOCAId:
                 // return fixed values a real simulator could do better here
                 // but, this is good enough for the unit tests

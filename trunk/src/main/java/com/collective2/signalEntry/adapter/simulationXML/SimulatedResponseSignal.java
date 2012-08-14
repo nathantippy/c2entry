@@ -27,7 +27,7 @@ public class SimulatedResponseSignal extends SimulatedResponse {
     @Override
     public void serverSideEventProduction(BlockingQueue<XMLEvent> queue) {
         /*
-         * <collective2> <signalid>10344682</signalid> <comments>Signal 10344682
+         * <collective2> <signalid>10344682</signalid> <comments>Order 10344682
          * accepted for immediate processing.</comments> </collective2>
          */
         try {
@@ -52,15 +52,15 @@ public class SimulatedResponseSignal extends SimulatedResponse {
     /*
      * //allinone
      * 
-     * <collective2> <ack>Signal Received</ack> <status>OK</status>
-     * <signalid>35584023</signalid> <comments>Signal 35584023 accepted for
+     * <collective2> <ack>Order Received</ack> <status>OK</status>
+     * <signalid>35584023</signalid> <comments>Order 35584023 accepted for
      * immediate processing.</comments> <oca></oca> <delay></delay>
      * <stoplosssignalid>35584025</stoplosssignalid> </collective2>
      * 
      * 
      * 
-     * //xreplace <collective2> <ack>Signal Received</ack> <status>OK</status>
-     * <signalid>35584086</signalid> Signal 35584086 accepted for immediate
+     * //xreplace <collective2> <ack>Order Received</ack> <status>OK</status>
+     * <signalid>35584086</signalid> Order 35584086 accepted for immediate
      * processing.</comments> <oca></oca> <delay></delay> </collective2>
      */
 

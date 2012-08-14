@@ -6,34 +6,41 @@
  */
 package com.collective2.signalEntry;
 
+import java.io.Serializable;
+import java.util.Arrays;
+import java.util.Comparator;
+
 public enum C2Element {
 
-    ElementSignalId("signalid"),
-    ElementSystemId("systemid"),
-    ElementComments("comments"),
-    ElementPreviousComment("previousComment"),
-    ElementOCAId("ocaid"),
-    ElementStatus("status"),
+    //Must be in alpha order by localElementName so
+    //binary search can be used for faster lookup
+
     ElementAck("ack"),
-    ElementSystemName("systemname"),
-    ElementPostedWhen("postedwhen"),
-    ElementEMailedWhen("emailedwhen"),
-    ElementKilledWhen("killedwhen"),
-    ElementTradedWhen("tradedwhen"),
-    ElementTradePrice("tradeprice"),
-    ElementErrorType("errortype"),
-    ElementTotalEquityAvail("totalequityavail"),
-    ElementCash("cash"),
-    ElementEquity("equity"),
-    ElementMarginUsed("marginused"),
-    ElementSystemEquity("systemequity"),
-    ElementComment("comment"),
-    ElementSymbol("symbol"),
-    ElementDetails("details"),
-    ElementStopLossSignalId("stoplosssignalid"),
-    ElementCalcTime("calctime"),
     ElementBuyPower("buypower"),
-    ElementPosition("position");
+    ElementCalcTime("calctime"),
+    ElementCash("cash"),
+    ElementComment("comment"),
+    ElementComments("comments"),
+    ElementDetails("details"),
+    ElementEMailedWhen("emailedwhen"),
+    ElementEquity("equity"),
+    ElementErrorType("errortype"),
+    ElementKilledWhen("killedwhen"),
+    ElementMarginUsed("marginused"),
+    ElementOCAId("ocaid"),
+    ElementPosition("position"),
+    ElementPostedWhen("postedwhen"),
+    ElementPreviousComment("previousComment"),
+    ElementSignalId("signalid"),
+    ElementStatus("status"),
+    ElementStopLossSignalId("stoplosssignalid"),
+    ElementSymbol("symbol"),
+    ElementSystemEquity("systemequity"),
+    ElementSystemId("systemid"),
+    ElementSystemName("systemname"),
+    ElementTotalEquityAvail("totalequityavail"),
+    ElementTradedWhen("tradedwhen"),
+    ElementTradePrice("tradeprice");
 
     final private String localElementName;
 
@@ -43,5 +50,39 @@ public enum C2Element {
 
     public String localElementName() {
         return localElementName;
+    }
+
+    public String toString() {
+        return localElementName;
+    }
+
+    public static C2Element binaryLookup(String localName) {
+        assert(inOrder(values()));
+
+        int index = Arrays.binarySearch(values(), localName, new Comparator<Serializable>() {
+            @Override
+            public int compare(Serializable o1, Serializable o2) {
+                String s1 = o1.toString();
+                String s2 = o2.toString();
+                return s1.compareTo(s2);
+            }
+        });
+        if (index<0) {
+            return null;
+        } else {
+            return values()[index];
+        }
+    }
+
+    private static boolean inOrder(C2Element[] values) {
+        String last = "";
+        for(C2Element c2e:values) {
+            if (last.compareTo(c2e.localElementName())>=0) {
+                return false;
+            } else {
+                last = c2e.localElementName();
+            }
+        }
+        return true;
     }
 }

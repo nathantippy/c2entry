@@ -14,16 +14,16 @@ import com.collective2.signalEntry.C2ServiceException;
 
 public class RelativeNumber implements Serializable {
 
-    private final Number number;
-    private final String prefix;
+    private final BigDecimal number;
+    private final char prefix;
 
     public RelativeNumber(String stringValue) {
         //parse
         switch(stringValue.charAt(0)) {
-            case 'O':
-            case 'T':;
-            case 'Q':
-                prefix = stringValue.substring(0,1);
+            case 'O':   //session opening price
+            case 'T':   //fill price of the opening portion of the trade (no BTO or STO)
+            case 'Q':   //real-time quote-feed price of the instrument at the moment the order is released for processing
+                prefix = stringValue.charAt(0);
 
                 switch(stringValue.charAt(3)) {
                     case 'D': //negative
@@ -37,13 +37,13 @@ public class RelativeNumber implements Serializable {
                 }
                 break;
             default:
-                prefix = "";
+                prefix = ' ';
                 number = new BigDecimal(stringValue);
         }
 
     }
 
-    public RelativeNumber(BasePrice base, Number value) {
+    public RelativeNumber(BasePrice base, BigDecimal value) {
 
         prefix = base.prefix();
         number = value;
@@ -57,7 +57,7 @@ public class RelativeNumber implements Serializable {
         //Minus %2D
 
         String value = number.toString();
-        if (prefix.isEmpty()) { //only for BasePrice.Absolute
+        if (' '==prefix) { //only for BasePrice.Absolute
             return value;
         } else {
             if (value.startsWith("-")) {
@@ -68,5 +68,11 @@ public class RelativeNumber implements Serializable {
         }
     }
 
+    public char prefix() {
+        return prefix;
+    }
 
+    public BigDecimal value() {
+        return number;
+    }
 }

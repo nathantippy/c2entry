@@ -39,8 +39,6 @@ public enum Parameter {
 
     OrderDuration("&duration=",             ParameterType.DurationType),
 
-    LimitOrder("&limit=",                   ParameterType.NumberType),
-    StopOrder("&stop=",                     ParameterType.NumberType),
     RelativeLimitOrder("&limit=",           ParameterType.RelativeNumberType),
     RelativeStopOrder("&stop=",             ParameterType.RelativeNumberType),
     MarketOrder("",                         ParameterType.StringType),
@@ -49,12 +47,9 @@ public enum Parameter {
     Quantity("&quant=",                     ParameterType.IntegerType),
     AccountPercent("&accountpercent=",      ParameterType.NumberType),
 
-    TriggerPrice("&triggerprice=",          ParameterType.NumberType),
+    TriggerPrice("&triggerprice=",          ParameterType.MoneyType),
 
     OCAId("&ocaid=",                        ParameterType.IntegerType),
-
-    StopLoss("&stoploss=",                  ParameterType.NumberType),
-    ProfitTarget("&profittarget=",          ParameterType.NumberType),
 
     RelativeStopLoss("&stoploss=",          ParameterType.RelativeNumberType),
     RelativeProfitTarget("&profittarget=",  ParameterType.RelativeNumberType),
@@ -77,7 +72,7 @@ public enum Parameter {
     OCAGroupId("&ocagroupid=",              ParameterType.IntegerType),
     Commentary("&commentary=",              ParameterType.StringType),
 
-    BuyPower("&buypower=",                  ParameterType.NumberType),
+    BuyPower("&buypower=",                  ParameterType.MoneyType),
     Message("&message=",                    ParameterType.StringType);
 
     private static final Logger logger = LoggerFactory.getLogger(Parameter.class);

@@ -7,15 +7,15 @@
 package com.collective2.signalEntry;
 
 public enum BasePrice {
-    Opening("O"), TradeFill("T"), QuoteNow("Q"), Absolute("");
+    SessionOpenPlus('O'), PositionOpenPlus('T'), RTQuotePlus('Q'), Absolute(' ');
 
-    private final String prefix;
+    private final char prefix;
 
-    BasePrice(String prefix) {
+    BasePrice(char prefix) {
         this.prefix = prefix;
     }
 
-    public String prefix() {
+    public char prefix() {
         return prefix;
     }
 }

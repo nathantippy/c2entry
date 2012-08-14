@@ -6,10 +6,9 @@
  */
 package com.collective2.signalEntry.implementation;
 
-import com.collective2.signalEntry.BasePrice;
-import com.collective2.signalEntry.Duration;
-import com.collective2.signalEntry.Parameter;
-import com.collective2.signalEntry.Signal;
+import com.collective2.signalEntry.*;
+
+import java.math.BigDecimal;
 
 import static com.collective2.signalEntry.Parameter.*;
 public abstract class ImplSignal extends AbstractCommand implements Signal {
@@ -38,27 +37,27 @@ public abstract class ImplSignal extends AbstractCommand implements Signal {
         return wrap(AccountPercent, value);
     }
 
-    public Signal limitOrder(BasePrice base, Number value) {
+    public Signal limitOrder(BasePrice base, BigDecimal value) {
         return wrap(RelativeLimitOrder, new RelativeNumber(base,value));
     }
 
-    public Signal limitOrder(Number value) {
-        return wrap(LimitOrder,value);
+    public Signal limitOrder(BigDecimal value) {
+        return wrap(RelativeLimitOrder, new RelativeNumber(BasePrice.Absolute,value));
     }
 
-    public Signal stopOrder(BasePrice base, Number value) {
+    public Signal stopOrder(BasePrice base, BigDecimal value) {
         return wrap(RelativeStopOrder, new RelativeNumber(base,value));
+    }
+
+    public Signal stopOrder(BigDecimal value) {
+        return wrap(RelativeStopOrder, new RelativeNumber(BasePrice.Absolute,value));
     }
 
     public Signal marketOrder() {
     	return wrap(MarketOrder,"");
     }
 
-    public Signal stopOrder(Number value) {
-        return wrap(StopOrder,value);
-    }
-
-    public Signal stopLoss(BasePrice base, Number value, boolean noOCA) {
+    public Signal stopLoss(BasePrice base, BigDecimal value, boolean noOCA) {
         ImplSignal result = wrap(RelativeStopLoss, new RelativeNumber(base,value));
         if (noOCA) {
             return new SignalLeaf(result, ForceNoOCA, 1);
@@ -70,15 +69,15 @@ public abstract class ImplSignal extends AbstractCommand implements Signal {
         return wrap(Delay,seconds);
     }
 
-    public Signal stopLoss(BasePrice base, Number value) {
+    public Signal stopLoss(BasePrice base, BigDecimal value) {
         return wrap(RelativeStopLoss, new RelativeNumber(base,value));
     }
 
-    public Signal stopLoss(Number value) {
-        return wrap(StopLoss,value);
+    public Signal stopLoss(BigDecimal value) {
+        return wrap(RelativeStopLoss, new RelativeNumber(BasePrice.Absolute,value));
     }
 
-    public Signal profitTarget(BasePrice base, Number value, boolean noOCA) {
+    public Signal profitTarget(BasePrice base, BigDecimal value, boolean noOCA) {
         ImplSignal result = wrap(RelativeProfitTarget, new RelativeNumber(base,value));
         if (noOCA) {
             return new SignalLeaf(result, ForceNoOCA, 1);
@@ -86,16 +85,22 @@ public abstract class ImplSignal extends AbstractCommand implements Signal {
         return result;
     }
 
-    public Signal profitTarget(BasePrice base, Number value) {
+    public Signal profitTarget(BasePrice base, BigDecimal value) {
         return wrap(RelativeProfitTarget, new RelativeNumber(base,value));
     }
 
-    public Signal profitTarget(Number value) {
-        return wrap(ProfitTarget,value);
+    public Signal profitTarget(BigDecimal value) {
+        return wrap(RelativeProfitTarget, new RelativeNumber(BasePrice.Absolute,value));
     }
 
     public Signal oneCancelsAnother(Integer id) {
         return wrap(OCAId, id);
+    }
+
+    //TODO: add human in the loop confirm
+    //TODO: experimental chaining feature
+    public Signal oneCancelsAnother(Response response) {
+        return wrap(OCAId, response);
     }
 
     public Signal conditionalUpon(Integer id) {
