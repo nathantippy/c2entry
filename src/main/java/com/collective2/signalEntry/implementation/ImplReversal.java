@@ -10,17 +10,19 @@ import com.collective2.signalEntry.Duration;
 import com.collective2.signalEntry.Parameter;
 import com.collective2.signalEntry.Reverse;
 
+import java.math.BigDecimal;
+
 public abstract class ImplReversal extends AbstractCommand implements Reverse {
 
     public Reverse duration(Duration duration) {
         return new ReversalLeaf(this, Parameter.OrderDuration, duration);
     }
 
-    public Reverse triggerPrice(Number value) {
+    public Reverse triggerPrice(BigDecimal value) {
         return  new ReversalLeaf(this, Parameter.TriggerPrice, value);
     }
 
-    public Reverse quantity(Number value) {
+    public Reverse quantity(Integer value) {
         return new ReversalLeaf(this, Parameter.Quantity, value);
     }
 }

@@ -38,15 +38,22 @@ public class Request extends EnumMap<Parameter, Object> {
 
     @Override
     public Object put(Parameter parameter, Object value) {
-        command().validateApplicable(this, parameter);
-        parameter.validateValue(value);
+
+        if (Parameter.Password != parameter) {
+
+            if (super.containsKey(parameter)) {
+                throw new UnsupportedOperationException("Can not modify "+parameter+" with new value "+value+" already set to "+super.get(parameter));
+            }
+
+            command().validateApplicable(this, parameter);
+            parameter.validateValue(value);
+        }
         return super.put(parameter, value);
     }
 
     public Request secureClone() {
         Request clone = (Request) super.clone();
         if (clone.containsKey(Parameter.Password)) {
-            clone.remove((Parameter.Password));
             clone.put(Parameter.Password,"*****");
         }
         return clone;
@@ -137,7 +144,15 @@ public class Request extends EnumMap<Parameter, Object> {
         return URLEncoder.encode(value.toString(), "UTF-8");
     }
 
-    public void validate() {
-        command().validate(this);
+    @Override
+    public Object remove(Object key) {
+        throw new UnsupportedOperationException("Element removal is not supported because it will break equivalence.");
     }
+
+    public boolean validate() {
+        command().validate(this);
+        return true;
+    }
+
+
 }

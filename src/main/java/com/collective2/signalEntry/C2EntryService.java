@@ -11,6 +11,8 @@ import static com.collective2.signalEntry.Instrument.*;
 
 import com.collective2.signalEntry.implementation.*;
 
+import java.math.BigDecimal;
+
 public class C2EntryService {
 
     private final C2ServiceFactory serviceFactory;
@@ -58,12 +60,20 @@ public class C2EntryService {
         this.commonSystemId = id;
     }
 
+    public Integer systemId() {
+        return this.commonSystemId;
+    }
+
     public void password(String password) {
         this.commonPassword = password;
     }
 
     public void eMail(String eMail) {
         this.commonEMail = eMail;
+    }
+
+    public String eMail() {
+        return this.commonEMail;
     }
 
     public C2ServiceFactory serviceFactory() {
@@ -94,70 +104,6 @@ public class C2EntryService {
         return responseManager.fetchResponse(request);
     }
 
-    public Integer oneCancelsAnotherId() {
-        return sendOneCancelsAnotherIdRequest().getInteger(ElementOCAId);
-    }
-
-    public Response sendOneCancelsAnotherIdRequest() {
-        Request request = new Request(Command.RequestOCAId);
-        request.put(Parameter.SystemId, commonSystemId);
-        request.put(Parameter.Password, commonPassword);
-        return send(request);
-    }
-
-    public boolean cancel(final Integer signalId) {
-        return sendCancelRequest(signalId).isOk();
-    }
-
-    public Response sendCancelRequest(final Integer signalId) {
-        Request request = new Request(Command.Cancel);
-        request.put(Parameter.SignalId, signalId);
-        request.put(Parameter.SystemId, commonSystemId);
-        request.put(Parameter.Password, commonPassword);
-        return send(request);
-    }
-
-    public boolean cancelAllPending() {
-        return sendCancelAllPendingRequest().isOk();
-    }
-
-    public Response sendCancelAllPendingRequest() {
-        Request request = new Request(Command.CancelAllPending);
-        request.put(Parameter.SystemId, commonSystemId);
-        request.put(Parameter.Password, commonPassword);
-        return send(request);
-    }
-
-    public boolean flushPendingSignals() {
-        return sendFlushPendingSignalsRequest().isOk();
-    }
-
-    public Response sendFlushPendingSignalsRequest() {
-        Request request = new Request(Command.FlushPendingSignals);
-        request.put(Parameter.SystemId, commonSystemId);
-        request.put(Parameter.Password, commonPassword);
-        return send(request);
-    }
-
-    public boolean closeAllPositions(final Integer signalId) {
-       return sendCloseAllPositionsRequest(signalId).isOk();
-    }
-
-    public Response sendCloseAllPositionsRequest(final Integer signalId) {
-        Request request = new Request(Command.CloseAllPositions);
-        request.put(Parameter.SignalId, signalId);
-        request.put(Parameter.SystemId, commonSystemId);
-        request.put(Parameter.Password, commonPassword);
-        return send(request);
-    }
-
-    public Response sendBuyPowerRequest() {
-        Request request = new Request(Command.GetBuyPower);
-        request.put(Parameter.SystemId, commonSystemId);
-        request.put(Parameter.Password, commonPassword);
-        return send(request);
-    }
-
     public Response sendSignalStatusRequest(final Integer signalId, final boolean showDetails, final Related showRelated) {
         Request request = new Request(Command.SignalStatus);
         request.put(Parameter.EMail, commonEMail);
@@ -181,11 +127,18 @@ public class C2EntryService {
         return send(request);
     }
 
-
     public Response sendAllSystemsRequest() {
         Request request = new Request(Command.AllSystems);
         request.put(Parameter.EMail, commonEMail);
         request.put(Parameter.Password, commonPassword);
+        return send(request);
+    }
+
+    public Response sendSystemHypotheticalRequest() {
+        Request request = new Request(Command.GetSystemHypothetical);
+        request.put(Parameter.Password, commonPassword);
+        request.put(Parameter.EMail, commonEMail);
+        request.put(Parameter.Systems, new DotString<Integer>(commonSystemId));
         return send(request);
     }
 
@@ -205,9 +158,93 @@ public class C2EntryService {
         return send(request);
     }
 
+
+    ////////////////////////////////////////////////////////////////
+
+    public Integer oneCancelsAnotherId() {
+        return sendOneCancelsAnotherIdRequest().getInteger(ElementOCAId);
+    }
+
+    public Response sendOneCancelsAnotherIdRequest() {
+        Request request = new Request(Command.RequestOCAId);
+        request.put(Parameter.SystemId, commonSystemId);
+        request.put(Parameter.Password, commonPassword);
+        return send(request);
+    }
+
+    //////////////////////////////////////////////////////////////////
+
+    public boolean cancel(final Integer signalId) {
+        return sendCancelRequest(signalId).isOk();
+    }
+
+    public Response sendCancelRequest(final Integer signalId) {
+        Request request = new Request(Command.Cancel);
+        request.put(Parameter.SignalId, signalId);
+        request.put(Parameter.SystemId, commonSystemId);
+        request.put(Parameter.Password, commonPassword);
+        return send(request);
+    }
+
+    //////////////////////////////////////////////////////////////////
+
+    public boolean cancelAllPending() {
+        return sendCancelAllPendingRequest().isOk();
+    }
+
+    public Response sendCancelAllPendingRequest() {
+        Request request = new Request(Command.CancelAllPending);
+        request.put(Parameter.SystemId, commonSystemId);
+        request.put(Parameter.Password, commonPassword);
+        return send(request);
+    }
+
+    ///////////////////////////////////////////////////////////////////
+
+    public boolean flushPendingSignals() {
+        return sendFlushPendingSignalsRequest().isOk();
+    }
+
+    public Response sendFlushPendingSignalsRequest() {
+        Request request = new Request(Command.FlushPendingSignals);
+        request.put(Parameter.SystemId, commonSystemId);
+        request.put(Parameter.Password, commonPassword);
+        return send(request);
+    }
+
+    ///////////////////////////////////////////////////////////////////
+
+    public boolean closeAllPositions(final Integer signalId) {
+       return sendCloseAllPositionsRequest(signalId).isOk();
+    }
+
+    public Response sendCloseAllPositionsRequest(final Integer signalId) {
+        Request request = new Request(Command.CloseAllPositions);
+        request.put(Parameter.SignalId, signalId);
+        request.put(Parameter.SystemId, commonSystemId);
+        request.put(Parameter.Password, commonPassword);
+        return send(request);
+    }
+
+    //////////////////////////////////////////////////////////////////
+
+    public BigDecimal buyPower() {
+        return sendBuyPowerRequest().getBigDecimal(C2Element.ElementBuyPower);
+    }
+
+    public Response sendBuyPowerRequest() {
+        Request request = new Request(Command.GetBuyPower);
+        request.put(Parameter.SystemId, commonSystemId);
+        request.put(Parameter.Password, commonPassword);
+        return send(request);
+    }
+
+    //////////////////////////////////////////////////////////////////
+
     public boolean addToOCAGroup(final Integer signalId, final Integer OCAGroup) {
         return sendAddToOCAGroupRequest(signalId,OCAGroup).isOk();
     }
+
     public Response sendAddToOCAGroupRequest(final Integer signalId, final Integer OCAGroup) {
         Request request = new Request(Command.AddToOCAGroup);
         request.put(Parameter.Password, commonPassword);
@@ -216,6 +253,8 @@ public class C2EntryService {
         request.put(Parameter.OCAGroupId, OCAGroup);
         return send(request);
     }
+
+    //////////////////////////////////////////////////////////////////
 
     public boolean setMinBuyPower(final Number buyPower) {
         return sendSetMinBuyPowerRequest(buyPower).isOk();
@@ -228,6 +267,8 @@ public class C2EntryService {
         request.put(Parameter.BuyPower, buyPower);
         return send(request);
     }
+
+    /////////////////////////////////////////////////////////////////
 
     public boolean subscriberBroadcast(final String message) {
         return sendSubscriberBroadcastRequest(message).isOk();
@@ -242,6 +283,12 @@ public class C2EntryService {
         return send(request);
     }
 
+    ////////////////////////////////////////////////////////////////
+
+    public BigDecimal systemEquity() {
+        return sendSystemEquityRequest().getBigDecimal(C2Element.ElementSystemEquity);
+    }
+
     public Response sendSystemEquityRequest() {
         Request request = new Request(Command.GetSystemEquity);
         request.put(Parameter.SystemId, commonSystemId);
@@ -249,7 +296,13 @@ public class C2EntryService {
         return send(request);
     }
 
-    public Response sendPositionStatusRequest(final String symbol) {
+    ///////////////////////////////////////////////////////////////
+
+    public Integer positionStatus(String symbol) {
+        return sendPositionStatusRequest(symbol).getInteger(C2Element.ElementPosition);
+    }
+
+    public Response sendPositionStatusRequest(String symbol) {
         Request request = new Request(Command.PositionStatus);
         request.put(Parameter.SystemId, commonSystemId);
         request.put(Parameter.Password, commonPassword);
@@ -257,7 +310,13 @@ public class C2EntryService {
         return send(request);
     }
 
-    public Response sendNewCommentRequest(final String comment, final Integer signalId) {
+    /////////////////////////////////////////////////////////////////
+
+    public String newComment(String comment, Integer signalId) {
+        return sendNewCommentRequest(comment,signalId).getString(C2Element.ElementPreviousComment);
+    }
+
+    public Response sendNewCommentRequest(String comment, final Integer signalId) {
         Request request = new Request(Command.NewComment);
         request.put(Parameter.SystemId, commonSystemId);
         request.put(Parameter.Password, commonPassword);
@@ -266,6 +325,8 @@ public class C2EntryService {
         return send(request);
 
     }
+
+    //////////////////////////////////////////////////////////////
 
     public void awaitPending() {
         responseManager.awaitPending();

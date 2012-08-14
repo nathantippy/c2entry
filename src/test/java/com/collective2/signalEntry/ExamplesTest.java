@@ -17,6 +17,10 @@ import org.junit.Test;
 import com.collective2.signalEntry.adapter.Collective2Adapter;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+import static com.collective2.signalEntry.BasePrice.*;
+import static com.collective2.signalEntry.Money.*;
 
 public class ExamplesTest {
 
@@ -135,6 +139,39 @@ public class ExamplesTest {
                             .duration(Duration.GoodTilCancel).send();
         Integer signalId = response.getInteger(C2Element.ElementSignalId);
         
+    }
+
+    @Test
+    public void exampleAsyncServiceUsageTest() {
+        // validates commands and returns hard coded (canned) responses
+        C2EntryServiceAdapter simulationAdapter = new StaticSimulationAdapter();
+        C2ServiceFactory factory = new C2ServiceFactory(simulationAdapter);
+
+        String password = "PA55WORD";
+        Integer systemId = 99999999;
+        String eMail = "someone@somewhere.com";
+        C2EntryService sentryService = factory.signalEntryService(password, systemId, eMail);
+
+        List<Response> responseList = new ArrayList<Response>();
+                                                                                 //TODO: must  update examples on the site
+        responseList.add(sentryService.stockSignal(ActionForStock.BuyToOpen)
+                                      .marketOrder().quantity(10).symbol("msft")
+                                      .duration(Duration.GoodTilCancel).send());
+
+        responseList.add(sentryService.stockSignal(ActionForStock.BuyToOpen)
+                                        .limitOrder(USD(23.4))
+                                        .quantity(10).symbol("www")
+                                        .duration(Duration.GoodTilCancel).send());
+
+        responseList.add(sentryService.stockSignal(ActionForStock.BuyToOpen)
+                                        .limitOrder(SessionOpenPlus, USD(.50))
+                                         .quantity(10).symbol("ibm")
+                                        .duration(Duration.GoodTilCancel).send());
+
+        //after some time...  ask for an arbitrary signal id.
+
+        Integer signalId = responseList.get(2).getInteger(C2Element.ElementSignalId);
+
     }
 
 }

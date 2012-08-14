@@ -28,7 +28,7 @@ public enum Command {
             return new EnumSet[] {
                     EnumSet.of(StockAction,NonStockAction),
                     EnumSet.of(Dollars, Quantity, AccountPercent),
-                    EnumSet.of(LimitOrder, RelativeLimitOrder, StopOrder, RelativeStopOrder, MarketOrder)
+                    EnumSet.of(RelativeLimitOrder, RelativeStopOrder, MarketOrder)
             };
         }
         protected EnumSet<Parameter> paraOptional() {
@@ -38,8 +38,8 @@ public enum Command {
             return new EnumSet[] {
                     EnumSet.of(CancelsAt, CancelsAtRelative),
                     EnumSet.of(ParkUntil, ParkUntilDateTime),
-                    EnumSet.of(StopLoss, RelativeStopLoss),
-                    EnumSet.of(ProfitTarget, RelativeProfitTarget)
+                    EnumSet.of(RelativeStopLoss),
+                    EnumSet.of(RelativeProfitTarget)
             };
         }
         protected EnumSet<C2Element> possibleResult() {

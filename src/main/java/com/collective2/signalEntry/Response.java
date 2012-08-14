@@ -27,4 +27,6 @@ public interface Response {
     Boolean isOk();
     
     String getXML();
+
+    void visitC2Elements(C2ElementVisitor c2ElementVisitor);
 }

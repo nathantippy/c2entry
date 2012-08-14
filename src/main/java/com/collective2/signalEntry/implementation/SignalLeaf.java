@@ -7,6 +7,7 @@
 package com.collective2.signalEntry.implementation;
 
 import com.collective2.signalEntry.Parameter;
+import com.collective2.signalEntry.Response;
 
 public class SignalLeaf extends ImplSignal {
 
@@ -15,7 +16,14 @@ public class SignalLeaf extends ImplSignal {
     private final Object     value;
 
     SignalLeaf(ImplSignal base, Parameter parameter, Object value) {
-        parameter.validateValue(value);
+
+        if (value instanceof Response) {
+            //check command that it returns what we need for the value
+            //TODO: rewindable response to make this work.
+
+        } else {
+            parameter.validateValue(value);
+        }
 
         this.base = base;
         this.parameter = parameter;

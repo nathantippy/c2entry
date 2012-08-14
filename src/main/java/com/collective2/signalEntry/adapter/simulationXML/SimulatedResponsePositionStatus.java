@@ -6,6 +6,7 @@
  */
 package com.collective2.signalEntry.adapter.simulationXML;
 
+import java.util.Date;
 import java.util.concurrent.BlockingQueue;
 
 import javax.xml.stream.events.XMLEvent;
@@ -17,12 +18,12 @@ public class SimulatedResponsePositionStatus extends SimulatedResponse {
 	private static final Logger logger = LoggerFactory.getLogger(SimulatedResponsePositionStatus.class);
 
     private final String status;
-    private final String calctime;
+    private final Long calctime;
     private final String symbol;
     private final Integer position;
 
 
-    public SimulatedResponsePositionStatus(String status, String calctime, String symbol, Integer position) {
+    public SimulatedResponsePositionStatus(String status, Long calctime, String symbol, Integer position) {
         this.status = status;
         this.calctime = calctime;
         this.symbol = symbol;
@@ -54,7 +55,7 @@ public class SimulatedResponsePositionStatus extends SimulatedResponse {
 
         queue.put(eventFactory.createStartElement("", "", "positionstatus"));
             queue.put(eventFactory.createStartElement("", "", "calctime"));
-            queue.put(eventFactory.createCharacters(calctime));
+            queue.put(eventFactory.createCharacters(new Date(calctime).toString()));
             queue.put(eventFactory.createEndElement("", "", "calctime"));
 
             queue.put(eventFactory.createStartElement("", "", "symbol"));

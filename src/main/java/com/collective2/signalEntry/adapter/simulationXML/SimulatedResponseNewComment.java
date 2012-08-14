@@ -33,7 +33,7 @@ public class SimulatedResponseNewComment extends SimulatedResponse {
     @Override
     public void serverSideEventProduction(BlockingQueue<XMLEvent> queue) {
         /*
-         * <collective2> <status>OK: Signal 29148580 comment created</status>
+         * <collective2> <status>OK: Order 29148580 comment created</status>
          * <signalid> 29148580</signalid> <previousComment></previousComment>
          * </collective2>
          */

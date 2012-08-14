@@ -39,7 +39,7 @@ import javax.xml.stream.events.XMLEvent;
  * This notice shall not be removed. See the "LICENSE.txt" file found in the
  * root folder for the full license governing this code. Nathan Tippy 7/5/12
  */
-public class SimulationTest {
+public class StaticSimulationTest {
 
     private final static Integer          systemId      = 1234;
     private final static String           password      = "pa55word";
@@ -48,8 +48,8 @@ public class SimulationTest {
     private final static C2ServiceFactory factory       = new C2ServiceFactory(backEnd);
     private final static C2EntryService   sentryService = factory.signalEntryService(password, systemId, email);
 
-    private final Number testNumber = 12.34;
-    private final Number testNegativeNumber = -43.21;
+    private final BigDecimal testNumber = new BigDecimal("12.34");
+    private final BigDecimal testNegativeNumber = new BigDecimal("-43.21");
     private final Integer testInteger = 42;
 
     @Before
@@ -127,8 +127,8 @@ public class SimulationTest {
     }
 
 
-    private void testAllOrderTypes(Number testNumber, Number testNegativeNumber, Integer testInteger, String durationURL, Signal base) {
-        for (Parameter reqOrder : EnumSet.of(MarketOrder, LimitOrder, RelativeLimitOrder, StopOrder, RelativeStopOrder)) {
+    private void testAllOrderTypes(BigDecimal testNumber, BigDecimal testNegativeNumber, Integer testInteger, String durationURL, Signal base) {
+        for (Parameter reqOrder : EnumSet.of(MarketOrder, RelativeLimitOrder, RelativeStopOrder)) {
             String reqOrderURL = null;
             Signal baseOrder = null;
             switch (reqOrder) {
@@ -136,20 +136,12 @@ public class SimulationTest {
                     baseOrder = base.marketOrder();
                     reqOrderURL = durationURL;//url does not change
                     break;
-                case LimitOrder:
-                    baseOrder = base.limitOrder(testNumber);
-                    reqOrderURL = durationURL + "&limit=" + testNumber;
-                    break;
                 case RelativeLimitOrder:
-                    baseOrder = base.limitOrder(BasePrice.QuoteNow, testNumber);
+                    baseOrder = base.limitOrder(BasePrice.RTQuotePlus, testNumber);
                     reqOrderURL = durationURL + "&limit=Q%2B" + testNumber;
                     break;
-                case StopOrder:
-                    baseOrder = base.stopOrder(testNumber);
-                    reqOrderURL = durationURL + "&stop=" + testNumber;
-                    break;
                 case RelativeStopOrder:
-                    baseOrder = base.stopOrder(BasePrice.Opening, testNumber);
+                    baseOrder = base.stopOrder(BasePrice.SessionOpenPlus, testNumber);
                     reqOrderURL = durationURL + "&stop=O%2B" + testNumber;
                     break;
             }
@@ -202,7 +194,7 @@ public class SimulationTest {
         }
     }
 
-    private void testEachOptionalParameter(Number testNumber, Number testNegativeNumber, Integer testInteger, String allReqURL, Signal allReq) {
+    private void testEachOptionalParameter(BigDecimal testNumber, BigDecimal testNegativeNumber, Integer testInteger, String allReqURL, Signal allReq) {
         allReq.oneCancelsAnother(testInteger).send().getInteger(ElementSignalId);
         assertEquals(allReqURL + "&ocaid=" + testInteger, backEnd.getLastURLString());
 
@@ -232,22 +224,22 @@ public class SimulationTest {
         allReq.stopLoss(testNumber).send().getInteger(ElementSignalId);
         assertEquals(allReqURL + "&stoploss=" + testNumber, backEnd.getLastURLString());
 
-        allReq.stopLoss(BasePrice.Opening, testNumber).send().getInteger(ElementSignalId);
+        allReq.stopLoss(BasePrice.SessionOpenPlus, testNumber).send().getInteger(ElementSignalId);
         assertEquals(allReqURL + "&stoploss=O%2B" + testNumber, backEnd.getLastURLString());
 
-        allReq.stopLoss(BasePrice.QuoteNow, testNumber, true).send().getInteger(ElementSignalId); // ForceNoOCA
+        allReq.stopLoss(BasePrice.RTQuotePlus, testNumber, true).send().getInteger(ElementSignalId); // ForceNoOCA
         assertEquals(allReqURL + "&stoploss=Q%2B" + testNumber + "&forcenooca=1", backEnd.getLastURLString());
 
         allReq.profitTarget(testNumber).send().getInteger(ElementSignalId);
         assertEquals(allReqURL + "&profittarget=" + testNumber, backEnd.getLastURLString());
 
-        allReq.profitTarget(BasePrice.TradeFill, testNegativeNumber).send().getInteger(ElementSignalId);
+        allReq.profitTarget(BasePrice.PositionOpenPlus, testNegativeNumber).send().getInteger(ElementSignalId);
         assertEquals(allReqURL + "&profittarget=T%2D" + Math.abs(testNegativeNumber.doubleValue()), backEnd.getLastURLString());
 
-        allReq.profitTarget(BasePrice.Opening, testNegativeNumber, true).send().getInteger(ElementSignalId); // ForceNoOCA
+        allReq.profitTarget(BasePrice.SessionOpenPlus, testNegativeNumber, true).send().getInteger(ElementSignalId); // ForceNoOCA
         assertEquals(allReqURL + "&profittarget=O%2D" + Math.abs(testNegativeNumber.doubleValue()) + "&forcenooca=1", backEnd.getLastURLString());
 
-        validateXML(allReq.profitTarget(BasePrice.Opening, testNegativeNumber, true).send().getXML());
+        validateXML(allReq.profitTarget(BasePrice.SessionOpenPlus, testNegativeNumber, true).send().getXML());
     }
 
     @Test
@@ -352,7 +344,7 @@ public class SimulationTest {
     @Test
     public void setMinBuyPowerTest() {
 
-        Number power = 1234.56d;
+        Number power = new BigDecimal(1234.56d);
         assertTrue(sentryService.setMinBuyPower(power));
     }
 
@@ -424,9 +416,9 @@ public class SimulationTest {
         Reverse reverse = sentryService.reversal("msft");
 
         assertEquals("Command:http://www.collective2.com/cgi-perl/signal.mpl?cmd=reverse&systemid=1234&pw=PASSWORD&symbol=msft",reverse.toString());
-        Response response = reverse.triggerPrice(12.23d).duration(Duration.DayOrder).quantity(10).send();
+        Response response = reverse.triggerPrice(new BigDecimal("12.23")).duration(Duration.DayOrder).quantity(10).send();
         assertTrue(response.isOk());
-        validateXML(reverse.triggerPrice(12.23d).duration(Duration.DayOrder).quantity(10).send().getXML());
+        validateXML(reverse.triggerPrice(new BigDecimal("12.23")).duration(Duration.DayOrder).quantity(10).send().getXML());
     }
 
     @Test

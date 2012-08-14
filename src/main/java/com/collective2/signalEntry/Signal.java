@@ -6,17 +6,18 @@
  */
 package com.collective2.signalEntry;
 
+import java.math.BigDecimal;
 import java.util.concurrent.Callable;
 
 public interface Signal {
 
-    Signal limitOrder(BasePrice base, Number value);
+    Signal limitOrder(BasePrice base, BigDecimal value);
 
-    Signal limitOrder(Number value);
+    Signal limitOrder(BigDecimal value);
 
-    Signal stopOrder(BasePrice base, Number value);
+    Signal stopOrder(BasePrice base, BigDecimal value);
 
-    Signal stopOrder(Number value);
+    Signal stopOrder(BigDecimal value);
 
     Signal marketOrder();
 
@@ -26,17 +27,17 @@ public interface Signal {
 
     Signal delay(Integer seconds);
 
-    Signal stopLoss(BasePrice base, Number value, boolean noOCA);
+    Signal stopLoss(BasePrice base, BigDecimal value, boolean noOCA);
 
-    Signal stopLoss(BasePrice base, Number value);
+    Signal stopLoss(BasePrice base, BigDecimal value);
 
-    Signal stopLoss(Number value);
+    Signal stopLoss(BigDecimal value);
 
-    Signal profitTarget(BasePrice base, Number value, boolean noOCA);
+    Signal profitTarget(BasePrice base, BigDecimal value, boolean noOCA);
 
-    Signal profitTarget(BasePrice base, Number value);
+    Signal profitTarget(BasePrice base, BigDecimal value);
 
-    Signal profitTarget(Number value);
+    Signal profitTarget(BigDecimal value);
 
     Signal oneCancelsAnother(Integer id);
 

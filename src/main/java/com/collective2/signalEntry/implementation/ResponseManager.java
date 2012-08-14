@@ -72,7 +72,6 @@ public class ResponseManager {
             //never modify object passed in or this may leak the password out!
             Request request = iterator.next().secureClone();
             if (request.containsKey(Parameter.Password)) {
-                request.remove(Parameter.Password);
                 request.put(Parameter.Password, password);
             }
             executor.submit(new ImplResponse(this, request)); //Note: may want to add a recovery listener here
@@ -81,7 +80,6 @@ public class ResponseManager {
             //never modify object passed in or this may leak the password out!
             Request request = iterator.next().secureClone();
             if (request.containsKey(Parameter.Password)) {
-                request.remove(Parameter.Password);
                 request.put(Parameter.Password, password);
             }
             executor.submit(new ImplResponse(this, request)); //Note: may want to add a recovery listener here
@@ -92,6 +90,8 @@ public class ResponseManager {
         ImplResponse newResponse = new ImplResponse(this, request);
         synchronized (this) {
             journal.append(request.secureClone());
+            assert(request.validate());
+            assert(newResponse.secureRequest().validate());
             executor.submit(newResponse);
         }
         return newResponse;
@@ -170,7 +170,7 @@ public class ResponseManager {
                     throw haltingException;
                 }
             } catch (Exception ex) {
-                haltingException = new C2ServiceException(ex,false);
+                haltingException = new C2ServiceException(request.toString(),ex,false);
                 throw haltingException;
             }
         } while (tryAgain);

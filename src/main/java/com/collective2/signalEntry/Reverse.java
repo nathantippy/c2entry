@@ -6,15 +6,15 @@
  */
 package com.collective2.signalEntry;
 
-import java.util.concurrent.Callable;
+import java.math.BigDecimal;
 
 public interface Reverse {
 
     Reverse duration(Duration duration);
 
-    Reverse triggerPrice(Number value);
+    Reverse triggerPrice(BigDecimal value);
 
-    Reverse quantity(Number value);
+    Reverse quantity(Integer value);
 
     Response send();
 

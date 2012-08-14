@@ -40,7 +40,7 @@ public class RequestTest {
             @Override
             protected String encode(Object value) throws UnsupportedEncodingException {
                 throw new UnsupportedEncodingException("Martian OS does not support UTF-8");
-            }
+            }                                        //TODO:remove the logger for this test.
         };
         request.put(Parameter.SystemId, 1234);
         request.put(Parameter.Password, "PA55");

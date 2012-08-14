@@ -26,6 +26,12 @@ public enum ParameterType {
             return Integer.valueOf(stringValue);
         }
     },
+    MoneyType(BigDecimal.class) {
+        @Override
+        public Object parse(String stringValue) {
+            return new BigDecimal(stringValue);
+        }
+    },
     CommandType(Command.class) {
         @Override
         public Object parse(String stringValue) {
