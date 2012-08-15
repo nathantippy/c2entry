@@ -8,6 +8,8 @@ package com.collective2.signalEntry;
 
 import com.collective2.signalEntry.adapter.DynamicSimulationAdapter;
 import com.collective2.signalEntry.adapter.dynamicSimulator.DataProvider;
+import com.collective2.signalEntry.adapter.dynamicSimulator.Portfolio;
+import com.collective2.signalEntry.adapter.dynamicSimulator.SimplePortfolio;
 import org.junit.Test;
 
 import java.math.BigDecimal;
@@ -26,14 +28,16 @@ public class DynamicSimulationTest {
 
 
     @Test
-    public void marketOrderBuyTest() {
+    public void longBuySellTest() {
 
         // validates commands and returns hard coded (canned) responses
         DynamicSimulationAdapter simulationAdapter = new DynamicSimulationAdapter(0l);
 
         String password = "P455w0rd";
         String eMail = "someone@somewhere.com";
-        Integer systemId = simulationAdapter.createSystem(new BigDecimal("10000"),"first system",password,new BigDecimal("10.00"));
+        Portfolio portfolio = new SimplePortfolio(new BigDecimal("10000"));
+        BigDecimal commission = new BigDecimal("10.00");
+        Integer systemId = simulationAdapter.createSystem("first system",password,portfolio,commission);
         simulationAdapter.subscribe(eMail,systemId);
         C2ServiceFactory factory = new C2ServiceFactory(simulationAdapter);
         C2EntryService sentryService = factory.signalEntryService(password, systemId, eMail);
@@ -59,6 +63,7 @@ public class DynamicSimulationTest {
             }
         });
 
+        assertEquals(0, portfolio.position("msft").quantity().intValue());
         Response openResponse = sentryService.stockSignal(ActionForStock.BuyToOpen)
                                         .marketOrder().quantity(10).symbol("msft")
                                         .duration(Duration.GoodTilCancel).send();
@@ -67,10 +72,11 @@ public class DynamicSimulationTest {
 
         assertEquals(0,signalId.intValue());
 
+        long timeStep = 60000l*60l*24l;
         long time = 100000l;
         BigDecimal fixedPrice = new BigDecimal("80.43");
 
-        DataProvider dataProvider = new DynamicSimulationMockDataProvider(time,fixedPrice,fixedPrice,fixedPrice,fixedPrice,time);
+        DynamicSimulationMockDataProvider dataProvider = new DynamicSimulationMockDataProvider(time,fixedPrice,fixedPrice,fixedPrice,fixedPrice,time);
 
         simulationAdapter.tick(dataProvider);
 
@@ -106,40 +112,171 @@ public class DynamicSimulationTest {
             }
         });
         assertEquals("expected to check 4 elements",4,checkedElements.size());
+        assertEquals(10, portfolio.position("msft").quantity().intValue());
 
-
-        Response closeResponse = sentryService.stockSignal(ActionForStock.SellToClose)
+        ///////////////////
+        //market order sell test
+        ///////////////////
+        Response marketOrderResponse = sentryService.stockSignal(ActionForStock.SellToClose)
                 .marketOrder().quantity(10).symbol("msft")
                 .duration(Duration.GoodTilCancel).send();
 
-        closeResponse.getXML();
+        //force request response now
+        marketOrderResponse.getXML();
 
+        ///////////////////////
+        //tick for market buy
+        /////////////////////
         long closeTime = 200000l;
         BigDecimal closePrice = new BigDecimal("160.86");
-
         dataProvider = new DynamicSimulationMockDataProvider(time,fixedPrice,fixedPrice,closePrice,closePrice,closeTime);
-
         simulationAdapter.tick(dataProvider);
 
+        ////////////////////
+        //confirm values
+        ///////////////////
+        assertEquals(0, portfolio.position("msft").quantity().intValue());
         buyPower = sentryService.buyPower();
         assertEquals(10784.30d,buyPower.doubleValue(),DELTA);
 
         systemEquity = sentryService.systemEquity(); //10 * 80.43 = 804.30
         assertEquals(0d,systemEquity.doubleValue(),DELTA);
 
+        ///////////////////
+        //limit order test
+        //////////////////
+        BigDecimal failLimit = new BigDecimal("95.10");
+        Response limitOrderResponse = sentryService.stockSignal(ActionForStock.BuyToOpen)
+                .limitOrder(failLimit).quantity(10).symbol("msft")
+                .duration(Duration.DayOrder).send();
+
+        //force request response now
+        limitOrderResponse.getXML();
+
+        ///////////////////////////
+        //tick for limit order fail
+        ////////////////////////////
+        dataProvider.incTime(timeStep);
+        simulationAdapter.tick(dataProvider);
+
+        ////////////////////
+        //confirm unchanged values
+        ///////////////////
+        assertEquals(0, portfolio.position("msft").quantity().intValue());
+        buyPower = sentryService.buyPower();
+        assertEquals(10784.30d,buyPower.doubleValue(),DELTA);
+
+        systemEquity = sentryService.systemEquity(); //10 * 80.43 = 804.30
+        assertEquals(0d,systemEquity.doubleValue(),DELTA);
+
+        ///////////////////
+        //limit order test
+        //////////////////
+        BigDecimal successLimit = new BigDecimal("170.10");
+        limitOrderResponse = sentryService.stockSignal(ActionForStock.BuyToOpen)
+                .limitOrder(successLimit).quantity(10).symbol("msft")
+                .duration(Duration.DayOrder).send();
+
+        //force request response now
+        limitOrderResponse.getXML();
+
+        ///////////////////////////
+        //tick for limit order success
+        ////////////////////////////
+        dataProvider.incTime(timeStep);
+        simulationAdapter.tick(dataProvider);
+
+        ////////////////////
+        //confirm changed
+        ///////////////////
+        BigDecimal entryPrice = portfolio.position("msft").openPrice();
+        assertTrue(entryPrice.compareTo(successLimit)<=0);
+
+        BigDecimal shares = new BigDecimal("10");
+        assertEquals(shares.intValue(), portfolio.position("msft").quantity().intValue());
+
+        BigDecimal openEquity = entryPrice.multiply(shares);
+        BigDecimal expectedBuyPower = new BigDecimal("10784.30").subtract(commission.add(openEquity));
+
+        buyPower = sentryService.buyPower();
+        assertEquals(expectedBuyPower.doubleValue(),buyPower.doubleValue(),DELTA);
+
+        BigDecimal closeEquity = closePrice.multiply(shares);
+        systemEquity = sentryService.systemEquity();
+        assertEquals(closeEquity.doubleValue(),systemEquity.doubleValue(),DELTA);
+
+
+        ///////////////////
+        //market limit sell fail test
+        ///////////////////
+        BigDecimal sellLimitFail = new BigDecimal("180.10");
+        Response marketLimitSellResponse = sentryService.stockSignal(ActionForStock.SellToClose)
+                .limitOrder(sellLimitFail).quantity(10).symbol("msft")
+                .duration(Duration.DayOrder).send();
+
+        //force request response now
+        marketLimitSellResponse.getXML();
+
+        ///////////////////////////
+        //tick for limit order fail
+        ////////////////////////////
+        dataProvider.incTime(timeStep);
+        simulationAdapter.tick(dataProvider);
+
+        ////////////////////
+        //confirm nothing changed
+        ///////////////////
+        entryPrice = portfolio.position("msft").openPrice();
+        assertTrue(entryPrice.compareTo(successLimit)<=0);
+
+        shares = new BigDecimal("10");
+        assertEquals(shares.intValue(), portfolio.position("msft").quantity().intValue());
+
+        openEquity = entryPrice.multiply(shares);
+        expectedBuyPower = new BigDecimal("10784.30").subtract(commission.add(openEquity));
+
+        buyPower = sentryService.buyPower();
+        assertEquals(expectedBuyPower.doubleValue(),buyPower.doubleValue(),DELTA);
+
+        closeEquity = closePrice.multiply(shares);
+        systemEquity = sentryService.systemEquity();
+        assertEquals(closeEquity.doubleValue(),systemEquity.doubleValue(),DELTA);
+
+//        ///////////////////
+//        //market limit sell success test
+//        ///////////////////
+//        BigDecimal sellLimitSuccess = new BigDecimal("110.10");
+//        marketLimitSellResponse = sentryService.stockSignal(ActionForStock.SellToClose)
+//                .limitOrder(sellLimitSuccess).quantity(10).symbol("msft")
+//                .duration(Duration.DayOrder).send();
+//
+//        //force request response now
+//        marketLimitSellResponse.getXML();
+//
+//        ///////////////////////////
+//        //tick for limit order success
+//        ////////////////////////////
+//        dataProvider.incTime(timeStep);
+//        simulationAdapter.tick(dataProvider);
+//
+//        shares = new BigDecimal("0");
+//        assertEquals(shares.intValue(), portfolio.position("msft").quantity().intValue());
+
+
+
     }
 
-
-
 //    @Test
-//    public void limitOrderBuyTest() {
+//    public void allInOneBuySellTest() {
 //
 //        // validates commands and returns hard coded (canned) responses
 //        DynamicSimulationAdapter simulationAdapter = new DynamicSimulationAdapter(0l);
 //
 //        String password = "P455w0rd";
 //        String eMail = "someone@somewhere.com";
-//        Integer systemId = simulationAdapter.createSystem(new BigDecimal("10000"),"first system",password,new BigDecimal("10.00"));
+//        Portfolio portfolio = new SimplePortfolio(new BigDecimal("10000"));
+//        BigDecimal commission = new BigDecimal("10.00");
+//        Integer systemId = simulationAdapter.createSystem("first system",password,portfolio,commission);
 //        simulationAdapter.subscribe(eMail,systemId);
 //        C2ServiceFactory factory = new C2ServiceFactory(simulationAdapter);
 //        C2EntryService sentryService = factory.signalEntryService(password, systemId, eMail);
@@ -165,74 +302,35 @@ public class DynamicSimulationTest {
 //            }
 //        });
 //
+//        BigDecimal stopLoss = new BigDecimal("20.50");
+//        BigDecimal profitTarget = new BigDecimal("120.50");
+//
+//        assertEquals(0, portfolio.position("msft").quantity().intValue());
 //        Response openResponse = sentryService.stockSignal(ActionForStock.BuyToOpen)
-//                .limitOrder(USD(90)).quantity(10).symbol("msft")
+//                .marketOrder().quantity(10).symbol("msft")
+//                .stopLoss(null).profitTarget(null)
 //                .duration(Duration.GoodTilCancel).send();
 //
-//        Integer signalId = openResponse.getInteger(C2Element.ElementSignalId);
-//
-//        assertEquals(0,signalId.intValue());
-//
-//        long time = 100000l;
-//        BigDecimal fixedPrice = new BigDecimal("80.43");
-//
-//        DataProvider dataProvider = new DynamicSimulationMockDataProvider(time,fixedPrice,fixedPrice,fixedPrice,fixedPrice,time);
-//
-//        simulationAdapter.tick(dataProvider);
-//
-//        Number buyPower = sentryService.buyPower(); // 10000 - ((10 * 80.43)+10) = 10000-814.30
-//        assertEquals(9185.7d,buyPower.doubleValue(),DELTA);
-//
-//        Number systemEquity = sentryService.systemEquity(); //10 * 80.43 = 804.30
-//        assertEquals(804.30d,systemEquity.doubleValue(),DELTA);
-//
-//        final Set<C2Element> checkedElements = new HashSet<C2Element>();
-//        sentryService.sendSystemHypotheticalRequest(systemId).visitC2Elements(new C2ElementVisitor() {
-//            @Override
-//            public void visit(C2Element element, String data, Deque<String> stack) {
-//
-//                switch (element) {
-//                    case ElementTotalEquityAvail:
-//                        checkedElements.add(element);
-//                        assertEquals(9990d, Double.parseDouble(data), DELTA);
-//                        break;
-//                    case ElementCash:
-//                        checkedElements.add(element);
-//                        assertEquals(9185.70d, Double.parseDouble(data), DELTA);
-//                        break;
-//                    case ElementEquity:
-//                        checkedElements.add(element);
-//                        assertEquals(804.30d, Double.parseDouble(data), DELTA);
-//                        break;
-//                    case ElementMarginUsed:
-//                        checkedElements.add(element);
-//                        assertEquals(0d, Double.parseDouble(data), DELTA);
-//                        break;
-//                }
-//            }
-//        });
-//        assertEquals("expected to check 4 elements",4,checkedElements.size());
-//
-//
-//        Response closeResponse = sentryService.stockSignal(ActionForStock.SellToClose)
-//                .limitOrder(USD(160.86)).quantity(10).symbol("msft")
-//                .duration(Duration.GoodTilCancel).send();
-//
-//        closeResponse.getXML();
-//
-//        long closeTime = 200000l;
+//        long timeStep = 60000l*60l*24l;
+//        long openTime = 0l;
+//        long closeTime = openTime+timeStep;
 //        BigDecimal closePrice = new BigDecimal("160.86");
-//
-//        dataProvider = new DynamicSimulationMockDataProvider(time,fixedPrice,fixedPrice,closePrice,closePrice,closeTime);
-//
+//        BigDecimal lowPrice = new BigDecimal("80");
+//        BigDecimal highPrice = new BigDecimal("100");
+//        DynamicSimulationMockDataProvider dataProvider = new DynamicSimulationMockDataProvider(
+//                openTime,lowPrice,lowPrice,highPrice,highPrice,closeTime);
 //        simulationAdapter.tick(dataProvider);
 //
-//        buyPower = sentryService.buyPower();
-//        assertEquals(10784.30d,buyPower.doubleValue(),DELTA);
+//        assertEquals(10, portfolio.position("msft").quantity().intValue());
 //
-//        systemEquity = sentryService.systemEquity(); //10 * 80.43 = 804.30
-//        assertEquals(0d,systemEquity.doubleValue(),DELTA);
+//
+//
+//
 //
 //    }
+
+
+//test the stop and target combined orders.
+
 
 }
