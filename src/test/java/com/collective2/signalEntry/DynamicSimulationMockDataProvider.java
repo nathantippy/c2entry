@@ -13,10 +13,10 @@ import java.math.BigDecimal;
 public class DynamicSimulationMockDataProvider implements DataProvider {
 
     long openingTime;
-    final BigDecimal open;
-    final BigDecimal high;
-    final BigDecimal low;                  //TODO beginning ending   opening closing
-    final BigDecimal close;
+    BigDecimal open;
+    BigDecimal high;
+    BigDecimal low;
+    BigDecimal close;
     long endingTime;
 
     //only used when testing single symbols so that field is never checked
@@ -38,6 +38,15 @@ public class DynamicSimulationMockDataProvider implements DataProvider {
     public void incTime(long step) {
         openingTime = endingTime;
         endingTime += step;
+    }
+
+    public void incTime(long step, BigDecimal flatLine) {
+        openingTime = endingTime;
+        endingTime += step;
+        open = flatLine;
+        close = flatLine;
+        high = flatLine;
+        low = flatLine;
     }
 
     @Override
