@@ -8,6 +8,7 @@ package com.collective2.signalEntry.adapter.dynamicSimulator.quantity;
 
 import com.collective2.signalEntry.adapter.dynamicSimulator.DataProvider;
 import com.collective2.signalEntry.adapter.dynamicSimulator.Portfolio;
+import com.collective2.signalEntry.adapter.dynamicSimulator.order.Order;
 
 
 public class QuantityComputableFixed implements QuantityComputable {
@@ -19,7 +20,7 @@ public class QuantityComputableFixed implements QuantityComputable {
     }
 
     @Override
-    public Integer quantity(Number price, Portfolio portfolio, DataProvider dataProvider) {
+    public Integer quantity(Number price, Portfolio portfolio, DataProvider dataProvider, Order entryOrder) {
         return quantity;
     }
 }

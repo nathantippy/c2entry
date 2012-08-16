@@ -71,19 +71,12 @@ public class SystemManager {
     }
 
 
-    public int scheduleSignal(long timeToExecute, Request request) {
+    public int[] scheduleSignal(long timeToExecute, Request request) {
+
+        //TODO: no support for setting signalid from the caller
+
         synchronized(archive) {
-
-
-
             Integer conditionalUpon = (Integer)request.get(Parameter.ConditionalUpon);
-            if (conditionalUpon!=null) {
-                // ConditionalUpon - TODO add implmentation here
-
-
-            }
-
-
 
             int id = archive.size();
 
@@ -168,32 +161,12 @@ public class SystemManager {
                     signal.forceNoOCA(forceNoOCA);
                 }
 
-                RelativeNumber stopLoss = (RelativeNumber)request.get(Parameter.RelativeStopLoss);
-                if (stopLoss!=null) {
-                    signal.stopLoss(stopLoss);
-
-                    //must return <stoplosssignalid>35584025</stoplosssignalid>
-
-                    //TODO: if not forceNoOCA then add new signal for sell at this price in OCA
-                    //in all cases this is a chained action
-
-                }
-
-                RelativeNumber profitTarget = (RelativeNumber)request.get(RelativeProfitTarget);
-                if (profitTarget!=null) {
-                    signal.profitTarget(profitTarget);
-
-                    //TODO: if not forceNoOCA then add new signal for sell at this price in OCA
-                    //in all cases this is a chained action
-
-
-                }
-
                 Integer xReplace = (Integer)request.get(XReplace);
                 if (xReplace!=null) {
                     signal.xReplace(xReplace);
 
-                    //cancel the active order with this id
+                    //TODO: cancel the active order with this id
+                    //add new stop order conditional upon what xReplace was upon
 
 
                 }
@@ -201,9 +174,85 @@ public class SystemManager {
                 order = signal;
             }
 
+            if (conditionalUpon!=null) {
+                order.conditionalUpon(archive.get(conditionalUpon));
+                //do normal schedule however in addition to time and other
+                //critera the upon must have triggered
+            }
+
+            //must be done before adding the all-in-one stop or target because they must also be added
             archive.add(order);//needed for long term lookup by id order
             scheduled.add(order);//needed for processing by time order
-            return id;
+
+            Integer ocaId = null;
+            if (!request.containsKey(Parameter.ForceNoOCA)) {
+                ocaId = generateNewOCAId();
+            }
+            int stopLossSignalId = -1;
+            int profitTargetSignalId = -1;
+
+            //generate and schedule requests for all-in-one
+            RelativeNumber stopLoss = (RelativeNumber)request.get(Parameter.RelativeStopLoss);
+            if (stopLoss!=null) {
+                Request stopRequest = request.baseClone();
+
+                Instrument instrument = (Instrument)request.get(Parameter.Instrument);
+                switch(instrument) {
+                    case Stock:
+                        stopRequest.put(Parameter.StockAction,ActionForStock.SellToClose);   //TODO: is this right for shorts?
+                        break;
+                    default:
+                        stopRequest.put(Parameter.NonStockAction,ActionForNonStock.SellToClose);  //TODO: is this right for shorts?
+                        break;
+                }
+                stopRequest.put(Parameter.RelativeStopOrder,stopLoss); //TODO: is this right for shorts?
+
+                //this is the only place the code will be able to get quantity because it can not be set
+                //here when Dollar or Percent is used.
+                stopRequest.put(Parameter.ConditionalUpon,id);
+                //get quantity after previous order is submitted, must have exact shares!
+
+                if (ocaId!=null) {
+                    stopRequest.put(Parameter.OCAId,ocaId);
+                }
+
+
+                stopLossSignalId = scheduleSignal(timeToExecute, stopRequest)[0];
+                //must return <stoplosssignalid>35584025</stoplosssignalid>
+
+            }
+
+            //generate and schedule requests for all-in-one
+            RelativeNumber profitTarget = (RelativeNumber)request.get(RelativeProfitTarget);
+            if (profitTarget!=null) {
+                Request profitTargetRequest = request.baseClone();
+
+                Instrument instrument = (Instrument)request.get(Parameter.Instrument);
+                switch(instrument) {
+                    case Stock:
+                        profitTargetRequest.put(Parameter.StockAction,ActionForStock.SellToClose);   //TODO: is this right for shorts?
+                        break;
+                    default:
+                        profitTargetRequest.put(Parameter.NonStockAction,ActionForNonStock.SellToClose);  //TODO: is this right for shorts?
+                        break;
+                }
+                profitTargetRequest.put(Parameter.RelativeLimitOrder,profitTarget); //TODO: is this right for shorts?
+
+                //this is the only place the code will be able to get quantity because it can not be set
+                //here when Dollar or Percent is used.
+                profitTargetRequest.put(Parameter.ConditionalUpon,id);
+                //get quantity after previous order is submitted, must have exact shares!
+
+                if (ocaId!=null) {
+                    profitTargetRequest.put(Parameter.OCAId,ocaId);
+                }
+
+                profitTargetSignalId = scheduleSignal(timeToExecute, profitTargetRequest)[0];
+                //must return <profittargetsignalid>35584025</profittargetsignalid>
+
+            }
+
+            return new int[] {id,stopLossSignalId,profitTargetSignalId};
         }
     }
 
@@ -300,14 +349,6 @@ public class SystemManager {
                        }
                        //oca triggered now remove so its not triggered again.
                        ocaList.clear();
-                   }
-
-                   Iterator<Order> chain = signal.chain();
-                   while (chain.hasNext()) {
-
-                       //schedule? its not in the list!  need boolean for processed in case we visit it twice?
-                       //TODO: recursive process of eachof these?
-
                    }
 
                }

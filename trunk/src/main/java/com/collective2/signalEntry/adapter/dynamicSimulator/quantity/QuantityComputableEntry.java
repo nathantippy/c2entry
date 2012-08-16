@@ -8,19 +8,23 @@ import com.collective2.signalEntry.adapter.dynamicSimulator.order.Order;
  * This notice shall not be removed.
  * See the "LICENSE.txt" file found in the root folder
  * for the full license governing this code.
- * Nathan Tippy  7/30/12
+ * Nathan Tippy  8/15/12
  */
 
-public class QuantityComputableDollars implements QuantityComputable {
+public class QuantityComputableEntry implements QuantityComputable {
 
-    private final Number dollars;
+    private final Integer condUpon;
 
-    public QuantityComputableDollars(Number dollars) {
-        this.dollars = dollars;
+    public QuantityComputableEntry(Integer condUpon) {
+        assert(condUpon!=null);
+        this.condUpon = condUpon;
     }
 
     @Override
     public Integer quantity(Number price, Portfolio portfolio, DataProvider dataProvider, Order entryOrder) {
-        return (int)(dollars.doubleValue()/price.doubleValue());
+
+        assert(entryOrder.id() == condUpon.intValue()) : "Was conditional upon "+condUpon+" but found "+entryOrder.id();
+
+        return entryOrder.entryQuantity();
     }
 }

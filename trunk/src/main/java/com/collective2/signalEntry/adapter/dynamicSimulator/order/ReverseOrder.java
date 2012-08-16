@@ -25,6 +25,11 @@ public class ReverseOrder extends Order {
 
     @Override
     public boolean process(DataProvider dataProvider, Portfolio portfolio, BigDecimal commission) {
+
+        if (!isConditionProcessed()) {
+            return false;
+        }
+
         throw new UnsupportedOperationException();
     }
 
