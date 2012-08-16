@@ -24,8 +24,12 @@ public class MarketOrder extends OrderSignal {
     @Override
     public boolean process(DataProvider dataProvider, Portfolio portfolio, BigDecimal commission) {
 
+        if (!isConditionProcessed()) {
+            return false;
+        }
+
         long time = dataProvider.endingTime();
-        if (cancel || time>cancelAtMs) {
+        if (processed || cancel || time>cancelAtMs) {
             //cancel instead of submit order
             //still return true but no need to add any transaction to the portfolio
             return true;
@@ -33,7 +37,8 @@ public class MarketOrder extends OrderSignal {
 
             BigDecimal marketPrice = dataProvider.endingPrice(symbol);
 
-            Integer quantity = quantityComputable.quantity(marketPrice, portfolio, dataProvider);
+            Integer quantity = quantityComputable.quantity(marketPrice, portfolio, dataProvider, conditionalUpon());
+            entryQuantity(quantity);
 
             switch(action) {
                 case BTC:
@@ -47,6 +52,7 @@ public class MarketOrder extends OrderSignal {
                     break;
 
             }
+            processed = true;
             return true;
         }
     }

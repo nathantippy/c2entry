@@ -99,7 +99,10 @@ public class DynamicSimulationAdapter implements C2EntryServiceAdapter {
                 case Signal:
 
                      long timeToExecute = extractTimeToExecute(request);
-                     int signalId = system.scheduleSignal(timeToExecute,request);
+                     int[] signalIdArray = system.scheduleSignal(timeToExecute,request);
+                     int signalId             = signalIdArray[0];
+                     int stopLossSignalId     = signalIdArray[1];
+                     int profitTargetSignalId = signalIdArray[2];
                      return new SimulatedResponseSignal(signalId,OK);
 
                 case GetBuyPower:
@@ -182,7 +185,7 @@ public class DynamicSimulationAdapter implements C2EntryServiceAdapter {
 
                 case Reverse:
                     //the same as a signal but its done now and can not be parked
-                    Integer reverseId = system.scheduleSignal(time, request);
+                    Integer reverseId = system.scheduleSignal(time, request)[0];
                     return new SimulatedResponseReverse(OK);
 
                 case SendSubscriberBroadcast:

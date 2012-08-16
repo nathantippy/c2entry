@@ -250,7 +250,7 @@ public class C2EntryService {
         request.put(Parameter.Password, commonPassword);
         request.put(Parameter.EMail, commonEMail);
         request.put(Parameter.SignalId, signalId);
-        request.put(Parameter.OCAGroupId, OCAGroup);
+        request.put(Parameter.OCAGroupIdToGrow, OCAGroup);
         return send(request);
     }
 

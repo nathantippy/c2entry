@@ -18,29 +18,35 @@ import java.util.List;
 public abstract class Order implements Comparable<Order> {
     //private final Request request;
     protected final int id;
-    private final List<Order> chain;
     protected final long time;
     private String comment;
     protected final String symbol;
     protected boolean cancel;
+    protected boolean processed;
+    protected Order conditionalUpon;
+    private Integer entryQuantity;
 
     public Order(int id, long time, String symbol) {
         this.id = id;
         this.time = time;
         this.symbol = symbol;
-        this.chain = new ArrayList<Order>();
     }
 
     public long time() {
         return time;
     }
 
-    public void addToChain(Order signal) {
-        chain.add(signal);
+    public Order conditionalUpon() {
+        return conditionalUpon;
     }
 
-    public Iterator<Order> chain() {
-        return chain.iterator();
+    public void conditionalUpon(Order conditionalUpon) {
+        assert(this.conditionalUpon==null) : "only supports a single condition";
+        this.conditionalUpon = conditionalUpon;
+    }
+
+    protected boolean isConditionProcessed() {
+        return (conditionalUpon == null) || (conditionalUpon.isProcessed());
     }
 
     public int id() {
@@ -92,7 +98,19 @@ public abstract class Order implements Comparable<Order> {
         return null;
     }
 
+    public boolean isProcessed() {
+        return processed;
+    }
+
     public void cancel() {
         cancel = true;
+    }
+
+    public Integer entryQuantity() {
+        return entryQuantity;
+    }
+
+    public void entryQuantity(Integer quantity) {
+        entryQuantity = quantity;
     }
 }

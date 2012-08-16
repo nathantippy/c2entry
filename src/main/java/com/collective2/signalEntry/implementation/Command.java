@@ -140,7 +140,7 @@ public enum Command {
     },
     AddToOCAGroup("addtoocagroup") {
         protected EnumSet<Parameter> paraRequired() {
-            return EnumSet.of(SignalId, Password, EMail, OCAGroupId);
+            return EnumSet.of(SignalId, Password, EMail, OCAGroupIdToGrow);
         }
         protected EnumSet<C2Element> possibleResult() {
             return EnumSet.of(ElementStatus,ElementDetails);

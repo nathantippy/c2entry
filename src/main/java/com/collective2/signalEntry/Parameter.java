@@ -69,7 +69,7 @@ public enum Parameter {
 
     ConditionalUpon("&conditionalupon=",    ParameterType.IntegerType),
 
-    OCAGroupId("&ocagroupid=",              ParameterType.IntegerType),
+    OCAGroupIdToGrow("&ocagroupid=",        ParameterType.IntegerType),
     Commentary("&commentary=",              ParameterType.StringType),
 
     BuyPower("&buypower=",                  ParameterType.MoneyType),

@@ -129,7 +129,7 @@ public class DynamicSimulationTest {
         /////////////////////
         long closeTime = 200000l;
         BigDecimal closePrice = new BigDecimal("160.86");
-        dataProvider = new DynamicSimulationMockDataProvider(time,fixedPrice,fixedPrice,closePrice,closePrice,closeTime);
+        dataProvider = new DynamicSimulationMockDataProvider(time,fixedPrice,closePrice,fixedPrice,closePrice,closeTime);
         simulationAdapter.tick(dataProvider);
 
         ////////////////////
@@ -145,7 +145,7 @@ public class DynamicSimulationTest {
         ///////////////////
         //limit order test
         //////////////////
-        BigDecimal failLimit = new BigDecimal("95.10");
+        BigDecimal failLimit = new BigDecimal("65.10");
         Response limitOrderResponse = sentryService.stockSignal(ActionForStock.BuyToOpen)
                 .limitOrder(failLimit).quantity(10).symbol("msft")
                 .duration(Duration.DayOrder).send();
@@ -242,27 +242,25 @@ public class DynamicSimulationTest {
         systemEquity = sentryService.systemEquity();
         assertEquals(closeEquity.doubleValue(),systemEquity.doubleValue(),DELTA);
 
-//        ///////////////////
-//        //market limit sell success test
-//        ///////////////////
-//        BigDecimal sellLimitSuccess = new BigDecimal("110.10");
-//        marketLimitSellResponse = sentryService.stockSignal(ActionForStock.SellToClose)
-//                .limitOrder(sellLimitSuccess).quantity(10).symbol("msft")
-//                .duration(Duration.DayOrder).send();
-//
-//        //force request response now
-//        marketLimitSellResponse.getXML();
-//
-//        ///////////////////////////
-//        //tick for limit order success
-//        ////////////////////////////
-//        dataProvider.incTime(timeStep);
-//        simulationAdapter.tick(dataProvider);
-//
-//        shares = new BigDecimal("0");
-//        assertEquals(shares.intValue(), portfolio.position("msft").quantity().intValue());
+        ///////////////////
+        //market limit sell success test
+        ///////////////////
+        BigDecimal sellLimitSuccess = new BigDecimal("110.10");
+        marketLimitSellResponse = sentryService.stockSignal(ActionForStock.SellToClose)
+                .limitOrder(sellLimitSuccess).quantity(10).symbol("msft")
+                .duration(Duration.DayOrder).send();
 
+        //force request response now
+        marketLimitSellResponse.getXML();
 
+        ///////////////////////////
+        //tick for limit order success
+        ////////////////////////////
+        dataProvider.incTime(timeStep);
+        simulationAdapter.tick(dataProvider);
+
+        shares = new BigDecimal("0");
+        assertEquals(shares.intValue(), portfolio.position("msft").quantity().intValue());
 
     }
 

@@ -59,6 +59,27 @@ public class Request extends EnumMap<Parameter, Object> {
         return clone;
     }
 
+    public Request baseClone() {
+        //only fields needed for building all-in-one dependent signals
+       Request base = new Request(command());
+       Parameter[] copy = new Parameter[]{
+               Parameter.Instrument,
+               Parameter.Symbol,
+               Parameter.OrderDuration,
+               Parameter.Password,
+               Parameter.SystemId
+        };
+
+       for(Parameter p:copy) {
+           Object obj = get(p);
+           if (obj!=null) {
+                base.put(p,obj);
+           }
+       }
+
+       return base;
+    }
+
     public String toString() {
         return buildURL(this, true).toString();
     }
@@ -153,6 +174,7 @@ public class Request extends EnumMap<Parameter, Object> {
         command().validate(this);
         return true;
     }
+
 
 
 }

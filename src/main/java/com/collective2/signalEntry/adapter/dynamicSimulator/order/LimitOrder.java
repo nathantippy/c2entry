@@ -28,8 +28,15 @@ public class LimitOrder extends OrderSignal {
     @Override
     public boolean process(DataProvider dataProvider, Portfolio portfolio, BigDecimal commission) {
 
+        //return true will move this to the processed list and
+        //will cancel everything in the same OCA group if this order is in an OCA group.
+
+        if (!isConditionProcessed()) {
+            return false;
+        }
+
         long time = dataProvider.endingTime();
-        if (cancel || time>cancelAtMs) {
+        if (processed || cancel || time>cancelAtMs) {
             //cancel instead of submit order
             //still return true but no need to add any transaction to the portfolio
             return true;
@@ -55,9 +62,12 @@ public class LimitOrder extends OrderSignal {
                             price = priceSelection(dataProvider.lowPrice(symbol), absoluteLimit);
                         }
                         //using the price used for the transaction determine the right quantity
-                        Integer quantity = quantityComputable.quantity(price, portfolio, dataProvider);
+                        Integer quantity = quantityComputable.quantity(price, portfolio, dataProvider, conditionalUpon());
+                        entryQuantity(quantity);
                         //create the transaction in the portfolio
                         portfolio.position(symbol).addTransaction(quantity, time, price, commission);
+
+                        processed = true;
                         return true;
 
                     } else {
@@ -68,9 +78,11 @@ public class LimitOrder extends OrderSignal {
                         } else {
                             //limit is above or equal to last price so it can be used.
                             //using the price used for the transaction determine the right quantity
-                            Integer quantity = quantityComputable.quantity(price, portfolio, dataProvider);
+                            Integer quantity = quantityComputable.quantity(price, portfolio, dataProvider, conditionalUpon());
+                            entryQuantity(quantity);
                             //create the transaction in the portfolio
                             portfolio.position(symbol).addTransaction(quantity, time, price, commission);
+                            processed = true;
                             return true;
                         }
                     }
@@ -92,9 +104,11 @@ public class LimitOrder extends OrderSignal {
                             price = priceSelection(dataProvider.highPrice(symbol), absoluteLimit);
                         }
                         //using the price used for the transaction determine the right quantity
-                        Integer quantity = quantityComputable.quantity(price, portfolio, dataProvider);
+                        Integer quantity = quantityComputable.quantity(price, portfolio, dataProvider, conditionalUpon());
+                        entryQuantity(quantity);
                         //create the transaction in the portfolio
                         portfolio.position(symbol).addTransaction(-quantity, time, price, commission);
+                        processed = true;
                         return true;
 
                     } else {
@@ -105,9 +119,11 @@ public class LimitOrder extends OrderSignal {
                         } else {
                             //limit is above or equal to last price so it can be used.
                             //using the price used for the transaction determine the right quantity
-                            Integer quantity = quantityComputable.quantity(price, portfolio, dataProvider);
+                            Integer quantity = quantityComputable.quantity(price, portfolio, dataProvider, conditionalUpon());
+                            entryQuantity(quantity);
                             //create the transaction in the portfolio
                             portfolio.position(symbol).addTransaction(-quantity, time, price, commission);
+                            processed = true;
                             return true;
                         }
                     }

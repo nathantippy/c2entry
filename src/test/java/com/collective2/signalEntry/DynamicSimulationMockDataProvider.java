@@ -22,6 +22,12 @@ public class DynamicSimulationMockDataProvider implements DataProvider {
     //only used when testing single symbols so that field is never checked
     public DynamicSimulationMockDataProvider(long openingTime, BigDecimal open, BigDecimal high, BigDecimal low, BigDecimal close, long endingTime) {
         this.openingTime = openingTime;
+        assert(high.compareTo(low)>=0) : "high must be greater or equal to low";
+        assert(high.compareTo(open)>=0) : "high must be greater or equal to open";
+        assert(high.compareTo(close)>=0) : "high must be greater or equal to close";
+        assert(low.compareTo(open)<=0) : "low must be less or equal to open";
+        assert(low.compareTo(close)<=0) : "low must be less or equal to close";
+
         this.open = open;
         this.high = high;
         this.low = low;

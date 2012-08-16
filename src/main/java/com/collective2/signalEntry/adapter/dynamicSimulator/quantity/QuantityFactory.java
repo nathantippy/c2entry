@@ -28,6 +28,13 @@ public class QuantityFactory {
         if (percent != null) {
             return new QuantityComputablePercent(percent);
         }
+
+        //part of all-in-one signal where we need to close out the same sized position we opened
+        Integer condUpon = (Integer)request.get(Parameter.ConditionalUpon);
+        if (condUpon != null) {
+            return new QuantityComputableEntry(condUpon);
+        }
+
         throw new C2ServiceException("Unable to determine how to calculate quantity.",false);
 
     }

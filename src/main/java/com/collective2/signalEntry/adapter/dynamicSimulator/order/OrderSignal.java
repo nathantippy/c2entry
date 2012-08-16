@@ -76,14 +76,6 @@ public abstract class OrderSignal extends Order {
         return oneCancelsAnother;
     }
 
-    public void stopLoss(RelativeNumber stopLoss) {
-
-    }
-
-    public void profitTarget(RelativeNumber profitTarget) {
-
-    }
-
     public void forceNoOCA(Integer forceNoOCA) {
 
     }
