@@ -163,6 +163,7 @@ public class SystemManager {
 
                     Order oldOrder = archive.get(xReplace);
                     conditionalUponOrder = oldOrder.conditionalUpon();
+                    oldOrder.cancel();
                     request.remove(XReplace);
 
                 }
