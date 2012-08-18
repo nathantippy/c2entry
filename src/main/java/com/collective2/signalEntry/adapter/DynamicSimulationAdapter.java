@@ -7,6 +7,7 @@
 package com.collective2.signalEntry.adapter;
 
 import com.collective2.signalEntry.C2Element;
+import com.collective2.signalEntry.C2EntryService;
 import com.collective2.signalEntry.C2ServiceException;
 import com.collective2.signalEntry.Parameter;
 import com.collective2.signalEntry.adapter.dynamicSimulator.*;
@@ -30,8 +31,6 @@ import java.util.concurrent.ThreadFactory;
 
 public class DynamicSimulationAdapter implements C2EntryServiceAdapter {
 
-    //TODO: simulator is most important feature followed by user in the loop.
-
     private static final Logger logger = LoggerFactory.getLogger(DynamicSimulationAdapter.class);
     private static final String OK = "ok";
     private static final String ERROR = "error";
@@ -54,10 +53,13 @@ public class DynamicSimulationAdapter implements C2EntryServiceAdapter {
     private final Executor gainExecutor = Executors.newSingleThreadExecutor(threadFactory);
 
     public DynamicSimulationAdapter(long startTime) {
-        time = startTime;
+        this.time = startTime;
     }
 
-    public void tick(DataProvider dataProvider) {
+    public void tick(DataProvider dataProvider, C2EntryService entryService) {
+        //ensure existing requests are submitted.
+        entryService.awaitPending();
+
         //can not tick and transmit at same moment in order to keep simulator repeatable
         synchronized(lock) {
                //look at ordered list of signals for each system and do all those older than time now.

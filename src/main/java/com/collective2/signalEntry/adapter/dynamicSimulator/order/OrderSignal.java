@@ -76,11 +76,4 @@ public abstract class OrderSignal extends Order {
         return oneCancelsAnother;
     }
 
-    public void forceNoOCA(Integer forceNoOCA) {
-
-    }
-
-    public void xReplace(Integer xReplace) {
-
-    }
 }

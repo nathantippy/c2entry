@@ -8,42 +8,33 @@
 package com.collective2.signalEntry;
 
 import com.collective2.signalEntry.adapter.C2EntryServiceAdapter;
+import com.collective2.signalEntry.implementation.ResponseManager;
 import com.collective2.signalEntry.journal.C2EntryServiceJournal;
 import com.collective2.signalEntry.journal.C2EntryServiceMemoryJournal;
 
 public class C2ServiceFactory {
 
-    protected final C2EntryServiceAdapter entryServiceAdapter;
-    protected final C2EntryServiceJournal entryServiceJournal;
+    private final static long networkDownRetryDelay = 10000l;//try every 10 seconds
+    protected final ResponseManager responseManager;
 
     public C2ServiceFactory(C2EntryServiceAdapter adapter) {
-        this.entryServiceAdapter = adapter;
-        this.entryServiceJournal = new C2EntryServiceMemoryJournal();
+        this.responseManager = new ResponseManager(adapter, new C2EntryServiceMemoryJournal(), networkDownRetryDelay);
     }
 
     public C2ServiceFactory(C2EntryServiceAdapter adapter, C2EntryServiceJournal journal) {
-        this.entryServiceAdapter = adapter;
-        this.entryServiceJournal = journal;
-    }
-
-    C2EntryServiceAdapter entryServiceAdapter() {
-        return entryServiceAdapter;
-    }
-
-    C2EntryServiceJournal entryServiceJournal() {
-        return entryServiceJournal;
+        this.responseManager = new ResponseManager(adapter, journal, networkDownRetryDelay);
     }
 
     public C2EntryService signalEntryService(String password, Integer systemId) {
-        return new C2EntryService(this, password, systemId);
+        return new C2EntryService(responseManager, this, password, systemId);
     }
 
     public C2EntryService signalEntryService(String password, String email) {
-        return new C2EntryService(this, password, email);
+        return new C2EntryService(responseManager, this, password, email);
     }
 
     public C2EntryService signalEntryService(String password, Integer systemId, String email) {
-        return new C2EntryService(this, password, systemId, email);
+        return new C2EntryService(responseManager, this, password, systemId, email);
     }
 
     // other services can be added here in the future as we find the need.

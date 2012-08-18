@@ -17,10 +17,10 @@ import org.junit.Test;
 import com.collective2.signalEntry.adapter.Collective2Adapter;
 
 import java.io.File;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import static com.collective2.signalEntry.BasePrice.*;
-import static com.collective2.signalEntry.Money.*;
 
 public class ExamplesTest {
 
@@ -45,11 +45,6 @@ public class ExamplesTest {
                 factory = new C2ServiceFactory(simulationAdapter);
             }
 
-            if (isLive) {
-                assertTrue(factory.entryServiceAdapter() instanceof Collective2Adapter);
-            } else {
-                assertTrue(factory.entryServiceAdapter() instanceof StaticSimulationAdapter);
-            }
         } while (isLive == false);
 
     }
@@ -77,11 +72,6 @@ public class ExamplesTest {
                 factory = new C2ServiceFactory(simulationAdapter, journal);
             }
 
-            if (isLive) {
-                assertTrue(factory.entryServiceAdapter() instanceof Collective2Adapter);
-            } else {
-                assertTrue(factory.entryServiceAdapter() instanceof StaticSimulationAdapter);
-            }
         } while (isLive == false);
 
     }
@@ -159,12 +149,12 @@ public class ExamplesTest {
                                       .duration(Duration.GoodTilCancel).send());
 
         responseList.add(sentryService.stockSignal(ActionForStock.BuyToOpen)
-                                        .limitOrder(USD(23.4))
+                                        .limitOrder(new BigDecimal("23.4"))
                                         .quantity(10).symbol("www")
                                         .duration(Duration.GoodTilCancel).send());
 
         responseList.add(sentryService.stockSignal(ActionForStock.BuyToOpen)
-                                        .limitOrder(SessionOpenPlus, USD(.50))
+                                        .limitOrder(SessionOpenPlus, new BigDecimal(".50"))
                                          .quantity(10).symbol("ibm")
                                         .duration(Duration.GoodTilCancel).send());
 

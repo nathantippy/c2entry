@@ -97,8 +97,6 @@ public abstract class ImplSignal extends AbstractCommand implements Signal {
         return wrap(OCAId, id);
     }
 
-    //TODO: add human in the loop confirm
-    //TODO: experimental chaining feature
     public Signal oneCancelsAnother(Response response) {
         return wrap(OCAId, response);
     }

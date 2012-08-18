@@ -6,6 +6,7 @@
  */
 package com.collective2.signalEntry.adapter;
 
+import com.collective2.signalEntry.C2EntryService;
 import com.collective2.signalEntry.implementation.Request;
 
 import javax.xml.stream.XMLEventReader;
@@ -13,7 +14,6 @@ import java.util.Map;
 
 public interface C2EntryServiceAdapter {
 
-    public abstract XMLEventReader transmit(Request request);
-
+    public XMLEventReader transmit(Request request);
 
 }

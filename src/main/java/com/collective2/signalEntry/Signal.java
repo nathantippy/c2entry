@@ -19,14 +19,6 @@ public interface Signal {
 
     Signal stopOrder(BigDecimal value);
 
-    Signal marketOrder();
-
-    Signal symbol(String symbol);
-
-    Signal duration(Duration duration);
-
-    Signal delay(Integer seconds);
-
     Signal stopLoss(BasePrice base, BigDecimal value, boolean noOCA);
 
     Signal stopLoss(BasePrice base, BigDecimal value);
@@ -38,6 +30,14 @@ public interface Signal {
     Signal profitTarget(BasePrice base, BigDecimal value);
 
     Signal profitTarget(BigDecimal value);
+
+    Signal marketOrder();
+
+    Signal symbol(String symbol);
+
+    Signal duration(Duration duration);
+
+    Signal delay(Integer seconds);
 
     Signal oneCancelsAnother(Integer id);
 

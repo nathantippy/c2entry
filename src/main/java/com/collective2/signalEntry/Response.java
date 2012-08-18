@@ -28,5 +28,5 @@ public interface Response {
     
     String getXML();
 
-    void visitC2Elements(C2ElementVisitor c2ElementVisitor);
+    void visitC2Elements(C2ElementVisitor c2ElementVisitor, C2Element ... expected);
 }
