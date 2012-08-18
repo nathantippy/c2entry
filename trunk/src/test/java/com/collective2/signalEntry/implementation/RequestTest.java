@@ -8,15 +8,27 @@ package com.collective2.signalEntry.implementation;
 
 import com.collective2.signalEntry.C2ServiceException;
 import com.collective2.signalEntry.Parameter;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.io.UnsupportedEncodingException;
+import java.util.logging.Handler;
+import java.util.logging.Logger;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 public class RequestTest {
+
+    @Before
+    public void dumpLog() {
+        //remove loggers to speed up test
+        //same events are captured by looking at the exceptions
+        for(Handler h: Logger.getLogger("").getHandlers()) {
+            Logger.getLogger("").removeHandler(h);
+        }
+    }
 
     @Test
     public void commandSetTest() {
@@ -40,7 +52,7 @@ public class RequestTest {
             @Override
             protected String encode(Object value) throws UnsupportedEncodingException {
                 throw new UnsupportedEncodingException("Martian OS does not support UTF-8");
-            }                                        //TODO:remove the logger for this test.
+            }
         };
         request.put(Parameter.SystemId, 1234);
         request.put(Parameter.Password, "PA55");

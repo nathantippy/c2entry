@@ -49,7 +49,6 @@ public class LiveTest {
     public static void initService() {
         C2EntryServiceAdapter backEnd = new Collective2Adapter();
         C2ServiceFactory factory = new C2ServiceFactory(backEnd);
-        assertEquals(backEnd, factory.entryServiceAdapter());
 
         commonSystemId = System.getProperty(PROPERTY_KEY_SYSTEM_ID);
         commonPassword = System.getProperty(PROPERTY_KEY_PASSWORD);

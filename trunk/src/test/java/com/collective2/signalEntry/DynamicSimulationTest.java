@@ -24,7 +24,7 @@ public class DynamicSimulationTest {
 
     private final double DELTA=.00000001d;
 
-        // TODO: add new test for this simulationAdapter.addGainListener(0, GainListenerManager.ONE_YEAR_MS/12, new SystemOutGainListener());
+        // TODO: add new test for this simulationAdapter.addGainListener(0, GainListenerManager.ONE_YEAR_MS/12, new SimpleGainListener());
 
 
     @Test
@@ -44,7 +44,7 @@ public class DynamicSimulationTest {
 
         sentryService.sendSystemHypotheticalRequest(systemId).visitC2Elements(new C2ElementVisitor() {
             @Override
-            public void visit(C2Element element, String data, Deque<String> stack) {
+            public void visit(C2Element element, String data) {
 
                 switch (element) {
                     case ElementTotalEquityAvail:
@@ -78,7 +78,7 @@ public class DynamicSimulationTest {
 
         DynamicSimulationMockDataProvider dataProvider = new DynamicSimulationMockDataProvider(time,fixedPrice,fixedPrice,fixedPrice,fixedPrice,time);
 
-        simulationAdapter.tick(dataProvider);
+        simulationAdapter.tick(dataProvider,sentryService);
 
         Number buyPower = sentryService.buyPower(); // 10000 - ((10 * 80.43)+10) = 10000-814.30
         assertEquals(9185.7d,buyPower.doubleValue(),DELTA);
@@ -89,7 +89,7 @@ public class DynamicSimulationTest {
         final Set<C2Element> checkedElements = new HashSet<C2Element>();
         sentryService.sendSystemHypotheticalRequest(systemId).visitC2Elements(new C2ElementVisitor() {
             @Override
-            public void visit(C2Element element, String data, Deque<String> stack) {
+            public void visit(C2Element element, String data) {
 
                 switch (element) {
                     case ElementTotalEquityAvail:
@@ -130,7 +130,7 @@ public class DynamicSimulationTest {
         long closeTime = 200000l;
         BigDecimal closePrice = new BigDecimal("160.86");
         dataProvider = new DynamicSimulationMockDataProvider(time,fixedPrice,closePrice,fixedPrice,closePrice,closeTime);
-        simulationAdapter.tick(dataProvider);
+        simulationAdapter.tick(dataProvider,sentryService);
 
         ////////////////////
         //confirm values
@@ -157,7 +157,7 @@ public class DynamicSimulationTest {
         //tick for limit order fail
         ////////////////////////////
         dataProvider.incTime(timeStep);
-        simulationAdapter.tick(dataProvider);
+        simulationAdapter.tick(dataProvider,sentryService);
 
         ////////////////////
         //confirm unchanged values
@@ -184,7 +184,7 @@ public class DynamicSimulationTest {
         //tick for limit order success
         ////////////////////////////
         dataProvider.incTime(timeStep);
-        simulationAdapter.tick(dataProvider);
+        simulationAdapter.tick(dataProvider,sentryService);
 
         ////////////////////
         //confirm changed
@@ -221,7 +221,7 @@ public class DynamicSimulationTest {
         //tick for limit order fail
         ////////////////////////////
         dataProvider.incTime(timeStep);
-        simulationAdapter.tick(dataProvider);
+        simulationAdapter.tick(dataProvider,sentryService);
 
         ////////////////////
         //confirm nothing changed
@@ -257,7 +257,7 @@ public class DynamicSimulationTest {
         //tick for limit order success
         ////////////////////////////
         dataProvider.incTime(timeStep);
-        simulationAdapter.tick(dataProvider);
+        simulationAdapter.tick(dataProvider,sentryService);
 
         shares = new BigDecimal("0");
         assertEquals(shares.intValue(), portfolio.position("msft").quantity().intValue());
@@ -281,7 +281,7 @@ public class DynamicSimulationTest {
 
         sentryService.sendSystemHypotheticalRequest(systemId).visitC2Elements(new C2ElementVisitor() {
             @Override
-            public void visit(C2Element element, String data, Deque<String> stack) {
+            public void visit(C2Element element, String data) {
 
                 switch (element) {
                     case ElementTotalEquityAvail:
@@ -319,17 +319,17 @@ public class DynamicSimulationTest {
         BigDecimal highPrice = new BigDecimal("100");
         DynamicSimulationMockDataProvider dataProvider = new DynamicSimulationMockDataProvider(
                 openTime,lowPrice,highPrice,lowPrice,highPrice,closeTime);
-        simulationAdapter.tick(dataProvider);
+        simulationAdapter.tick(dataProvider,sentryService);
 
         assertEquals(10, portfolio.position("msft").quantity().intValue());
 
         dataProvider.incTime(timeStep,new BigDecimal("22"));
-        simulationAdapter.tick(dataProvider);
+        simulationAdapter.tick(dataProvider,sentryService);
 
         assertEquals(10, portfolio.position("msft").quantity().intValue());
 
         dataProvider.incTime(timeStep,new BigDecimal("10"));
-        simulationAdapter.tick(dataProvider);
+        simulationAdapter.tick(dataProvider,sentryService);
 
         //should have hit sell stop with this low price
         assertEquals(0, portfolio.position("msft").quantity().intValue());
@@ -353,7 +353,7 @@ public class DynamicSimulationTest {
 
         sentryService.sendSystemHypotheticalRequest(systemId).visitC2Elements(new C2ElementVisitor() {
             @Override
-            public void visit(C2Element element, String data, Deque<String> stack) {
+            public void visit(C2Element element, String data) {
 
                 switch (element) {
                     case ElementTotalEquityAvail:
@@ -391,17 +391,17 @@ public class DynamicSimulationTest {
         BigDecimal highPrice = new BigDecimal("100");
         DynamicSimulationMockDataProvider dataProvider = new DynamicSimulationMockDataProvider(
                 openTime,lowPrice,highPrice,lowPrice,highPrice,closeTime);
-        simulationAdapter.tick(dataProvider);
+        simulationAdapter.tick(dataProvider,sentryService);
 
         assertEquals(10, portfolio.position("msft").quantity().intValue());
 
         dataProvider.incTime(timeStep,new BigDecimal("119"));
-        simulationAdapter.tick(dataProvider);
+        simulationAdapter.tick(dataProvider,sentryService);
 
         assertEquals(10, portfolio.position("msft").quantity().intValue());
 
         dataProvider.incTime(timeStep,new BigDecimal("121"));
-        simulationAdapter.tick(dataProvider);
+        simulationAdapter.tick(dataProvider,sentryService);
 
         assertEquals(0, portfolio.position("msft").quantity().intValue());
 

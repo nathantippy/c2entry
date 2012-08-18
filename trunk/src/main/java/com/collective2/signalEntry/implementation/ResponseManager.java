@@ -25,6 +25,7 @@ public class ResponseManager {
     private final C2EntryServiceJournal journal;
     private C2ServiceException          haltingException;
     private final long                  networkDownRetryDelay;
+    private boolean isClean;//is false when out of sync with journal
 
 
     private static final String        threadName = "C2EntryServiceResponseManager";
@@ -34,6 +35,7 @@ public class ResponseManager {
             Thread thread = new Thread(r);
             thread.setDaemon(true);
             thread.setName(threadName);
+            thread.setPriority(Thread.MAX_PRIORITY);
             return thread;
         }
     };
@@ -46,11 +48,10 @@ public class ResponseManager {
         }
     };
 
-    public ResponseManager(C2EntryServiceAdapter adapter, C2EntryServiceJournal journal, String password, long networkDownRetryDelay) {
+    public ResponseManager(C2EntryServiceAdapter adapter, C2EntryServiceJournal journal, long networkDownRetryDelay) {
         this.adapter                = adapter;
         this.journal                = journal;
         this.networkDownRetryDelay  = networkDownRetryDelay;
-        reloadPendingRequests(password);
     }
 
     public Exception getHaltingException(){
@@ -65,24 +66,27 @@ public class ResponseManager {
     }
 
 
-    private void reloadPendingRequests(String password) {
-        //reload old pending requests
-        Iterator<Request> iterator = this.journal.pending();
-        if (iterator.hasNext()) {
-            //never modify object passed in or this may leak the password out!
-            Request request = iterator.next().secureClone();
-            if (request.containsKey(Parameter.Password)) {
-                request.put(Parameter.Password, password);
+    public synchronized void reloadPendingRequests(String password) {
+        if (!isClean) {
+            //reload old pending requests
+            Iterator<Request> iterator = this.journal.pending();
+            if (iterator.hasNext()) {
+                //never modify object passed in or this may leak the password out!
+                Request request = iterator.next().secureClone();
+                if (request.containsKey(Parameter.Password)) {
+                    request.put(Parameter.Password, password);
+                }
+                executor.submit(new ImplResponse(this, request)); //Note: may want to add a recovery listener here
             }
-            executor.submit(new ImplResponse(this, request)); //Note: may want to add a recovery listener here
-        }
-        while(iterator.hasNext()) {
-            //never modify object passed in or this may leak the password out!
-            Request request = iterator.next().secureClone();
-            if (request.containsKey(Parameter.Password)) {
-                request.put(Parameter.Password, password);
+            while(iterator.hasNext()) {
+                //never modify object passed in or this may leak the password out!
+                Request request = iterator.next().secureClone();
+                if (request.containsKey(Parameter.Password)) {
+                    request.put(Parameter.Password, password);
+                }
+                executor.submit(new ImplResponse(this, request)); //Note: may want to add a recovery listener here
             }
-            executor.submit(new ImplResponse(this, request)); //Note: may want to add a recovery listener here
+            isClean=true;
         }
     }
 
@@ -96,7 +100,6 @@ public class ResponseManager {
         }
         return newResponse;
     }
-
 
 
     public void awaitPending() {

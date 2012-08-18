@@ -181,47 +181,58 @@ public class ImplResponse implements Response, Callable<XMLEventReader> {
             XMLEventReader reader = getXMLEventReader();
             StringBuilder builder = new StringBuilder();
             int tabs = 0;
-            while (reader.hasNext()) {
-                XMLEvent event;
-                try {
-                    event = reader.nextEvent();
-                } catch (XMLStreamException e) {
-                    e.printStackTrace();
-                    return builder.toString();
-                }
-                if (event.isEndElement()) {
-                    tabs--;
-                }
+            try{
+                while (reader.hasNext()) {
+                    XMLEvent event;
+                    try {
+                        event = reader.nextEvent();
+                    } catch (XMLStreamException e) {
+                        e.printStackTrace();
+                        return builder.toString();
+                    }
+                    if (event.isEndElement()) {
+                        tabs--;
+                    }
 
-                int x = tabs;
-                while (--x > 0) {
-                    builder.append("  ");
-                }
-                if (event.isEndDocument()) {
-                    builder.append("\n");
-                } else {
-                    String line = event.toString().trim();
-                    if (line.length()>0) {
-                        builder.append(line);
+                    int x = tabs;
+                    while (--x > 0) {
+                        builder.append("  ");
+                    }
+                    if (event.isEndDocument()) {
                         builder.append("\n");
+                    } else {
+                        String line = event.toString().trim();
+                        if (line.length()>0) {
+                            builder.append(line);
+                            builder.append("\n");
+                        }
+                    }
+
+                    if (event.isStartElement()) {
+                        tabs++;
                     }
                 }
-
-                if (event.isStartElement()) {
-                    tabs++;
+            } finally {
+                try {
+                    reader.close();
+                } catch (XMLStreamException e) {
+                    logger.warn("Unable to close xml stream", e);
                 }
-            }      //TODO: change to finally block
-            try {
-                reader.close();
-            } catch (XMLStreamException e) {
-                logger.warn("Unable to close xml stream", e);
             }
             return builder.toString();
 
     }
 
+
     @Override
-    public void visitC2Elements(C2ElementVisitor c2ElementVisitor) {
+    public void visitC2Elements(C2ElementVisitor c2ElementVisitor, C2Element ... expected) {
+        if (expected.length==0) {
+            logger.warn("expected types can not be checked unless they are passed in");
+        } else {
+            for(C2Element element: expected) {
+                request.command().validate(element);
+            }
+        }
         XMLEventReader reader = getXMLEventReader();
         try {
             Deque<String> stack = new ArrayDeque<String>();
@@ -235,8 +246,7 @@ public class ImplResponse implements Response, Callable<XMLEventReader> {
                     String data = event.asCharacters().getData().trim();
                     C2Element element = C2Element.binaryLookup(stack.peek());
                     if (element != null) {
-
-                        c2ElementVisitor.visit(element, data, stack);
+                        c2ElementVisitor.visit(element, data);
                     }
 
                 }

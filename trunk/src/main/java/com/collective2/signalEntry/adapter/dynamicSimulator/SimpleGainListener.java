@@ -7,13 +7,23 @@
 
 package com.collective2.signalEntry.adapter.dynamicSimulator;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.PrintStream;
 import java.math.BigDecimal;
-import java.nio.ByteBuffer;
 import java.text.DecimalFormat;
 import java.util.Calendar;
 import java.util.List;
 
-public class SystemOutGainListener implements GainListener {
+public class SimpleGainListener implements GainListener {
+
+    private static final Logger logger = LoggerFactory.getLogger(SimpleGainListener.class);
+    public final PrintStream systemOut;
+
+    public SimpleGainListener(PrintStream systemOut) {
+        this.systemOut = systemOut;
+    }
 
     @Override
     public void gainData(long now, List<String> systemNameList,
@@ -32,8 +42,11 @@ public class SystemOutGainListener implements GainListener {
             writeSystem(systemNameList.get(i),fullCAGRList.get(i),lastCAGRList.get(i),currentEquityList.get(i),row);
         }
 
-
-        System.out.println(row);
+        if (systemOut!=null) {
+            systemOut.println(row);
+        } else {
+            logger.info(row.toString());
+        }
     }
 
     private void writeSystem(String name, Double fullCAGR, Double lastCAGR, BigDecimal equity, StringBuffer row) {

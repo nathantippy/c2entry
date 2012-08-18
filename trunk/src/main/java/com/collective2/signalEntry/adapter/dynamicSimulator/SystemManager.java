@@ -33,7 +33,7 @@ public class SystemManager {
     private final BigDecimal commission;
 
     private final SortedSet<Order> scheduled;//waiting for the right time
-    private final List<Order> archive;//all signals listed here
+    private final List<Order> archive;//all signals listed here by index
     private final List<Order> active;//waiting on market conditions
     private final Map<Integer, List<Order>> ocaMap;
 
@@ -76,7 +76,9 @@ public class SystemManager {
         //TODO: no support for setting signalid from the caller
 
         synchronized(archive) {
-            Integer conditionalUpon = (Integer)request.get(Parameter.ConditionalUpon);
+            Integer conditionalUponId = (Integer)request.get(Parameter.ConditionalUpon);
+            Order conditionalUponOrder = (conditionalUponId==null? null : archive.get(conditionalUponId));
+
 
             int id = archive.size();
 
@@ -156,26 +158,20 @@ public class SystemManager {
                     ocaMap.get(ocaId).add(signal);
                 }
 
-                Integer forceNoOCA = (Integer)request.get(ForceNoOCA);
-                if (forceNoOCA!=null) {
-                    signal.forceNoOCA(forceNoOCA);
-                }
-
                 Integer xReplace = (Integer)request.get(XReplace);
                 if (xReplace!=null) {
-                    signal.xReplace(xReplace);
 
-                    //TODO: cancel the active order with this id
-                    //add new stop order conditional upon what xReplace was upon
-
+                    Order oldOrder = archive.get(xReplace);
+                    conditionalUponOrder = oldOrder.conditionalUpon();
+                    request.remove(XReplace);
 
                 }
 
                 order = signal;
             }
 
-            if (conditionalUpon!=null) {
-                order.conditionalUpon(archive.get(conditionalUpon));
+            if (conditionalUponOrder!=null) {
+                order.conditionalUpon(conditionalUponOrder);
                 //do normal schedule however in addition to time and other
                 //critera the upon must have triggered
             }
@@ -185,7 +181,9 @@ public class SystemManager {
             scheduled.add(order);//needed for processing by time order
 
             Integer ocaId = null;
-            if (!request.containsKey(Parameter.ForceNoOCA)) {
+
+            Integer forceNoOCA = (Integer)request.get(ForceNoOCA);
+            if (forceNoOCA==null || forceNoOCA.intValue()!=1) {
                 ocaId = generateNewOCAId();
             }
             int stopLossSignalId = -1;
@@ -304,14 +302,15 @@ public class SystemManager {
 
     public BigDecimal totalMargin() {
 
+       // portfolio.
+         //                                hhhh
         //based on each positions instrument
         return BigDecimal.ZERO;//TODO: margin was not used in first release, not implemented yet
 
     }
 
 
-    //TODO: this simulation does not take into account splits
-    //TODO: this simulation does not take into account dividends
+    //TODO: this simulation does not take into account splits or dividends
 
 
     public boolean isPassword(String password) {
@@ -359,4 +358,10 @@ public class SystemManager {
     public String statusMessage() {
         return name()+" "+portfolio().statusMessage();
     }
+
+    //TODO: DataProvider does not need open flag
+    //TODO: add unit teest for gain listener and add boolean for log or system out
+
+
+
 }

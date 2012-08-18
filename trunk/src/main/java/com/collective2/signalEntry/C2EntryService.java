@@ -19,40 +19,36 @@ public class C2EntryService {
 
     //responsible for ensuring the order of the signals
     private final ResponseManager responseManager;
-    private final static long networkDownRetryDelay = 10000l;//try every 10 seconds
 
     private Integer commonSystemId;
     private String commonPassword;
     private String commonEMail;
 
-    public C2EntryService(C2ServiceFactory serviceFactory, String password, int systemId) {
+    public C2EntryService(ResponseManager responseManager, C2ServiceFactory serviceFactory, String password, int systemId) {
         this.serviceFactory = serviceFactory;
         this.commonPassword = password;
         this.commonSystemId = systemId;
         this.commonEMail = null;
-        this.responseManager = new ResponseManager(serviceFactory.entryServiceAdapter(),
-                                                   serviceFactory.entryServiceJournal(),
-                                                   password,networkDownRetryDelay);
+        this.responseManager = responseManager;
+        responseManager.reloadPendingRequests(password);
     }
 
-    public C2EntryService(C2ServiceFactory serviceFactory, String password, String eMail) {
+    public C2EntryService(ResponseManager responseManager, C2ServiceFactory serviceFactory, String password, String eMail) {
         this.serviceFactory = serviceFactory;
         this.commonPassword = password;
         this.commonSystemId = null;
         this.commonEMail = eMail;
-        this.responseManager = new ResponseManager(serviceFactory.entryServiceAdapter(),
-                                                   serviceFactory.entryServiceJournal(),
-                                                   password,networkDownRetryDelay);
+        this.responseManager = responseManager;
+        responseManager.reloadPendingRequests(password);
     }
 
-    public C2EntryService(C2ServiceFactory serviceFactory, String password, int systemId, String eMail) {
+    public C2EntryService(ResponseManager responseManager, C2ServiceFactory serviceFactory, String password, int systemId, String eMail) {
         this.serviceFactory = serviceFactory;
         this.commonPassword = password;
         this.commonSystemId = systemId;
         this.commonEMail = eMail;
-        this.responseManager = new ResponseManager(serviceFactory.entryServiceAdapter(),
-                                                   serviceFactory.entryServiceJournal(),
-                                                   password,networkDownRetryDelay);
+        this.responseManager = responseManager;
+        responseManager.reloadPendingRequests(password);
     }
 
 
