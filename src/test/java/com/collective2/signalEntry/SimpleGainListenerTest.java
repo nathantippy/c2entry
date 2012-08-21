@@ -7,6 +7,8 @@ import com.collective2.signalEntry.adapter.dynamicSimulator.SimpleGainListener;
 import com.collective2.signalEntry.adapter.dynamicSimulator.SimplePortfolio;
 import org.junit.Test;
 
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
 import java.math.BigDecimal;
 
 import static org.junit.Assert.assertEquals;
@@ -37,7 +39,10 @@ public class SimpleGainListenerTest {
 
         long timeStep = 60000l*60l*24l;
 
-        GainListener listener = new SimpleGainListener(System.err);
+        ByteArrayOutputStream baos = new ByteArrayOutputStream(1024);
+        PrintStream printStream = new PrintStream(baos);
+
+        GainListener listener = new SimpleGainListener(printStream);
         long start = 0;
         long period = timeStep;
         simulationAdapter.addGainListener(start,period,listener);
@@ -61,20 +66,30 @@ public class SimpleGainListenerTest {
         BigDecimal highPrice = new BigDecimal("100");
         DynamicSimulationMockDataProvider dataProvider = new DynamicSimulationMockDataProvider(
                 openTime,lowPrice,highPrice,lowPrice,highPrice,closeTime);
+
         simulationAdapter.tick(dataProvider,sentryService);
 
         assertEquals(10, portfolio.position("msft").quantity().intValue());
 
-        dataProvider.incTime(timeStep,new BigDecimal("22"));
-        simulationAdapter.tick(dataProvider,sentryService);
+        dataProvider.incTime(timeStep, new BigDecimal("22"));
+        simulationAdapter.tick(dataProvider, sentryService);
 
         assertEquals(10, portfolio.position("msft").quantity().intValue());
 
         dataProvider.incTime(timeStep,new BigDecimal("10"));
-        simulationAdapter.tick(dataProvider,sentryService);
+        simulationAdapter.tick(dataProvider, sentryService);
 
-        //should have hit sell stop with this low price
-        assertEquals(0, portfolio.position("msft").quantity().intValue());
+
+        simulationAdapter.awaitGainListeners();
+
+        //results
+        System.out.println(baos.toString());
+
+
+
+//
+//        //should have hit sell stop with this low price
+//        assertEquals(0, portfolio.position("msft").quantity().intValue());
 
     }
 

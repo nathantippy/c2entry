@@ -19,7 +19,7 @@ public class GainListenerManager {
     long             lastTime = Long.MIN_VALUE;
     List<BigDecimal> lastTotalEquityList;
 
-    long             firstTime;
+    long             firstTime = Long.MIN_VALUE;
     List<BigDecimal> firstTotalEquityList;
 
     long             start;
@@ -33,8 +33,16 @@ public class GainListenerManager {
 
     }
 
-    public void send(final long now, Executor gainExecutor, List<SystemManager> systems, DataProvider dataProvider) {
+    public void send(Executor gainExecutor, List<SystemManager> systems, DataProvider dataProvider) {
+        final long now = dataProvider.endingTime();
+
+        //establish start time
+        if (firstTime == Long.MIN_VALUE) {
+            firstTime = dataProvider.openingTime();
+        }
+        lastTime = dataProvider.openingTime();
         assert(now>=0);
+
         if (isTimeToSend(now)) {
 
             final List<BigDecimal> totalEquityList = new ArrayList<BigDecimal>();
@@ -47,7 +55,7 @@ public class GainListenerManager {
             }
 
             //must have old values and same number of systems
-            if (lastTime>=0 && totalEquityList.size()==lastTotalEquityList.size()) {
+            if (firstTotalEquityList!=null && totalEquityList.size()==lastTotalEquityList.size()) {
                 //we have all the old values and the new values, ready for sending.
                 gainExecutor.execute(new Runnable() {
                     @Override
@@ -55,6 +63,8 @@ public class GainListenerManager {
 
                             long unitLength = now - lastTime;
                             long fullLength = now - firstTime;
+
+                            System.out.println("unitLength:"+unitLength+" fullLength:"+fullLength);
 
                             double unitYears = unitLength/(double)ONE_YEAR_MS;
                             double fullYears = fullLength/(double)ONE_YEAR_MS;
@@ -66,21 +76,33 @@ public class GainListenerManager {
                                 double unitCAGR;
                                 double fullCAGR;
 
+                                System.out.println("unit test "+totalEquityList.get(i).doubleValue()+"/"+lastTotalEquityList.get(i).doubleValue()+"*"+unitYears);
+
                                 if (unitYears<1) {
-                                    unitCAGR =  (totalEquityList.get(i).doubleValue()/lastTotalEquityList.get(i).doubleValue()*unitYears)-1d;
+                                    if (unitYears==0) {
+                                        unitCAGR = Double.NaN;
+                                    } else {
+                                        unitCAGR = (1d-(totalEquityList.get(i).doubleValue()/(lastTotalEquityList.get(i).doubleValue())))/unitYears;
+                                    }
                                 } else {
                                     unitCAGR = computeDiscountRate(lastTotalEquityList.get(i).doubleValue(),totalEquityList.get(i).doubleValue(),unitYears);
                                 }
                                 unitCAGRList.add(unitCAGR);
 
+                                System.out.println("full test "+totalEquityList.get(i).doubleValue()+"/"+firstTotalEquityList.get(i).doubleValue()+"*"+fullYears);
                                 if (fullYears<1) {
-                                    fullCAGR =  (totalEquityList.get(i).doubleValue()/firstTotalEquityList.get(i).doubleValue()*fullYears)-1d;
+                                    if (fullYears==0) {
+                                        fullCAGR = Double.NaN;
+                                    } else {
+                                        fullCAGR =  (1d-(totalEquityList.get(i).doubleValue()/firstTotalEquityList.get(i).doubleValue()))/fullYears;
+                                    }
                                 } else {
                                     fullCAGR = computeDiscountRate(firstTotalEquityList.get(i).doubleValue(),totalEquityList.get(i).doubleValue(),fullYears);
                                 }
                                 fullCAGRList.add(fullCAGR);
                             }
 
+                        //move down so its seen every time!
                             listener.gainData(now, nameList, firstTotalEquityList, fullCAGRList, lastTotalEquityList, unitCAGRList, totalEquityList);
 
                     }
@@ -93,17 +115,14 @@ public class GainListenerManager {
                         assert(years>0);
                         return Math.pow(fV/pV, (1d/years))-1d;
                     }
-
                 });
-
             }
-            //store these values for next time
+
+            //store these equity values for next time
             lastTotalEquityList = totalEquityList;
             if (firstTotalEquityList == null) {
                 firstTotalEquityList = totalEquityList;
-                firstTime = now;
             }
-            lastTime = now;
         }
 
     }

@@ -310,10 +310,6 @@ public class SystemManager {
 
     }
 
-
-    //TODO: this simulation does not take into account splits or dividends
-
-
     public boolean isPassword(String password) {
         return true;//TODO: add implementation with test
     }

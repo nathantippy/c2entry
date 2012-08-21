@@ -15,7 +15,6 @@ import org.junit.Test;
 import java.math.BigDecimal;
 import java.util.*;
 
-import static com.collective2.signalEntry.Money.USD;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -23,9 +22,6 @@ import static org.junit.Assert.fail;
 public class DynamicSimulationTest {
 
     private final double DELTA=.00000001d;
-
-        // TODO: add new test for this simulationAdapter.addGainListener(0, GainListenerManager.ONE_YEAR_MS/12, new SimpleGainListener());
-
 
     @Test
     public void longBuySellTest() {
@@ -408,7 +404,7 @@ public class DynamicSimulationTest {
     }
 
 
-    //also need test for target price
+    //also need test for xReplace stop
 
     //add tests for shorts.
 

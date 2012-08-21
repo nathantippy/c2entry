@@ -25,10 +25,25 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.*;
 
+/**
+ * Dynamic simulation adapter
+ *
+ * Simulates collective2 responses given a data feed.
+ *
+ * Has built in support for simplistic position based portfolio.
+ * Uses portfolio interface for a more complex/persistent implementation.
+ *
+ * Has built in support for CAGR periodic reporting to logger or system out.
+ * Uses listener interface for a more complex/persistent implementation of CAGR gain listener.
+ *
+ * Limitations:
+ *  this simulation does not take into account splits or dividends
+ *  this simulation requires user to call tick and supply data via DataProvider interface
+ *
+ *
+ */
 public class DynamicSimulationAdapter implements C2EntryServiceAdapter {
 
     private static final Logger logger = LoggerFactory.getLogger(DynamicSimulationAdapter.class);
@@ -48,9 +63,10 @@ public class DynamicSimulationAdapter implements C2EntryServiceAdapter {
             thread.setDaemon(true);
             thread.setName("DynamicSimulationAdapter GainListenerManager");
             return thread;
+
         }
     };
-    private final Executor gainExecutor = Executors.newSingleThreadExecutor(threadFactory);
+    private final ExecutorService gainExecutor = Executors.newSingleThreadExecutor(threadFactory);
 
     public DynamicSimulationAdapter(long startTime) {
         this.time = startTime;
@@ -71,10 +87,27 @@ public class DynamicSimulationAdapter implements C2EntryServiceAdapter {
         }
 
         for(GainListenerManager manager:gainListeners) {
-            manager.send(time, gainExecutor, systems, dataProvider);
+            manager.send(gainExecutor, systems, dataProvider);
+        }
+    };
+
+    public void awaitGainListeners() {
+        Future<?> future = gainExecutor.submit(new Runnable() {
+            @Override
+            public void run() {
+                //do nothing, just wait
+            }
+        });
+        try {
+            future.get();//blocks until this runnable completes
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return;
+        } catch (ExecutionException e) {
+            logger.warn("unable to wait for gain listener", e);
         }
 
-    };
+    }
 
     public void addGainListener(long start, long period, GainListener listener) {
 
