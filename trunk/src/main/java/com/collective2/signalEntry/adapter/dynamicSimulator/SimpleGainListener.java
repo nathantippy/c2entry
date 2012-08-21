@@ -37,7 +37,6 @@ public class SimpleGainListener implements GainListener {
         calendar.setTimeInMillis(now);
         isoDateTime(calendar, row);
 
-
         for(int i = 0;i<systemNameList.size();i++) {
             writeSystem(systemNameList.get(i),fullCAGRList.get(i),lastCAGRList.get(i),currentEquityList.get(i),row);
         }
@@ -53,10 +52,14 @@ public class SimpleGainListener implements GainListener {
 
         DecimalFormat def = new DecimalFormat("##.00");
 
-        row.append(' ').append(name).append(' ');
-        row.append(def.format(fullCAGR*100d)).append("% ");
-        row.append(def.format(lastCAGR*100d)).append("% ");
-        row.append(equity);
+        row.append(' ').append(name);
+        if (!Double.isNaN(fullCAGR)) {
+            row.append(" total:").append(def.format(fullCAGR*100d)).append('%');
+        }
+        if (!Double.isNaN(lastCAGR)) {
+            row.append(" last:").append(def.format(lastCAGR*100d)).append('%');
+        }
+        row.append(" equity:").append(equity);
 
     }
 
