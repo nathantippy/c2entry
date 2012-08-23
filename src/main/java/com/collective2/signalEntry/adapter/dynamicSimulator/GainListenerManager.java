@@ -33,7 +33,7 @@ public class GainListenerManager {
 
     }
 
-    public void send(Executor gainExecutor, List<SystemManager> systems, DataProvider dataProvider) {
+    public void send(Executor gainExecutor, DataProvider dataProvider, SystemManager ... systems) {
         final long now = dataProvider.endingTime();
 
         //establish start time
