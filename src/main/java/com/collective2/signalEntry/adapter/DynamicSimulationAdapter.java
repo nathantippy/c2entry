@@ -74,12 +74,12 @@ public class DynamicSimulationAdapter implements C2EntryServiceAdapter {
         this.time = startTime;
     }
 
-    public void tick(DataProvider dataProvider, int systemId, C2EntryService entryService) {
+    public void tick(DataProvider dataProvider, C2EntryService entryService) {
 
         //ensure existing requests are submitted.
         entryService.awaitPending();
 
-        SystemManager system = systems.get(systemId);
+        SystemManager system = systems.get(entryService.systemId());
 
         //can not tick and transmit at same moment in order to keep simulator repeatable
         synchronized(lock) {

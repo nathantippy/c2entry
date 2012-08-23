@@ -67,17 +67,17 @@ public class SimpleGainListenerTest {
         DynamicSimulationMockDataProvider dataProvider = new DynamicSimulationMockDataProvider(
                 openTime,lowPrice,highPrice,lowPrice,highPrice,closeTime);
 
-        simulationAdapter.tick(dataProvider, systemId, sentryService);
+        simulationAdapter.tick(dataProvider, sentryService);
 
         assertEquals(10, portfolio.position("msft").quantity().intValue());
 
         dataProvider.incTime(timeStep, new BigDecimal("22"));
-        simulationAdapter.tick(dataProvider, systemId, sentryService);
+        simulationAdapter.tick(dataProvider, sentryService);
 
         assertEquals(10, portfolio.position("msft").quantity().intValue());
 
         dataProvider.incTime(timeStep,new BigDecimal("10"));
-        simulationAdapter.tick(dataProvider, systemId, sentryService);
+        simulationAdapter.tick(dataProvider, sentryService);
 
 
         simulationAdapter.awaitGainListeners();
