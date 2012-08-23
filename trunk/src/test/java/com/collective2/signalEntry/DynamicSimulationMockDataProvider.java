@@ -60,11 +60,6 @@ public class DynamicSimulationMockDataProvider implements DataProvider {
     }
 
     @Override
-    public boolean wasOpen() {
-        return true;
-    }
-
-    @Override
     public BigDecimal highPrice(String symbol) {
         return high;
     }

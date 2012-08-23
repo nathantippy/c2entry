@@ -42,6 +42,8 @@ import java.util.concurrent.*;
  *  this simulation does not take into account splits or dividends
  *  this simulation requires user to call tick and supply data via DataProvider interface
  *
+ *  this simulation has no support for setting signalId from the client side (caller)
+ *  this simulation has not be tested with multiple systems
  *
  */
 public class DynamicSimulationAdapter implements C2EntryServiceAdapter {
@@ -138,7 +140,10 @@ public class DynamicSimulationAdapter implements C2EntryServiceAdapter {
                      int signalId             = signalIdArray[0];
                      int stopLossSignalId     = signalIdArray[1];
                      int profitTargetSignalId = signalIdArray[2];
-                     return new SimulatedResponseSignal(signalId,OK);
+                     return new SimulatedResponseSignal(signalId,
+                                                        stopLossSignalId==SystemManager.NO_ID?null:stopLossSignalId,
+                                                        profitTargetSignalId==SystemManager.NO_ID?null:profitTargetSignalId,
+                                                        OK);
 
                 case GetBuyPower:
                    //  long lastTickTime = lastTickDataProvider.endingTime();

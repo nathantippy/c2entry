@@ -14,7 +14,6 @@ public interface DataProvider {
     BigDecimal openingPrice(String symbol);
     BigDecimal endingPrice(String symbol);
 
-    boolean wasOpen();
     BigDecimal highPrice(String symbol);
     BigDecimal lowPrice(String symbol);
 

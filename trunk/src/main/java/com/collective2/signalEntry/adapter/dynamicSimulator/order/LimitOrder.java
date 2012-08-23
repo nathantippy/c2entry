@@ -43,90 +43,57 @@ public class LimitOrder extends OrderSignal {
         } else {
 
             BigDecimal absoluteLimit = absolutePrice(relativeLimit,dataProvider,portfolio);
-
+            BigDecimal price;
+            Integer quantity;
             switch(action) {
                 case BTC:
                 case BTO:
                     //must only buy if we can do it under absoluteLimit.
-                    if (dataProvider.wasOpen()) {
-                        if (absoluteLimit.compareTo(dataProvider.lowPrice(symbol))<0) {
-                            return false;// do not trigger can not get good deal under limit price.
-                        }
 
-                        BigDecimal price;
-                        if (absoluteLimit.compareTo(dataProvider.highPrice(symbol))>0) {
-                            //limit is above high so anything between low and high is ok
-                            price = priceSelection(dataProvider.lowPrice(symbol), dataProvider.highPrice(symbol));
-                        } else {
-                            //limit is between low and high so only values between low and limit are ok
-                            price = priceSelection(dataProvider.lowPrice(symbol), absoluteLimit);
-                        }
-                        //using the price used for the transaction determine the right quantity
-                        Integer quantity = quantityComputable.quantity(price, portfolio, dataProvider, conditionalUpon());
-                        entryQuantity(quantity);
-                        //create the transaction in the portfolio
-                        portfolio.position(symbol).addTransaction(quantity, time, price, commission);
-
-                        processed = true;
-                        return true;
-
-                    } else {
-                        //only look at most recent price, dataProvider was not open.
-                        BigDecimal price = dataProvider.endingPrice(symbol);
-                        if (absoluteLimit.compareTo(price)<0) {
-                            return false;// do not trigger can not get good deal under limit price.
-                        } else {
-                            //limit is above or equal to last price so it can be used.
-                            //using the price used for the transaction determine the right quantity
-                            Integer quantity = quantityComputable.quantity(price, portfolio, dataProvider, conditionalUpon());
-                            entryQuantity(quantity);
-                            //create the transaction in the portfolio
-                            portfolio.position(symbol).addTransaction(quantity, time, price, commission);
-                            processed = true;
-                            return true;
-                        }
+                    if (absoluteLimit.compareTo(dataProvider.lowPrice(symbol))<0) {
+                        return false;// do not trigger can not get good deal under limit price.
                     }
+
+                    if (absoluteLimit.compareTo(dataProvider.highPrice(symbol))>0) {
+                        //limit is above high so anything between low and high is ok
+                        price = priceSelection(dataProvider.lowPrice(symbol), dataProvider.highPrice(symbol));
+                    } else {
+                        //limit is between low and high so only values between low and limit are ok
+                        price = priceSelection(dataProvider.lowPrice(symbol), absoluteLimit);
+                    }
+                    //using the price used for the transaction determine the right quantity
+                    quantity = quantityComputable.quantity(price, portfolio, dataProvider, conditionalUpon());
+                    entryQuantity(quantity);
+                    //create the transaction in the portfolio
+                    portfolio.position(symbol).addTransaction(quantity, time, price, commission);
+
+                    processed = true;
+                    return true;
+
                 case SSHORT:
                 case STC:
                 case STO:
                     //must only buy if we can do it under absoluteLimit.
-                    if (dataProvider.wasOpen()) {  //sell at price higher than limit if limit>high this is not possible
-                        if (absoluteLimit.compareTo(dataProvider.highPrice(symbol))>0) {
-                            return false;// do not trigger can not get good deal under limit price.
-                        }
 
-                        BigDecimal price;
-                        if (absoluteLimit.compareTo(dataProvider.lowPrice(symbol))<0) {
-                            //limit is below low so anything between low and high is ok
-                            price = priceSelection(dataProvider.highPrice(symbol), dataProvider.lowPrice(symbol));
-                        } else {
-                            //limit is between low and high so only values between high and limit are ok
-                            price = priceSelection(dataProvider.highPrice(symbol), absoluteLimit);
-                        }
-                        //using the price used for the transaction determine the right quantity
-                        Integer quantity = quantityComputable.quantity(price, portfolio, dataProvider, conditionalUpon());
-                        entryQuantity(quantity);
-                        //create the transaction in the portfolio
-                        portfolio.position(symbol).addTransaction(-quantity, time, price, commission);
-                        processed = true;
-                        return true;
-
-                    } else {
-                        //only look at most recent price, dataProvider was not open.
-                        BigDecimal price = dataProvider.endingPrice(symbol);
-                        if (absoluteLimit.compareTo(price)>0) {
-                            return false;// do not trigger can not get sell deal above limit price.
-                        } else {
-                            //limit is above or equal to last price so it can be used.
-                            //using the price used for the transaction determine the right quantity
-                            Integer quantity = quantityComputable.quantity(price, portfolio, dataProvider, conditionalUpon());
-                            entryQuantity(quantity);
-                            //create the transaction in the portfolio
-                            portfolio.position(symbol).addTransaction(-quantity, time, price, commission);
-                            processed = true;
-                            return true;
-                        }
+                    if (absoluteLimit.compareTo(dataProvider.highPrice(symbol))>0) {
+                        return false;// do not trigger can not get good deal under limit price.
                     }
+
+                    if (absoluteLimit.compareTo(dataProvider.lowPrice(symbol))<0) {
+                        //limit is below low so anything between low and high is ok
+                        price = priceSelection(dataProvider.highPrice(symbol), dataProvider.lowPrice(symbol));
+                    } else {
+                        //limit is between low and high so only values between high and limit are ok
+                        price = priceSelection(dataProvider.highPrice(symbol), absoluteLimit);
+                    }
+                    //using the price used for the transaction determine the right quantity
+                    quantity = quantityComputable.quantity(price, portfolio, dataProvider, conditionalUpon());
+                    entryQuantity(quantity);
+                    //create the transaction in the portfolio
+                    portfolio.position(symbol).addTransaction(-quantity, time, price, commission);
+                    processed = true;
+                    return true;
+
                 default:
                     throw new UnsupportedOperationException("Unsupported action:"+action);
 
