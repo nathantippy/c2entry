@@ -31,6 +31,7 @@ public enum C2Element {
     ElementPosition("position"),
     ElementPostedWhen("postedwhen"),
     ElementPreviousComment("previousComment"),
+    ElementProfitTaretSignalId("profittargetsignalid"),
     ElementSignalId("signalid"),
     ElementStatus("status"),
     ElementStopLossSignalId("stoplosssignalid"),

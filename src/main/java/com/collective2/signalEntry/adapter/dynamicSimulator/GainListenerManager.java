@@ -102,7 +102,7 @@ public class GainListenerManager {
                                 fullCAGRList.add(fullCAGR);
                             }
 
-                        //move down so its seen every time!
+                            //move down so its seen every time!
                             listener.gainData(now, nameList, firstTotalEquityList, fullCAGRList, lastTotalEquityList, unitCAGRList, totalEquityList);
 
                     }

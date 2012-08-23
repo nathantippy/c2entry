@@ -43,7 +43,7 @@ public enum Command {
             };
         }
         protected EnumSet<C2Element> possibleResult() {
-            return EnumSet.of(ElementSignalId,ElementStatus,ElementComments);
+            return EnumSet.of(ElementSignalId,ElementStatus,ElementComments,ElementProfitTaretSignalId,ElementStopLossSignalId);
         }
     },
     RequestOCAId("requestocaid") {

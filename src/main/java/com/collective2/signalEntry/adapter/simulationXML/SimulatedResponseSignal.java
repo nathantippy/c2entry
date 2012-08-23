@@ -10,6 +10,7 @@ import java.util.concurrent.BlockingQueue;
 
 import javax.xml.stream.events.XMLEvent;
 
+import com.collective2.signalEntry.C2Element;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,11 +18,22 @@ public class SimulatedResponseSignal extends SimulatedResponse {
 
     private static final Logger logger = LoggerFactory.getLogger(SimulatedResponseSignal.class);
     private final Integer       signalId;
+    private final Integer       stopLossSignalId;
+    private final Integer       profitTaretSignalId;
     private final String        message;
 
     public SimulatedResponseSignal(Integer signalId, String message) {
         this.signalId = signalId;
         this.message = message;
+        this.stopLossSignalId = null;
+        this.profitTaretSignalId = null;
+    }
+
+    public SimulatedResponseSignal(Integer signalId, Integer stopLossSignalId, Integer profitTaretSignalId, String message) {
+        this.signalId = signalId;
+        this.message = message;
+        this.stopLossSignalId = stopLossSignalId;
+        this.profitTaretSignalId = profitTaretSignalId;
     }
 
     @Override
@@ -34,9 +46,21 @@ public class SimulatedResponseSignal extends SimulatedResponse {
             queue.put(eventFactory.createStartDocument());
             queue.put(eventFactory.createStartElement("", "", "collective2"));
 
-            queue.put(eventFactory.createStartElement("", "", "signalid"));
+            queue.put(eventFactory.createStartElement("", "", C2Element.ElementSignalId.localElementName()));
             queue.put(eventFactory.createCharacters(signalId.toString()));
-            queue.put(eventFactory.createEndElement("", "", "signalid"));
+            queue.put(eventFactory.createEndElement("", "", C2Element.ElementSignalId.localElementName()));
+
+            if (stopLossSignalId != null) {
+                queue.put(eventFactory.createStartElement("", "", C2Element.ElementStopLossSignalId.localElementName()));
+                queue.put(eventFactory.createCharacters(stopLossSignalId.toString()));
+                queue.put(eventFactory.createEndElement("", "", C2Element.ElementStopLossSignalId.localElementName()));
+            }
+
+            if (profitTaretSignalId != null) {
+                queue.put(eventFactory.createStartElement("", "", C2Element.ElementProfitTaretSignalId.localElementName()));
+                queue.put(eventFactory.createCharacters(profitTaretSignalId.toString()));
+                queue.put(eventFactory.createEndElement("", "", C2Element.ElementProfitTaretSignalId.localElementName()));
+            }
 
             queue.put(eventFactory.createStartElement("", "", "comments"));
             queue.put(eventFactory.createCharacters(message));

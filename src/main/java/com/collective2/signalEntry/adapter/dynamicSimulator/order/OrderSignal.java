@@ -51,11 +51,7 @@ public abstract class OrderSignal extends Order {
             case 'Q':
                 return dataProvider.endingPrice(symbol).add(relativeLimit.value());
             case 'O':
-                if (dataProvider.wasOpen()) {
-                    return dataProvider.openingPrice(symbol).add(relativeLimit.value());
-                } else {
-                    return dataProvider.endingPrice(symbol).add(relativeLimit.value());
-                }
+                return dataProvider.openingPrice(symbol).add(relativeLimit.value());
             case 'T':
                 return portfolio.position(symbol).openPrice().add(relativeLimit.value());
             default:

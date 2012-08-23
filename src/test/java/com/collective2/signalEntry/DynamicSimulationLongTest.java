@@ -14,12 +14,13 @@ import org.junit.Test;
 
 import java.math.BigDecimal;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-public class DynamicSimulationTest {
+public class DynamicSimulationLongTest {
 
     private final double DELTA=.00000001d;
 
@@ -246,9 +247,6 @@ public class DynamicSimulationTest {
                 .limitOrder(sellLimitSuccess).quantity(10).symbol("msft")
                 .duration(Duration.DayOrder).send();
 
-        //force request response now
-        marketLimitSellResponse.getXML();
-
         ///////////////////////////
         //tick for limit order success
         ////////////////////////////
@@ -304,7 +302,6 @@ public class DynamicSimulationTest {
                 .marketOrder().quantity(10).symbol("msft")
                 .stopLoss(stopLoss).profitTarget(profitTarget)
                 .duration(Duration.GoodTilCancel).send();
-        openResponse.getXML();//force call now
 
         long timeStep = 60000l*60l*24l;
         long openTime = 0l;
@@ -376,7 +373,33 @@ public class DynamicSimulationTest {
                 .marketOrder().quantity(10).symbol("msft")
                 .stopLoss(stopLoss).profitTarget(profitTarget)
                 .duration(Duration.GoodTilCancel).send();
-        openResponse.getXML();//force call now
+
+        final AtomicInteger signalId = new AtomicInteger(0);
+        final AtomicInteger profitTargetSignalId = new AtomicInteger(0);
+        final AtomicInteger stopLossSignalId = new AtomicInteger(0);
+
+        openResponse.visitC2Elements(new C2ElementVisitor() {
+            @Override
+            public void visit(C2Element element, String data) {
+                switch(element) {
+                    case ElementSignalId:
+
+                        signalId.set(Integer.valueOf(data));
+                        break;
+                    case ElementProfitTaretSignalId:
+                        profitTargetSignalId.set(Integer.valueOf(data));
+                        break;
+                    case ElementStopLossSignalId:
+                        stopLossSignalId.set(Integer.valueOf(data));
+                        break;
+                }
+            }
+        }, C2Element.ElementSignalId, C2Element.ElementStopLossSignalId, C2Element.ElementProfitTaretSignalId );
+
+        sentryService.awaitPending();
+        assertTrue(signalId.intValue()>=0);
+        assertTrue(profitTargetSignalId.intValue()>0);
+        assertTrue(stopLossSignalId.intValue()>0);
 
         long timeStep = 60000l*60l*24l;
         long openTime = 0l;

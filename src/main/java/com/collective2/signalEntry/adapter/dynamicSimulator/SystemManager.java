@@ -47,6 +47,7 @@ public class SystemManager {
 
 
     private Number minBuyPower = BigDecimal.ZERO; //margin call when this is hit.
+    public static final int NO_ID = Integer.MIN_VALUE;
 
     public SystemManager(Portfolio portfolio, Integer systemId, String systemName, String password, BigDecimal commission) {
         this.portfolio = portfolio;
@@ -72,8 +73,6 @@ public class SystemManager {
 
 
     public int[] scheduleSignal(long timeToExecute, Request request) {
-
-        //TODO: no support for setting signalid from the caller
 
         synchronized(archive) {
             Integer conditionalUponId = (Integer)request.get(Parameter.ConditionalUpon);
@@ -187,8 +186,8 @@ public class SystemManager {
             if (forceNoOCA==null || forceNoOCA.intValue()!=1) {
                 ocaId = generateNewOCAId();
             }
-            int stopLossSignalId = -1;
-            int profitTargetSignalId = -1;
+            int stopLossSignalId = NO_ID;
+            int profitTargetSignalId = NO_ID;
 
             //generate and schedule requests for all-in-one
             RelativeNumber stopLoss = (RelativeNumber)request.get(Parameter.RelativeStopLoss);
@@ -355,10 +354,4 @@ public class SystemManager {
     public String statusMessage() {
         return name()+" "+portfolio().statusMessage();
     }
-
-    //TODO: DataProvider does not need open flag
-    //TODO: add unit teest for gain listener and add boolean for log or system out
-
-
-
 }
