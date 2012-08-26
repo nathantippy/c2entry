@@ -64,8 +64,6 @@ public class GainListenerManager {
                             long unitLength = now - lastTime;
                             long fullLength = now - firstTime;
 
-                            System.out.println("unitLength:"+unitLength+" fullLength:"+fullLength);
-
                             double unitYears = unitLength/(double)ONE_YEAR_MS;
                             double fullYears = fullLength/(double)ONE_YEAR_MS;
 
@@ -76,25 +74,22 @@ public class GainListenerManager {
                                 double unitCAGR;
                                 double fullCAGR;
 
-                                System.out.println("unit test "+totalEquityList.get(i).doubleValue()+"/"+lastTotalEquityList.get(i).doubleValue()+"*"+unitYears);
-
                                 if (unitYears<1) {
                                     if (unitYears==0) {
                                         unitCAGR = Double.NaN;
                                     } else {
-                                        unitCAGR = (1d-(totalEquityList.get(i).doubleValue()/(lastTotalEquityList.get(i).doubleValue())))/unitYears;
+                                        unitCAGR = ((totalEquityList.get(i).doubleValue()/(lastTotalEquityList.get(i).doubleValue()))-1d)/unitYears;
                                     }
                                 } else {
                                     unitCAGR = computeDiscountRate(lastTotalEquityList.get(i).doubleValue(),totalEquityList.get(i).doubleValue(),unitYears);
                                 }
                                 unitCAGRList.add(unitCAGR);
 
-                                System.out.println("full test "+totalEquityList.get(i).doubleValue()+"/"+firstTotalEquityList.get(i).doubleValue()+"*"+fullYears);
                                 if (fullYears<1) {
                                     if (fullYears==0) {
                                         fullCAGR = Double.NaN;
                                     } else {
-                                        fullCAGR =  (1d-(totalEquityList.get(i).doubleValue()/firstTotalEquityList.get(i).doubleValue()))/fullYears;
+                                        fullCAGR =  ((totalEquityList.get(i).doubleValue()/firstTotalEquityList.get(i).doubleValue())-1d)/fullYears;
                                     }
                                 } else {
                                     fullCAGR = computeDiscountRate(firstTotalEquityList.get(i).doubleValue(),totalEquityList.get(i).doubleValue(),fullYears);

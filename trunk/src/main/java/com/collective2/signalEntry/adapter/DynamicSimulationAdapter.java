@@ -6,11 +6,9 @@
  */
 package com.collective2.signalEntry.adapter;
 
-import com.collective2.signalEntry.C2Element;
-import com.collective2.signalEntry.C2EntryService;
-import com.collective2.signalEntry.C2ServiceException;
-import com.collective2.signalEntry.Parameter;
+import com.collective2.signalEntry.*;
 import com.collective2.signalEntry.adapter.dynamicSimulator.*;
+import com.collective2.signalEntry.adapter.dynamicSimulator.order.Order;
 import com.collective2.signalEntry.adapter.simulationXML.*;
 import com.collective2.signalEntry.implementation.Command;
 import com.collective2.signalEntry.implementation.Request;
@@ -173,11 +171,15 @@ public class DynamicSimulationAdapter implements C2EntryServiceAdapter {
                     return new SimulatedResponseFlushPendingSignals(OK);
 
                 case AllSignals:
-
+                    //not filled, cancelled or expired!
+                    //only for this subscriber
+                    String subscriberEmail = (String)request.get(Parameter.EMail);
                     Map<Integer,List<Integer>> allPendingSignals = new HashMap<Integer,List<Integer>>();
                     for(SystemManager sys:systems) {
-                        Integer sysId = sys.id();
-                        allPendingSignals.put(sysId,sys.allPendingSignals());
+                        if (sys.isSubscribed(subscriberEmail)) {
+                            Integer sysId = sys.id();
+                            allPendingSignals.put(sysId,sys.allPendingSignals());
+                        }
                     }
                     return new SimulatedResponseGetAllSignals(OK, allPendingSignals);
 
@@ -256,9 +258,71 @@ public class DynamicSimulationAdapter implements C2EntryServiceAdapter {
                     throw new UnsupportedOperationException("Not implemented at this time");
 
                 case SignalStatus:
-                    //no system provided for this call
-                    //lookup for subscribers
-                    throw new UnsupportedOperationException("Not implemented at this time");
+
+                    Integer signalIdInput = (Integer)request.get(Parameter.SignalId);
+                    Integer systemId = SystemManager.extractSystemId(signalIdInput);
+
+                    SystemManager systemForSignal = systems.get(systemId);
+
+                    //TODO: confirm this is the right email/password
+                    String signalSubscriberEmail = (String)request.get(Parameter.EMail);
+                    String subscriberPassword = (String)request.get(Parameter.Password);
+
+                    Order order = systemForSignal.lookupOrder(signalIdInput);
+
+                    String systemName = systemForSignal.name();
+                    String postedwhen = order.postedWhen();
+                    String emailedWhen = order.eMailedWhen();
+                    String killedWhen = order.killedWhen();
+                    String tradedWhen = order.tradedWhen();
+                    BigDecimal tradePrice = order.tradePrice();
+
+                    //TODO: need details boolean
+                    //TODO: need relationships parent/child
+
+
+                    SimulatedResponseSignalStatus response =
+                           new SimulatedResponseSignalStatus(signalIdInput,
+                                                             systemName,
+                                                             postedwhen,
+                                                             emailedWhen,
+                                                             killedWhen,
+                                                             tradedWhen,
+                                                             tradePrice
+                                                             );
+
+                    Integer showDetails = (Integer)request.get(Parameter.ShowDetails);
+                    if (showDetails!=null && 1==showDetails.intValue()) {
+
+                        response.showDetails(
+                            order.action(),
+                            order.quantity(),
+                            order.symbol(),
+                            order.limit(),
+                            order.stop(),
+                            order.market(),
+                            order.timeInForce(),
+                            order.oneCancelsAnother());
+
+                        //TODO: needs a lot more work
+
+                    }
+
+
+                     Related showRelated = (Related)request.get(Parameter.ShowRelated);
+                     if (showRelated!=null) {
+                         switch (showRelated) {
+                             case Children:
+                                 break;
+                             case Parent:
+                                 break;
+                         }
+
+
+                     }
+
+
+                     return response;
 
             }
             throw new C2ServiceException("Unsupported command :" + command,false);
@@ -323,6 +387,7 @@ public class DynamicSimulationAdapter implements C2EntryServiceAdapter {
     }
 
     public void subscribe(String eMail, Integer systemId) {
-        //TODO: no implementation
+        SystemManager system = systems.get(systemId);
+        system.subscribe(eMail);
     }
 }

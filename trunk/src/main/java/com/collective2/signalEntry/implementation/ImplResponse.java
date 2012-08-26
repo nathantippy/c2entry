@@ -226,8 +226,8 @@ public class ImplResponse implements Response, Callable<XMLEventReader> {
 
     @Override
     public void visitC2Elements(C2ElementVisitor c2ElementVisitor, C2Element ... expected) {
-        if (expected.length==0) {
-            logger.warn("expected types can not be checked unless they are passed in");
+        if (expected.length == 0) {
+            logger.warn("expected types can not be checked unless they are passed in",new Exception());
         } else {
             for(C2Element element: expected) {
                 request.command().validate(element);

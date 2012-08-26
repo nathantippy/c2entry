@@ -22,7 +22,7 @@ public abstract class ImplSignal extends AbstractCommand implements Signal {
     }
 
     public Signal duration(Duration duration) {
-        return wrap(OrderDuration, duration);
+        return wrap(TimeInForce, duration);
     }
 
     public Signal quantity(Integer value) {

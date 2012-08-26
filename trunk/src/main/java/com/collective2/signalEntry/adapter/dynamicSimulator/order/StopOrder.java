@@ -1,5 +1,6 @@
 package com.collective2.signalEntry.adapter.dynamicSimulator.order;
 
+import com.collective2.signalEntry.C2ServiceException;
 import com.collective2.signalEntry.Duration;
 import com.collective2.signalEntry.Instrument;
 import com.collective2.signalEntry.adapter.dynamicSimulator.DataProvider;
@@ -7,6 +8,8 @@ import com.collective2.signalEntry.adapter.dynamicSimulator.Portfolio;
 import com.collective2.signalEntry.adapter.dynamicSimulator.quantity.QuantityComputable;
 import com.collective2.signalEntry.implementation.Action;
 import com.collective2.signalEntry.implementation.RelativeNumber;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
 
@@ -19,7 +22,9 @@ import java.math.BigDecimal;
 
 public class StopOrder extends OrderSignal {
 
-    RelativeNumber relativeStop;
+    private static final Logger logger = LoggerFactory.getLogger(StopOrder.class);
+
+    private final RelativeNumber relativeStop;
 
     public StopOrder(int id, long time, Instrument instrument, String symbol, RelativeNumber stop, Action action, QuantityComputable quantityComputable, long cancelAtMs, Duration duration) {
         super(id, time, instrument, symbol, action, quantityComputable, cancelAtMs, duration);
@@ -28,13 +33,9 @@ public class StopOrder extends OrderSignal {
 
     @Override
     public boolean process(DataProvider dataProvider, Portfolio portfolio, BigDecimal commission) {
+        logger.trace("process StopOrder");
 
-        if (!isConditionProcessed()) {
-            return false;
-        }
-
-        long time = dataProvider.endingTime();
-        if (processed || cancel || time>cancelAtMs) {
+        if (processed || cancel) {
             //cancel instead of submit order
             //still return true but no need to add any transaction to the portfolio
             return true;
@@ -45,6 +46,14 @@ public class StopOrder extends OrderSignal {
             Integer quantity;
             switch(action) {
                 case BTC:
+                    if (conditionalUpon()==null) {
+                        throw new C2ServiceException("BuyToClose requires conditional open order",false);
+                    }
+                    //close order but make sure its not already been closed
+                    if ((conditionalUpon().isProcessed() && conditionalUpon().isClosed()) || conditionalUpon.cancel) {
+                        cancelOrder();
+                        return true;
+                    }
                 case BTO:
                     //must only buy if we can do it above absoluteLimit.
 
@@ -64,11 +73,22 @@ public class StopOrder extends OrderSignal {
                     entryQuantity(quantity);
                     //create the transaction in the portfolio
                     portfolio.position(symbol).addTransaction(quantity, time, price, commission);
+                    if (action==Action.BTC) {
+                        conditionalUpon().closeOrder();
+                    }
                     processed = true;
                     return true;
 
-                case SSHORT:
                 case STC:
+                    if (conditionalUpon()==null) {
+                        throw new C2ServiceException("SellToClose requires conditional open order",false);
+                    }
+                    //close order but make sure its not already been closed
+                    if ((conditionalUpon().isProcessed() && conditionalUpon().isClosed()) || conditionalUpon.cancel) {
+                        cancelOrder();
+                        return true;
+                    }
+                case SSHORT:
                 case STO:
                     //must only sell if we can do it under absoluteStop.
 
@@ -89,6 +109,9 @@ public class StopOrder extends OrderSignal {
                     entryQuantity(quantity);
                     //create the transaction in the portfolio
                     portfolio.position(symbol).addTransaction(-quantity, time, price, commission);
+                    if (action==Action.STC) {
+                        conditionalUpon().closeOrder();
+                    }
                     processed = true;
                     return true;
 

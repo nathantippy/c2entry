@@ -3,6 +3,8 @@ package com.collective2.signalEntry.adapter.dynamicSimulator.order;
 import com.collective2.signalEntry.Duration;
 import com.collective2.signalEntry.adapter.dynamicSimulator.DataProvider;
 import com.collective2.signalEntry.adapter.dynamicSimulator.Portfolio;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
 
@@ -15,20 +17,18 @@ import java.math.BigDecimal;
 
 public class ReverseOrder extends Order {
 
-    BigDecimal triggerPrice;
-    Duration duration;
-    Integer quantity;
+    private static final Logger logger = LoggerFactory.getLogger(ReverseOrder.class);
 
-    public ReverseOrder(int id, long time, String symbol) {
-        super(id, time, symbol);
+    private BigDecimal triggerPrice;
+    private Integer quantity;
+
+    public ReverseOrder(int id, long time, String symbol, Duration timeInForce) {
+        super(id, time, symbol, Long.MAX_VALUE, timeInForce, null); //TODO: must be implemented as 2 actions
     }
 
     @Override
-    public boolean process(DataProvider dataProvider, Portfolio portfolio, BigDecimal commission) {
-
-        if (!isConditionProcessed()) {
-            return false;
-        }
+    public boolean  process(DataProvider dataProvider, Portfolio portfolio, BigDecimal commission) {
+        logger.trace("process ReverseOrder");
 
         throw new UnsupportedOperationException();
     }
@@ -36,10 +36,6 @@ public class ReverseOrder extends Order {
 
     public void triggerPrice(BigDecimal price) {
         this.triggerPrice = price;
-    }
-
-    public void duration(Duration duration) {
-        this.duration = duration;
     }
 
     public void quantity(Integer quantity) {

@@ -22,7 +22,7 @@ public enum Command {
     Signal("signal") {
 
         protected EnumSet<Parameter> paraRequired() {
-            return EnumSet.of(SystemId, Password, Instrument, Symbol, OrderDuration);
+            return EnumSet.of(SystemId, Password, Instrument, Symbol, TimeInForce);
         }
         protected EnumSet<Parameter>[] paraRequiredExclusiveSets() {
             return new EnumSet[] {
@@ -103,7 +103,11 @@ public enum Command {
             return EnumSet.of(ShowDetails, ShowRelated);
         }
         protected EnumSet<C2Element> possibleResult() {
-            return EnumSet.of(ElementSignalId,ElementSystemName,ElementPostedWhen,ElementEMailedWhen,ElementKilledWhen,ElementTradedWhen,ElementTradePrice);
+            return EnumSet.of(ElementSignalId,ElementSystemName,ElementPostedWhen,
+                              ElementEMailedWhen,ElementKilledWhen,ElementTradedWhen,ElementTradePrice,
+                              //when detail is on these will also appear
+                              ElementAction,ElementQuant,ElementSymbol,ElementLimit,ElementStop,ElementMarket,
+                              ElementTimeInForce,ElementOCAGroupIdDetail);
         }
     },
     PositionStatus("positionstatus") {
@@ -183,7 +187,7 @@ public enum Command {
             return EnumSet.of(SystemId, Password, Symbol);
         }
         protected EnumSet<Parameter> paraOptional() {
-            return EnumSet.of(TriggerPrice, OrderDuration, Quantity);
+            return EnumSet.of(TriggerPrice, TimeInForce, Quantity);
         }
         protected EnumSet<C2Element> possibleResult() {
             return EnumSet.of(ElementStatus);

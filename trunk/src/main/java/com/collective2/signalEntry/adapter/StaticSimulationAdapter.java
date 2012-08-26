@@ -13,6 +13,7 @@ import static com.collective2.signalEntry.C2Element.ElementSystemId;
 import static com.collective2.signalEntry.C2Element.ElementSystemName;
 import static com.collective2.signalEntry.C2Element.ElementTotalEquityAvail;
 
+import java.math.BigDecimal;
 import java.util.*;
 
 import javax.xml.stream.XMLEventReader;
@@ -153,7 +154,7 @@ public class StaticSimulationAdapter implements C2EntryServiceAdapter {
             case SignalStatus:
                 // return fixed values a real simulator could do better here
                 // but, this is good enough for the unit tests
-                return new SimulatedResponseSignalStatus((Integer)request.get(Parameter.SignalId), "Velocity Forex System", "2006-05-19 15:34:50:000", "2006-05-19 15:45:28:000", "0", "2006-05-19 22:08:53:000", 20.87);
+                return new SimulatedResponseSignalStatus((Integer)request.get(Parameter.SignalId), "Velocity Forex System", "2006-05-19 15:34:50:000", "2006-05-19 15:45:28:000", "0", "2006-05-19 22:08:53:000", new BigDecimal("20.87"));
         }
         throw new C2ServiceException("Unspported command :" + request, false);
 
