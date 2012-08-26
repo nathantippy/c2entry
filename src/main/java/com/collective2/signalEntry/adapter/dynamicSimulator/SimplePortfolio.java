@@ -70,7 +70,7 @@ public class SimplePortfolio implements Portfolio {
 
         if (totalPositionsClosed>0) {
             double pctWin = 100d* winPositionsClosed /(double)totalPositionsClosed;
-            builder.append(" # profitable:").append(winPositionsClosed).append('(').append(def.format(pctWin)).append("'%)");
+            builder.append(" # profitable:").append(winPositionsClosed).append('(').append(def.format(pctWin)).append("%)");
         }
         if (winPositionsClosed>0) {
             double avgWin = winPositionsTotal.doubleValue()/(double) winPositionsClosed;

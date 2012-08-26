@@ -8,6 +8,8 @@ import com.collective2.signalEntry.implementation.Action;
 import com.collective2.signalEntry.implementation.Command;
 import com.collective2.signalEntry.implementation.RelativeNumber;
 import com.collective2.signalEntry.implementation.Request;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
 import java.util.*;
@@ -25,6 +27,9 @@ import static com.collective2.signalEntry.Parameter.*;
 
 public class SystemManager {
 
+    private static final Logger logger = LoggerFactory.getLogger(SystemManager.class);
+    private static final int BITS_FOR_SYSTEM_ID = 6; //64 max systems
+
     private final Portfolio portfolio;
     private final Integer systemId;
     private final String systemName;
@@ -36,6 +41,7 @@ public class SystemManager {
     private final List<Order> archive;//all signals listed here by index
     private final List<Order> active;//waiting on market conditions
     private final Map<Integer, List<Order>> ocaMap;
+    private final Set<String> subscribers;
 
     //Tick:
     //     1. check all active against new market conditions
@@ -45,13 +51,15 @@ public class SystemManager {
     private final AtomicInteger ocaCounter;
     private final QuantityFactory quantityFactory;
 
-
     private Number minBuyPower = BigDecimal.ZERO; //margin call when this is hit.
     public static final int NO_ID = Integer.MIN_VALUE;
 
     public SystemManager(Portfolio portfolio, Integer systemId, String systemName, String password, BigDecimal commission) {
         this.portfolio = portfolio;
         this.systemId = systemId;
+        if (systemId>=(1<<BITS_FOR_SYSTEM_ID)) {
+            throw new C2ServiceException("Too many systems defined, limit is "+(1<<BITS_FOR_SYSTEM_ID),false);
+        }
         this.systemName = systemName;
         this.password = password;
         this.ocaCounter = new AtomicInteger();
@@ -61,6 +69,7 @@ public class SystemManager {
         this.quantityFactory = new QuantityFactory();
         this.ocaMap = new HashMap<Integer,List<Order>>();
         this.commission = commission;
+        this.subscribers = new HashSet<String>(); //email
     }
 
     public Integer id() {
@@ -71,31 +80,44 @@ public class SystemManager {
         return systemName;
     }
 
+    public static int extractSystemId(int signalId) {
+        //the system id is found in the lower BITS_FOR_SYSTEM_ID bits
+        return signalId - ((signalId >>> BITS_FOR_SYSTEM_ID) << BITS_FOR_SYSTEM_ID);
+    }
 
     public int[] scheduleSignal(long timeToExecute, Request request) {
 
         synchronized(archive) {
             Integer conditionalUponId = (Integer)request.get(Parameter.ConditionalUpon);
-            Order conditionalUponOrder = (conditionalUponId==null? null : archive.get(conditionalUponId));
+            Order conditionalUponOrder = (conditionalUponId==null? null : archive.get(conditionalUponId>>BITS_FOR_SYSTEM_ID));
 
 
-            int id = archive.size();
+            int signalIdOnly = archive.size();
+
+            if (signalIdOnly > (1<<(32-(1+BITS_FOR_SYSTEM_ID)))  ) {
+                throw new C2ServiceException("Too many signals, limit is:"+(1<<(32-(1+BITS_FOR_SYSTEM_ID))),false);
+            }
+
+            int id = (signalIdOnly << BITS_FOR_SYSTEM_ID)+systemId;
 
             String symbol = (String)request.get(Parameter.Symbol);
 
             Order order = null;
             if (request.command()== Command.Reverse) {
 
-                ReverseOrder reverseOrder =  new ReverseOrder(id,timeToExecute,symbol);
+                Duration timeInForce = (Duration)request.get(TimeInForce);
+                if (timeInForce!=null) {
+                    //default
+                    timeInForce = Duration.GoodTilCancel;
+                }
+
+                ReverseOrder reverseOrder =  new ReverseOrder(id,timeToExecute,symbol,timeInForce);
 
                 BigDecimal price = (BigDecimal)request.get(TriggerPrice);
                 if (price!=null) {
                     reverseOrder.triggerPrice(price);
                 }
-                Duration duration = (Duration)request.get(OrderDuration);
-                if (duration!=null) {
-                    reverseOrder.duration(duration);
-                }
+
                 Integer quantity = (Integer)request.get(Quantity);
                 if (quantity!=null) {
                     reverseOrder.quantity(quantity);
@@ -108,7 +130,7 @@ public class SystemManager {
                 QuantityComputable quantityComputable = quantityFactory.computable(request);
 
                 //GTC or Day
-                Duration duration = (Duration)request.get(Parameter.OrderDuration);
+                Duration timeInForce = (Duration)request.get(Parameter.TimeInForce);
 
                 //cancel at this fixed time
                 long cancelAtMs = Long.MAX_VALUE;
@@ -139,14 +161,14 @@ public class SystemManager {
                 //convert everything to relatives, should have already been relatives?
                 RelativeNumber limit = (RelativeNumber)request.get(Parameter.RelativeLimitOrder);
                 if (limit != null) {
-                    signal = new LimitOrder(id,timeToExecute, instrument, symbol, limit, action, quantityComputable, cancelAtMs, duration);
+                    signal = new LimitOrder(id,timeToExecute, instrument, symbol, limit, action, quantityComputable, cancelAtMs, timeInForce);
                 }  else {
                     RelativeNumber stop = (RelativeNumber)request.get(Parameter.RelativeStopOrder);
                     if (stop != null) {
-                        signal = new StopOrder(id,timeToExecute, instrument, symbol, stop, action, quantityComputable, cancelAtMs, duration);
+                        signal = new StopOrder(id,timeToExecute, instrument, symbol, stop, action, quantityComputable, cancelAtMs, timeInForce);
                     } else {
                         //market
-                        signal = new MarketOrder(id,timeToExecute, instrument, symbol, action, quantityComputable, cancelAtMs, duration);
+                        signal = new MarketOrder(id,timeToExecute, instrument, symbol, action, quantityComputable, cancelAtMs, timeInForce);
                     }
                 }
 
@@ -160,10 +182,12 @@ public class SystemManager {
                 Integer xReplace = (Integer)request.get(XReplace);
                 if (xReplace!=null) {
 
-                    Order oldOrder = archive.get(xReplace);
+                    if (xReplace<0 || (xReplace>>BITS_FOR_SYSTEM_ID)>=archive.size()) {
+                        throw new C2ServiceException("Invalid signalId "+xReplace+" not found.",false);
+                    }
+                    Order oldOrder = archive.get(xReplace>>BITS_FOR_SYSTEM_ID);
+                    oldOrder.cancelOrder();//cancel old order to be replaced
                     conditionalUponOrder = oldOrder.conditionalUpon();
-                    oldOrder.cancel();
-                    request.remove(XReplace);
 
                 }
 
@@ -171,6 +195,7 @@ public class SystemManager {
             }
 
             if (conditionalUponOrder!=null) {
+                logger.trace("set conditional upon " + request);
                 order.conditionalUpon(conditionalUponOrder);
                 //do normal schedule however in addition to time and other
                 //critera the upon must have triggered
@@ -192,7 +217,7 @@ public class SystemManager {
             //generate and schedule requests for all-in-one
             RelativeNumber stopLoss = (RelativeNumber)request.get(Parameter.RelativeStopLoss);
             if (stopLoss!=null) {
-                Request stopRequest = request.baseClone();
+                Request stopRequest = request.baseConditional();
 
                 Instrument instrument = (Instrument)request.get(Parameter.Instrument);
                 switch(instrument) {
@@ -223,7 +248,7 @@ public class SystemManager {
             //generate and schedule requests for all-in-one
             RelativeNumber profitTarget = (RelativeNumber)request.get(RelativeProfitTarget);
             if (profitTarget!=null) {
-                Request profitTargetRequest = request.baseClone();
+                Request profitTargetRequest = request.baseConditional();
 
                 Instrument instrument = (Instrument)request.get(Parameter.Instrument);
                 switch(instrument) {
@@ -254,13 +279,20 @@ public class SystemManager {
         }
     }
 
-
     public void cancelSignal(Integer id) {
-        scheduled.remove(archive.get(id));
+        Order order = archive.get(id>>BITS_FOR_SYSTEM_ID);
+        order.cancelOrder();
     }
 
     public void cancelAllPending() {
-        scheduled.clear();
+        for(Order order:scheduled) {
+            order.cancelOrder();
+        }
+    }
+
+    public Order lookupOrder(Integer signalId) {
+        Order order = archive.get(signalId>>BITS_FOR_SYSTEM_ID);
+        return order;
     }
 
     public Portfolio portfolio() {
@@ -268,17 +300,19 @@ public class SystemManager {
     }
 
     public List<Integer> allPendingSignals() {
-
         List<Integer> result = new ArrayList<Integer>();
         for(Order signal:scheduled) {
-            result.add(signal.id());
+            //not filled, cancelled or expired!
+            if (signal.isPending()) {
+                result.add(signal.id());
+            }
         }
         return result;
     }
 
     public String newComment(Integer signalId, String newComment) {
 
-        Order signal = archive.get(signalId);
+        Order signal = archive.get(signalId>>BITS_FOR_SYSTEM_ID);
         String previousComment = signal.comment();
         signal.comment(newComment);
         return previousComment;
@@ -323,29 +357,49 @@ public class SystemManager {
 
            Iterator<Order> orderIterator = scheduled.iterator();
 
+           logger.trace("count of scheduled:?", scheduled.size());
+
            while (orderIterator.hasNext()) {
 
                Order signal = orderIterator.next();
 
                if (signal.time()>time) {
-                    return;//do not process any more
+                    //these are future orders not to be processed (parked) until this time is reached
+                    return;//do not process any more, sorted list so all orders after this point will also be parked
                }
 
-               if (signal.process(dataProvider,portfolio,commission)) {
-                   scheduled.remove(signal);
+               if (signal.isConditionProcessed()) {
 
-                   if (signal.oneCancelsAnother()!=null) {
-                       //this processed so cancel all the others in this same group before moving to next
-                       List<Order> ocaList = ocaMap.get(signal.oneCancelsAnother());
-                       for (Order order:ocaList) {
-                           if (order!=signal) {
-                               order.cancel();
-                           }
-                       }
-                       //oca triggered now remove so its not triggered again.
-                       ocaList.clear();
+                   //TODO: count gaps in data provider tick calls as days for inForce
+
+                   long nowTime = dataProvider.endingTime();
+                   if (!signal.isInForce(nowTime)) {
+                       signal.cancelOrder();
                    }
 
+                   if (signal.isExpired(nowTime)) {
+                       signal.cancelOrder();
+                   }
+
+                   if (signal.process(dataProvider,portfolio,commission)) {
+                       logger.trace("processed, signal " + signal);
+                       scheduled.remove(signal);
+
+                       if (signal.oneCancelsAnother()!=null) {
+                           //this processed so cancel all the others in this same group before moving to next
+                           List<Order> ocaList = ocaMap.get(signal.oneCancelsAnother());
+                           for (Order order:ocaList) {
+                               if (order!=signal) {
+                                   order.cancelOrder();
+                               }
+                           }
+                           //oca triggered now remove so its not triggered again.
+                           ocaList.clear();
+                       }
+                   }
+
+               } else {
+                   logger.trace("skipped, signal " + signal);
                }
            }
        }
@@ -353,5 +407,17 @@ public class SystemManager {
 
     public String statusMessage() {
         return name()+" "+portfolio().statusMessage();
+    }
+
+    public void subscribe(String eMail) {
+        subscribers.add(eMail);
+    }
+
+    public boolean isSubscribed(String eMail) {
+        return subscribers.contains(eMail);
+    }
+
+    public void unSubscribe(String eMail) {
+        subscribers.remove(eMail);
     }
 }

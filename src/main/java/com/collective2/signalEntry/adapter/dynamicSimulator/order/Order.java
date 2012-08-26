@@ -6,13 +6,12 @@
  */
 package com.collective2.signalEntry.adapter.dynamicSimulator.order;
 
+import com.collective2.signalEntry.Duration;
 import com.collective2.signalEntry.adapter.dynamicSimulator.DataProvider;
 import com.collective2.signalEntry.adapter.dynamicSimulator.Portfolio;
+import com.collective2.signalEntry.implementation.Action;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
 
 
 public abstract class Order implements Comparable<Order> {
@@ -22,14 +21,24 @@ public abstract class Order implements Comparable<Order> {
     private String comment;
     protected final String symbol;
     protected boolean cancel;
+    protected boolean closed;
     protected boolean processed;
     protected Order conditionalUpon;
-    private Integer entryQuantity;
+    private int entryQuantity;
+    private final Duration timeInForce;
+    private final long cancelAtMs;
+    protected final Action action;
 
-    public Order(int id, long time, String symbol) {
+    //ASSUMPTION: MARKETS ARE EVER OPEN LONGER THAN 12 HOURS
+    private static final long ONE_TRADING_DAY = 60000l*60*36;
+
+    public Order(int id, long time, String symbol, long cancelAtMs, Duration timeInForce, Action action) {
         this.id = id;
         this.time = time;
         this.symbol = symbol;
+        this.cancelAtMs = cancelAtMs;
+        this.timeInForce = timeInForce;
+        this.action = action;
     }
 
     public long time() {
@@ -45,8 +54,19 @@ public abstract class Order implements Comparable<Order> {
         this.conditionalUpon = conditionalUpon;
     }
 
-    protected boolean isConditionProcessed() {
-        return (conditionalUpon == null) || (conditionalUpon.isProcessed());
+    public boolean isConditionProcessed() {
+        //clear to continue if conditional is filled, cancelled or expired
+        return (conditionalUpon == null) || (!conditionalUpon.isPending());
+    }
+
+    public boolean isInForce(long now) {
+        //TODO: wrong must start at open of market time not yesterday close!
+
+        return timeInForce==Duration.GoodTilCancel || (Duration.DayOrder==timeInForce && now<(time + ONE_TRADING_DAY));
+    }
+
+    public boolean isExpired(long now) {
+        return (now>cancelAtMs); //TODO: rename
     }
 
     public int id() {
@@ -102,8 +122,17 @@ public abstract class Order implements Comparable<Order> {
         return processed;
     }
 
-    public void cancel() {
+    public void cancelOrder() {
         cancel = true;
+    }
+
+    public void closeOrder() {
+        closed = true;
+    }
+
+    public boolean isPending() {
+        //not filled, cancelled or expired
+        return (!cancel)&&(!processed);
     }
 
     public Integer entryQuantity() {
@@ -112,5 +141,57 @@ public abstract class Order implements Comparable<Order> {
 
     public void entryQuantity(Integer quantity) {
         entryQuantity = quantity;
+    }
+
+    public boolean isClosed() {
+        return cancel || closed;
+    }
+
+    public String postedWhen() {
+        return "";    //TODO: SET WITH SCHEDULED
+    }
+
+    public String eMailedWhen() {
+        return "";    //TODO: SET WITH???
+    }
+
+    public String killedWhen() {
+        return "";      //TODO: SET WITH CANCEL
+    }
+
+    public String tradedWhen() {
+        return "";      //TODO: SET WITH ENTRY QUANTTY
+    }
+
+    public BigDecimal tradePrice() {
+        return BigDecimal.ZERO; //TODO: SET WITH ENTRY QUANTTY
+    }
+
+    public int quantity() {
+        return (conditionalUpon==null?entryQuantity():conditionalUpon.entryQuantity());
+    }
+
+    public BigDecimal limit() {
+        return BigDecimal.ZERO;  //TODO: override by right order
+    }
+
+    public BigDecimal stop() {
+        return BigDecimal.ZERO;  //TODO: override by right order
+    }
+
+    public BigDecimal market() {
+        return BigDecimal.ZERO; //TODO: override by right order
+    }
+
+    public String symbol() {
+        return symbol;
+    }
+
+    public Duration timeInForce() {
+        return timeInForce;
+    }
+
+    public Action action() {
+        return action;
     }
 }

@@ -15,7 +15,7 @@ import java.math.BigDecimal;
 public abstract class ImplReversal extends AbstractCommand implements Reverse {
 
     public Reverse duration(Duration duration) {
-        return new ReversalLeaf(this, Parameter.OrderDuration, duration);
+        return new ReversalLeaf(this, Parameter.TimeInForce, duration);
     }
 
     public Reverse triggerPrice(BigDecimal value) {

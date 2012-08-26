@@ -58,7 +58,10 @@ public class DynamicSimulationLongTest {
                         break;
                 }
             }
-        });
+        },C2Element.ElementTotalEquityAvail,
+                C2Element.ElementCash,
+                C2Element.ElementEquity,
+                C2Element.ElementMarginUsed);
 
         assertEquals(0, portfolio.position("msft").quantity().intValue());
         Response openResponse = sentryService.stockSignal(ActionForStock.BuyToOpen)
@@ -107,7 +110,10 @@ public class DynamicSimulationLongTest {
                         break;
                 }
             }
-        });
+        },C2Element.ElementTotalEquityAvail,
+                C2Element.ElementCash,
+                C2Element.ElementEquity,
+                C2Element.ElementMarginUsed);
         assertEquals("expected to check 4 elements",4,checkedElements.size());
         assertEquals(10, portfolio.position("msft").quantity().intValue());
 
@@ -115,7 +121,7 @@ public class DynamicSimulationLongTest {
         //market order sell test
         ///////////////////
         Response marketOrderResponse = sentryService.stockSignal(ActionForStock.SellToClose)
-                .marketOrder().quantity(10).symbol("msft")
+                .marketOrder().quantity(10).symbol("msft").conditionalUpon(signalId)
                 .duration(Duration.GoodTilCancel).send();
 
         //force request response now
@@ -147,8 +153,6 @@ public class DynamicSimulationLongTest {
                 .limitOrder(failLimit).quantity(10).symbol("msft")
                 .duration(Duration.DayOrder).send();
 
-        //force request response now
-        limitOrderResponse.getXML();
 
         ///////////////////////////
         //tick for limit order fail
@@ -175,7 +179,7 @@ public class DynamicSimulationLongTest {
                 .duration(Duration.DayOrder).send();
 
         //force request response now
-        limitOrderResponse.getXML();
+        Integer openSignalId = limitOrderResponse.getInteger(C2Element.ElementSignalId);
 
         ///////////////////////////
         //tick for limit order success
@@ -208,7 +212,7 @@ public class DynamicSimulationLongTest {
         ///////////////////
         BigDecimal sellLimitFail = new BigDecimal("180.10");
         Response marketLimitSellResponse = sentryService.stockSignal(ActionForStock.SellToClose)
-                .limitOrder(sellLimitFail).quantity(10).symbol("msft")
+                .limitOrder(sellLimitFail).quantity(10).symbol("msft").conditionalUpon(openSignalId)
                 .duration(Duration.DayOrder).send();
 
         //force request response now
@@ -244,7 +248,7 @@ public class DynamicSimulationLongTest {
         ///////////////////
         BigDecimal sellLimitSuccess = new BigDecimal("110.10");
         marketLimitSellResponse = sentryService.stockSignal(ActionForStock.SellToClose)
-                .limitOrder(sellLimitSuccess).quantity(10).symbol("msft")
+                .limitOrder(sellLimitSuccess).quantity(10).symbol("msft").conditionalUpon(openSignalId)
                 .duration(Duration.DayOrder).send();
 
         ///////////////////////////
@@ -259,7 +263,24 @@ public class DynamicSimulationLongTest {
     }
 
     @Test
-    public void allInOneBuySellTestStoppedOut() {
+    public void allInOneBuySellTestStoppedOutOCA() {
+        allInOneBuySellTestStoppedOut(false, Duration.GoodTilCancel);
+    }
+    @Test
+    public void allInOneBuySellTestStoppedOutNoOCA() {
+        allInOneBuySellTestStoppedOut(true, Duration.GoodTilCancel);
+    }
+
+    @Test
+    public void allInOneBuySellTestStoppedOutOCADayOrder() {
+        allInOneBuySellTestStoppedOut(false, Duration.DayOrder);
+    }
+    @Test
+    public void allInOneBuySellTestStoppedOutNoOCADayOrder() {
+        allInOneBuySellTestStoppedOut(true, Duration.DayOrder);
+    }
+
+    private void allInOneBuySellTestStoppedOut(boolean noOCA, Duration timeInForce) {
 
         // validates commands and returns hard coded (canned) responses
         DynamicSimulationAdapter simulationAdapter = new DynamicSimulationAdapter(0l);
@@ -292,7 +313,10 @@ public class DynamicSimulationLongTest {
                         break;
                 }
             }
-        });
+        },C2Element.ElementTotalEquityAvail,
+          C2Element.ElementCash,
+          C2Element.ElementEquity,
+          C2Element.ElementMarginUsed);
 
         BigDecimal stopLoss = new BigDecimal("20.50");
         BigDecimal profitTarget = new BigDecimal("120.50");
@@ -300,14 +324,35 @@ public class DynamicSimulationLongTest {
         assertEquals(0, portfolio.position("msft").quantity().intValue());
         Response openResponse = sentryService.stockSignal(ActionForStock.BuyToOpen)
                 .marketOrder().quantity(10).symbol("msft")
-                .stopLoss(stopLoss).profitTarget(profitTarget)
-                .duration(Duration.GoodTilCancel).send();
+                .stopLoss(BasePrice.Absolute,stopLoss,noOCA).profitTarget(profitTarget)
+                .duration(timeInForce).send();
+
+        final AtomicInteger signalId = new AtomicInteger(0);
+        final AtomicInteger profitTargetSignalId = new AtomicInteger(0);
+        final AtomicInteger stopLossSignalId = new AtomicInteger(0);
+
+        openResponse.visitC2Elements(new C2ElementVisitor() {
+            @Override
+            public void visit(C2Element element, String data) {
+                switch(element) {
+                    case ElementSignalId:
+                        signalId.set(Integer.valueOf(data));
+                        break;
+                    case ElementProfitTaretSignalId:
+                        profitTargetSignalId.set(Integer.valueOf(data));
+                        break;
+                    case ElementStopLossSignalId:
+                        stopLossSignalId.set(Integer.valueOf(data));
+                        break;
+                }
+            }
+        }, C2Element.ElementSignalId, C2Element.ElementStopLossSignalId, C2Element.ElementProfitTaretSignalId );
+
 
         long timeStep = 60000l*60l*24l;
         long openTime = 0l;
         long closeTime = openTime+timeStep;
 
-        BigDecimal closePrice = new BigDecimal("160.86");
         BigDecimal lowPrice = new BigDecimal("80");
         BigDecimal highPrice = new BigDecimal("100");
         DynamicSimulationMockDataProvider dataProvider = new DynamicSimulationMockDataProvider(
@@ -321,16 +366,115 @@ public class DynamicSimulationLongTest {
 
         assertEquals(10, portfolio.position("msft").quantity().intValue());
 
-        dataProvider.incTime(timeStep,new BigDecimal("10"));
+        final Set<Integer> pendingSignalIdSet = new HashSet<Integer>();
+        sentryService.sendAllSignalsRequest().visitC2Elements(new C2ElementVisitor() {
+            @Override
+            public void visit(C2Element element, String data) {
+                if (C2Element.ElementSignalId==element) {
+                    pendingSignalIdSet.add(Integer.parseInt(data));
+                }
+            }
+        },C2Element.ElementSignalId);
+
+        assertEquals(profitTargetSignalId.toString(),2,pendingSignalIdSet.size());
+        assertTrue(pendingSignalIdSet.contains(profitTargetSignalId.intValue()));
+        assertTrue(pendingSignalIdSet.contains(stopLossSignalId.intValue()));
+
+        //confirm that the target can be adjusted
+        BigDecimal newTarget = new BigDecimal("10");
+        Response adjClose = sentryService.stockSignal(ActionForStock.SellToClose)
+                .stopOrder(newTarget).quantity(10).symbol("msft")
+                .duration(Duration.GoodTilCancel)
+                .xReplace(stopLossSignalId.intValue()).send();
+
+        Integer newCloseSignalId = adjClose.getInteger(C2Element.ElementSignalId);
+
+        //confirm the pending list of signals has been updated
+        pendingSignalIdSet.clear();
+        sentryService.sendAllSignalsRequest().visitC2Elements(new C2ElementVisitor() {
+            @Override
+            public void visit(C2Element element, String data) {
+                if (C2Element.ElementSignalId==element) {
+                    pendingSignalIdSet.add(Integer.parseInt(data));
+                }
+            }
+        },C2Element.ElementSignalId);
+
+        assertTrue(pendingSignalIdSet.contains(newCloseSignalId));
+        if (noOCA) {
+            assertTrue(pendingSignalIdSet.toString(),pendingSignalIdSet.contains(profitTargetSignalId.intValue()));
+            assertEquals(2,pendingSignalIdSet.size());
+        } //else can not be tested because it's modified when tick is called
+
+        //send tick data that should not make any change
+        dataProvider.incTime(timeStep,new BigDecimal("13"));
         simulationAdapter.tick(dataProvider,sentryService);
 
-        //should have hit sell stop with this low price
+        //confirm we sill have the same shares
+        assertEquals(10, portfolio.position("msft").quantity().intValue());
+
+        //confirm the pending list did not change
+        pendingSignalIdSet.clear();
+        sentryService.sendAllSignalsRequest().visitC2Elements(new C2ElementVisitor() {
+            @Override
+            public void visit(C2Element element, String data) {
+                if (C2Element.ElementSignalId==element) {
+                    pendingSignalIdSet.add(Integer.parseInt(data));
+                }
+            }
+        },C2Element.ElementSignalId);
+
+        assertTrue(pendingSignalIdSet.contains(newCloseSignalId));
+        if (noOCA) {
+            assertTrue(pendingSignalIdSet.toString()+" can not find profit target signal "+profitTargetSignalId,pendingSignalIdSet.contains(profitTargetSignalId.intValue()));
+            assertEquals(2,pendingSignalIdSet.size());
+        } else {
+            assertEquals(1,pendingSignalIdSet.size());
+        }
+        dataProvider.incTime(timeStep,new BigDecimal("9"));
+        simulationAdapter.tick(dataProvider,sentryService);
         assertEquals(0, portfolio.position("msft").quantity().intValue());
+
+        //for oca orders the other order will get cancelled when the first is triggered.
+        //for non oca orders there will be one closing order however it should not be valid
+        //because its a close against something closed.
+
+        //ensure we have no pending signals now that position is closed
+        pendingSignalIdSet.clear();
+        sentryService.sendAllSignalsRequest().visitC2Elements(new C2ElementVisitor() {
+            @Override
+            public void visit(C2Element element, String data) {
+                if (C2Element.ElementSignalId==element) {
+                    pendingSignalIdSet.add(Integer.parseInt(data));
+                }
+            }
+        },C2Element.ElementSignalId);
+        assertEquals("should not have found any signals but found:"+pendingSignalIdSet, (noOCA ? 1 : 0),pendingSignalIdSet.size());
 
     }
 
     @Test
-    public void allInOneBuySellTestProfitTargetHit() {
+    public void allInOneBuySellTestProfitTargetHitOCA() {
+        allInOneBuySellTestProfitTargetHit(false, Duration.GoodTilCancel);
+    }
+
+    @Test
+    public void allInOneBuySellTestProfitTargetHitNoOCA() {
+        allInOneBuySellTestProfitTargetHit(true, Duration.GoodTilCancel);
+    }
+
+    @Test
+    public void allInOneBuySellTestProfitTargetHitOCADayOrder() {
+        allInOneBuySellTestProfitTargetHit(false, Duration.DayOrder);
+    }
+
+    @Test
+    public void allInOneBuySellTestProfitTargetHitNoOCADayOrder() {
+        allInOneBuySellTestProfitTargetHit(true, Duration.DayOrder);
+    }
+
+
+    private void allInOneBuySellTestProfitTargetHit(boolean noOCA, Duration timeInForce) {
 
         // validates commands and returns hard coded (canned) responses
         DynamicSimulationAdapter simulationAdapter = new DynamicSimulationAdapter(0l);
@@ -363,16 +507,20 @@ public class DynamicSimulationLongTest {
                         break;
                 }
             }
-        });
+        },C2Element.ElementTotalEquityAvail,
+                C2Element.ElementCash,
+                C2Element.ElementEquity,
+                C2Element.ElementMarginUsed);
 
         BigDecimal stopLoss = new BigDecimal("20.50");
         BigDecimal profitTarget = new BigDecimal("120.50");
 
         assertEquals(0, portfolio.position("msft").quantity().intValue());
+
         Response openResponse = sentryService.stockSignal(ActionForStock.BuyToOpen)
                 .marketOrder().quantity(10).symbol("msft")
-                .stopLoss(stopLoss).profitTarget(profitTarget)
-                .duration(Duration.GoodTilCancel).send();
+                .stopLoss(stopLoss).profitTarget(BasePrice.Absolute,profitTarget,noOCA)
+                .duration(timeInForce).send();
 
         final AtomicInteger signalId = new AtomicInteger(0);
         final AtomicInteger profitTargetSignalId = new AtomicInteger(0);
@@ -383,7 +531,6 @@ public class DynamicSimulationLongTest {
             public void visit(C2Element element, String data) {
                 switch(element) {
                     case ElementSignalId:
-
                         signalId.set(Integer.valueOf(data));
                         break;
                     case ElementProfitTaretSignalId:
@@ -414,21 +561,78 @@ public class DynamicSimulationLongTest {
 
         assertEquals(10, portfolio.position("msft").quantity().intValue());
 
+        //confirm that a price below target will not trigger
         dataProvider.incTime(timeStep,new BigDecimal("119"));
         simulationAdapter.tick(dataProvider,sentryService);
 
         assertEquals(10, portfolio.position("msft").quantity().intValue());
 
+        final Set<Integer> pendingSignalIdSet = new HashSet<Integer>();
+        sentryService.sendAllSignalsRequest().visitC2Elements(new C2ElementVisitor() {
+            @Override
+            public void visit(C2Element element, String data) {
+                if (C2Element.ElementSignalId==element) {
+                    pendingSignalIdSet.add(Integer.parseInt(data));
+                }
+            }
+        },C2Element.ElementSignalId);
+
+        assertEquals(profitTargetSignalId.toString(),2,pendingSignalIdSet.size());
+        assertTrue(pendingSignalIdSet.contains(profitTargetSignalId.intValue()));
+        assertTrue(pendingSignalIdSet.contains(stopLossSignalId.intValue()));
+
+        //confirm that the target can be adjusted
+        BigDecimal newTarget = new BigDecimal("160");
+        Response adjClose = sentryService.stockSignal(ActionForStock.SellToClose)
+                .limitOrder(newTarget).quantity(10).symbol("msft")   //TODO: is quantity optional wth xReplace?
+                .duration(Duration.GoodTilCancel)
+                .xReplace(profitTargetSignalId.intValue()).send();
+
+        Integer newCloseSignalId = adjClose.getInteger(C2Element.ElementSignalId);
+
         dataProvider.incTime(timeStep,new BigDecimal("121"));
         simulationAdapter.tick(dataProvider,sentryService);
+        assertEquals(10, portfolio.position("msft").quantity().intValue());
 
+        pendingSignalIdSet.clear();
+        sentryService.sendAllSignalsRequest().visitC2Elements(new C2ElementVisitor() {
+            @Override
+            public void visit(C2Element element, String data) {
+                if (C2Element.ElementSignalId==element) {
+                    pendingSignalIdSet.add(Integer.parseInt(data));
+                }
+            }
+        },C2Element.ElementSignalId);
+
+        assertTrue(pendingSignalIdSet.contains(newCloseSignalId));
+        if (noOCA) {
+            assertTrue(pendingSignalIdSet.contains(stopLossSignalId.intValue()));
+            assertEquals(2,pendingSignalIdSet.size());
+        } else {
+            assertEquals(1,pendingSignalIdSet.size());
+        }
+        dataProvider.incTime(timeStep,new BigDecimal("161"));
+        simulationAdapter.tick(dataProvider,sentryService);
         assertEquals(0, portfolio.position("msft").quantity().intValue());
+
+        //for oca orders the other order will get cancelled when the first is triggered.
+        //for non oca orders there will be one closing order however it should not be valid
+        //because its a close against something closed.
+
+        //ensure we have no pending signals now that position is closed
+        pendingSignalIdSet.clear();
+        sentryService.sendAllSignalsRequest().visitC2Elements(new C2ElementVisitor() {
+            @Override
+            public void visit(C2Element element, String data) {
+                if (C2Element.ElementSignalId==element) {
+                    pendingSignalIdSet.add(Integer.parseInt(data));
+                }
+            }
+        },C2Element.ElementSignalId);
+        assertEquals("should not have found any signals but found:"+pendingSignalIdSet, (noOCA ? 1 : 0),pendingSignalIdSet.size());
 
     }
 
-
-    //also need test for xReplace stop
-
-    //add tests for shorts.
+    //TODO: copy this class for shorts test.
 
 }

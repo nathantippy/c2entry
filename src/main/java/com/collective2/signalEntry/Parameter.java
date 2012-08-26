@@ -37,7 +37,7 @@ public enum Parameter {
     StockAction("&action=",                 ParameterType.ActionForStockType),
     NonStockAction("&action=",              ParameterType.ActionForNonStockType),
 
-    OrderDuration("&duration=",             ParameterType.DurationType),
+    TimeInForce("&duration=",               ParameterType.DurationType),
 
     RelativeLimitOrder("&limit=",           ParameterType.RelativeNumberType),
     RelativeStopOrder("&stop=",             ParameterType.RelativeNumberType),

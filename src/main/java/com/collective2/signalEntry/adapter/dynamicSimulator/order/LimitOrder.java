@@ -6,6 +6,7 @@
  */
 package com.collective2.signalEntry.adapter.dynamicSimulator.order;
 
+import com.collective2.signalEntry.C2ServiceException;
 import com.collective2.signalEntry.Duration;
 import com.collective2.signalEntry.Instrument;
 import com.collective2.signalEntry.adapter.dynamicSimulator.DataProvider;
@@ -13,12 +14,16 @@ import com.collective2.signalEntry.adapter.dynamicSimulator.Portfolio;
 import com.collective2.signalEntry.adapter.dynamicSimulator.quantity.QuantityComputable;
 import com.collective2.signalEntry.implementation.Action;
 import com.collective2.signalEntry.implementation.RelativeNumber;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
 
 public class LimitOrder extends OrderSignal {
 
-    RelativeNumber relativeLimit;
+    private static final Logger logger = LoggerFactory.getLogger(LimitOrder.class);
+
+    private final RelativeNumber relativeLimit;
 
     public LimitOrder(int id, long time, Instrument instrument, String symbol, RelativeNumber limit, Action action, QuantityComputable quantityComputable, long cancelAtMs, Duration duration) {
         super(id, time, instrument, symbol, action, quantityComputable, cancelAtMs, duration);
@@ -27,16 +32,9 @@ public class LimitOrder extends OrderSignal {
 
     @Override
     public boolean process(DataProvider dataProvider, Portfolio portfolio, BigDecimal commission) {
+        logger.trace("process LimitOrder");
 
-        //return true will move this to the processed list and
-        //will cancel everything in the same OCA group if this order is in an OCA group.
-
-        if (!isConditionProcessed()) {
-            return false;
-        }
-
-        long time = dataProvider.endingTime();
-        if (processed || cancel || time>cancelAtMs) {
+        if (processed || cancel) {
             //cancel instead of submit order
             //still return true but no need to add any transaction to the portfolio
             return true;
@@ -47,10 +45,19 @@ public class LimitOrder extends OrderSignal {
             Integer quantity;
             switch(action) {
                 case BTC:
+                    if (conditionalUpon()==null) {
+                        throw new C2ServiceException("BuyToClose requires conditional open order",false);
+                    }
+                    //close order but make sure its not already been closed
+                    if ((conditionalUpon().isProcessed() && conditionalUpon().isClosed()) || conditionalUpon.cancel) {
+                        cancelOrder();
+                        return true;
+                    }
                 case BTO:
                     //must only buy if we can do it under absoluteLimit.
 
                     if (absoluteLimit.compareTo(dataProvider.lowPrice(symbol))<0) {
+                        logger.trace("do not trigger "+action+" "+absoluteLimit+"  "+dataProvider.lowPrice(symbol));
                         return false;// do not trigger can not get good deal under limit price.
                     }
 
@@ -66,16 +73,27 @@ public class LimitOrder extends OrderSignal {
                     entryQuantity(quantity);
                     //create the transaction in the portfolio
                     portfolio.position(symbol).addTransaction(quantity, time, price, commission);
-
+                    if (action==Action.BTC) {
+                        conditionalUpon().closeOrder();
+                    }
                     processed = true;
                     return true;
 
-                case SSHORT:
                 case STC:
+                    if (conditionalUpon()==null) {
+                        throw new C2ServiceException("SellToClose requires conditional open order",false);
+                    }
+                    //close order but make sure its not already been closed
+                    if ((conditionalUpon().isProcessed() && conditionalUpon().isClosed()) || conditionalUpon.cancel) {
+                        cancelOrder();
+                        return true;
+                    }
+                case SSHORT:
                 case STO:
                     //must only buy if we can do it under absoluteLimit.
 
                     if (absoluteLimit.compareTo(dataProvider.highPrice(symbol))>0) {
+                        logger.trace("do not trigger "+action+" "+absoluteLimit+"  "+dataProvider.highPrice(symbol));
                         return false;// do not trigger can not get good deal under limit price.
                     }
 
@@ -91,6 +109,9 @@ public class LimitOrder extends OrderSignal {
                     entryQuantity(quantity);
                     //create the transaction in the portfolio
                     portfolio.position(symbol).addTransaction(-quantity, time, price, commission);
+                    if (action==Action.STC) {
+                        conditionalUpon().closeOrder();
+                    }
                     processed = true;
                     return true;
 

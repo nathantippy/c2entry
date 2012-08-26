@@ -20,20 +20,15 @@ import java.math.BigDecimal;
 public abstract class OrderSignal extends Order {
 
     protected final Instrument instrument;
-    protected final Action action;
     protected final QuantityComputable quantityComputable;
     protected PriceSelector priceSelector;
-    protected final long cancelAtMs;
-    protected final Duration duration;
+
     protected Integer oneCancelsAnother;
 
-    public OrderSignal(int id, long time, Instrument instrument, String symbol, Action action, QuantityComputable quantityComputable, long cancelAtMs, Duration duration) {
-        super(id, time, symbol);
+    public OrderSignal(int id, long time, Instrument instrument, String symbol, Action action, QuantityComputable quantityComputable, long cancelAtMs, Duration timeInForce) {
+        super(id, time, symbol, cancelAtMs, timeInForce, action);
         this.instrument = instrument;
-        this.action = action;
         this.quantityComputable = quantityComputable;
-        this.cancelAtMs = cancelAtMs;
-        this.duration = duration;
         this.priceSelector = PriceSelector.DEFAULT;
     }
 

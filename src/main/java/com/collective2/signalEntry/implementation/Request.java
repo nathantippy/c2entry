@@ -7,6 +7,7 @@
 package com.collective2.signalEntry.implementation;
 
 import com.collective2.signalEntry.C2ServiceException;
+import com.collective2.signalEntry.Duration;
 import com.collective2.signalEntry.Parameter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,7 +16,6 @@ import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
-import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.Map;
 
@@ -59,16 +59,18 @@ public class Request extends EnumMap<Parameter, Object> {
         return clone;
     }
 
-    public Request baseClone() {
+    public Request baseConditional() {
         //only fields needed for building all-in-one dependent signals
        Request base = new Request(command());
        Parameter[] copy = new Parameter[]{
                Parameter.Instrument,
                Parameter.Symbol,
-               Parameter.OrderDuration,
                Parameter.Password,
                Parameter.SystemId
-        };
+       };
+
+       base.put(Parameter.TimeInForce, Duration.GoodTilCancel);//this is conditional upon another
+       //if the dependent is cancelled this one will also be cancelled but not until then
 
        for(Parameter p:copy) {
            Object obj = get(p);

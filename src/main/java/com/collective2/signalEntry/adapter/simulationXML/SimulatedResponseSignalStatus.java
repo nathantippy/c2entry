@@ -6,10 +6,13 @@
  */
 package com.collective2.signalEntry.adapter.simulationXML;
 
+import java.math.BigDecimal;
 import java.util.concurrent.BlockingQueue;
 
 import javax.xml.stream.events.XMLEvent;
 
+import com.collective2.signalEntry.Duration;
+import com.collective2.signalEntry.implementation.Action;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,9 +25,24 @@ public class SimulatedResponseSignalStatus extends SimulatedResponse {
     private final String        emailedwhen;
     private final String        killedwhen;
     private final String        tradedwhen;
-    private final Number        tradeprice;
+    private final BigDecimal    tradeprice;
 
-    public SimulatedResponseSignalStatus(Integer signalId, String systemname, String postedwhen, String emailedwhen, String killedwhen, String tradedwhen, Number tradeprice) {
+    private boolean     showDetails;
+    private Action      action;
+    private int         quantity;
+    private String      symbol;
+    private BigDecimal  limit;
+    private BigDecimal  stop;
+    private BigDecimal  market;
+    private Duration    duration;
+    private Integer     ocaGroupId;
+
+    private boolean     showChildren = false;
+    private boolean     showParents = false;
+
+    public SimulatedResponseSignalStatus(Integer signalId, String systemname, String postedwhen,
+                                         String emailedwhen, String killedwhen,
+                                         String tradedwhen, BigDecimal tradeprice) {
         this.signalId = signalId;
         this.systemname = systemname;
         this.postedwhen = postedwhen;
@@ -33,6 +51,20 @@ public class SimulatedResponseSignalStatus extends SimulatedResponse {
         this.tradedwhen = tradedwhen;
         this.tradeprice = tradeprice;
 
+    }
+
+
+    public void showDetails(Action action, int quantity, String symbol, BigDecimal limit, BigDecimal stop, BigDecimal market,
+                            Duration duration, Integer ocaGroupId) {
+        this.showDetails = true;
+        this.action = action;
+        this.quantity = quantity;
+        this.symbol = symbol;
+        this.limit = limit;
+        this.stop = stop;
+        this.market = market;
+        this.duration = duration;
+        this.ocaGroupId = ocaGroupId;
     }
 
     @Override
@@ -80,6 +112,62 @@ public class SimulatedResponseSignalStatus extends SimulatedResponse {
             queue.put(eventFactory.createCharacters(tradeprice.toString()));
             queue.put(eventFactory.createEndElement("", "", "tradeprice"));
 
+            /*
+              <action>BTO</action>
+              <quant>100</quant>
+              <symbol>AAPL</symbol>
+              <limit>10.25</limit>
+              <stop>0</stop>
+              <market>0</market>
+              <tif>DAY</tif>
+              <ocagroupid></ocagroupid>
+            */
+            if (showDetails) {
+                queue.put(eventFactory.createStartElement("", "", "action"));
+                queue.put(eventFactory.createCharacters(action.toString()));
+                queue.put(eventFactory.createEndElement("", "", "action"));
+
+                queue.put(eventFactory.createStartElement("", "", "quant"));
+                queue.put(eventFactory.createCharacters(Integer.toString(quantity)));
+                queue.put(eventFactory.createEndElement("", "", "quant"));
+
+                queue.put(eventFactory.createStartElement("", "", "symbol"));
+                queue.put(eventFactory.createCharacters(symbol));
+                queue.put(eventFactory.createEndElement("", "", "symbol"));
+
+                queue.put(eventFactory.createStartElement("", "", "limit"));
+                queue.put(eventFactory.createCharacters(limit.toString()));
+                queue.put(eventFactory.createEndElement("", "", "limit"));
+
+                queue.put(eventFactory.createStartElement("", "", "stop"));
+                queue.put(eventFactory.createCharacters(stop.toString()));
+                queue.put(eventFactory.createEndElement("", "", "stop"));
+
+                queue.put(eventFactory.createStartElement("", "", "market"));
+                queue.put(eventFactory.createCharacters(market.toString()));
+                queue.put(eventFactory.createEndElement("", "", "market"));
+
+                queue.put(eventFactory.createStartElement("", "", "tif"));
+                queue.put(eventFactory.createCharacters(duration.toString()));
+                queue.put(eventFactory.createEndElement("", "", "tif"));
+
+                queue.put(eventFactory.createStartElement("", "", "ocagroupid"));
+                queue.put(eventFactory.createCharacters(ocaGroupId==null?"":ocaGroupId.toString()));
+                queue.put(eventFactory.createEndElement("", "", "ocagroupid"));
+
+            }
+
+            if (showChildren) {
+               throw new UnsupportedOperationException("Not implemented yet");
+
+            }
+
+            if (showParents) {
+                throw new UnsupportedOperationException("Not implemented yet");
+
+            }
+
+
             queue.put(eventFactory.createEndElement("", "", "signal"));
 
             queue.put(eventFactory.createEndElement("", "", "collective2"));
@@ -89,4 +177,6 @@ public class SimulatedResponseSignalStatus extends SimulatedResponse {
         }
 
     }
+
+
 }
