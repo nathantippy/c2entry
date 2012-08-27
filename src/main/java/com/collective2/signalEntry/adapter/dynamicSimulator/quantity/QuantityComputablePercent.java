@@ -7,7 +7,7 @@
 package com.collective2.signalEntry.adapter.dynamicSimulator.quantity;
 
 import com.collective2.signalEntry.adapter.dynamicSimulator.DataProvider;
-import com.collective2.signalEntry.adapter.dynamicSimulator.Portfolio;
+import com.collective2.signalEntry.adapter.dynamicSimulator.portfolio.Portfolio;
 import com.collective2.signalEntry.adapter.dynamicSimulator.order.Order;
 
 public class QuantityComputablePercent implements QuantityComputable {
@@ -21,7 +21,7 @@ public class QuantityComputablePercent implements QuantityComputable {
     @Override
     public Integer quantity(Number price, Portfolio portfolio, DataProvider dataProvider, Order entryOrder) {
 
-        double dollars = portfolio.equity(dataProvider).doubleValue()*percent.doubleValue();
+        double dollars = portfolio.cash().add(portfolio.equity(dataProvider)).doubleValue()*percent.doubleValue();
         return (int)(dollars/price.doubleValue());
     }
 }

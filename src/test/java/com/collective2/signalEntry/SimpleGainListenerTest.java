@@ -2,9 +2,9 @@ package com.collective2.signalEntry;
 
 import com.collective2.signalEntry.adapter.DynamicSimulationAdapter;
 import com.collective2.signalEntry.adapter.dynamicSimulator.GainListener;
-import com.collective2.signalEntry.adapter.dynamicSimulator.Portfolio;
+import com.collective2.signalEntry.adapter.dynamicSimulator.portfolio.Portfolio;
 import com.collective2.signalEntry.adapter.dynamicSimulator.SimpleGainListener;
-import com.collective2.signalEntry.adapter.dynamicSimulator.SimplePortfolio;
+import com.collective2.signalEntry.adapter.dynamicSimulator.portfolio.SimplePortfolio;
 import org.junit.Test;
 
 import java.io.ByteArrayOutputStream;

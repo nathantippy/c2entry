@@ -9,6 +9,8 @@ package com.collective2.signalEntry.adapter;
 import com.collective2.signalEntry.*;
 import com.collective2.signalEntry.adapter.dynamicSimulator.*;
 import com.collective2.signalEntry.adapter.dynamicSimulator.order.Order;
+import com.collective2.signalEntry.adapter.dynamicSimulator.portfolio.Portfolio;
+import com.collective2.signalEntry.adapter.dynamicSimulator.portfolio.SimplePortfolio;
 import com.collective2.signalEntry.adapter.simulationXML.*;
 import com.collective2.signalEntry.implementation.Command;
 import com.collective2.signalEntry.implementation.Request;
@@ -277,10 +279,6 @@ public class DynamicSimulationAdapter implements C2EntryServiceAdapter {
                     String tradedWhen = order.tradedWhen();
                     BigDecimal tradePrice = order.tradePrice();
 
-                    //TODO: need details boolean
-                    //TODO: need relationships parent/child
-
-
                     SimulatedResponseSignalStatus response =
                            new SimulatedResponseSignalStatus(signalIdInput,
                                                              systemName,
@@ -304,8 +302,6 @@ public class DynamicSimulationAdapter implements C2EntryServiceAdapter {
                             order.timeInForce(),
                             order.oneCancelsAnother());
 
-                        //TODO: needs a lot more work
-
                     }
 
 
@@ -313,14 +309,22 @@ public class DynamicSimulationAdapter implements C2EntryServiceAdapter {
                      if (showRelated!=null) {
                          switch (showRelated) {
                              case Children:
+                                 //what orders are conditional upon this one?
+                                 List<Order> childOrders = systemForSignal.allSignalsConditionalUpon(signalIdInput);
+
+                                 //TODO: response.showChildren()
+
                                  break;
                              case Parent:
+
+                                 Order parentOrder = order.conditionalUpon();
+
+                                 //TODO: response.showParent();
+
+
                                  break;
                          }
-
-
                      }
-
 
                      return response;
 

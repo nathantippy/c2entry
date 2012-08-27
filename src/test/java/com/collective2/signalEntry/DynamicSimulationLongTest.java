@@ -7,9 +7,8 @@
 package com.collective2.signalEntry;
 
 import com.collective2.signalEntry.adapter.DynamicSimulationAdapter;
-import com.collective2.signalEntry.adapter.dynamicSimulator.DataProvider;
-import com.collective2.signalEntry.adapter.dynamicSimulator.Portfolio;
-import com.collective2.signalEntry.adapter.dynamicSimulator.SimplePortfolio;
+import com.collective2.signalEntry.adapter.dynamicSimulator.portfolio.Portfolio;
+import com.collective2.signalEntry.adapter.dynamicSimulator.portfolio.SimplePortfolio;
 import org.junit.Test;
 
 import java.math.BigDecimal;
@@ -39,29 +38,7 @@ public class DynamicSimulationLongTest {
         C2ServiceFactory factory = new C2ServiceFactory(simulationAdapter);
         C2EntryService sentryService = factory.signalEntryService(password, systemId, eMail);
 
-        sentryService.sendSystemHypotheticalRequest(systemId).visitC2Elements(new C2ElementVisitor() {
-            @Override
-            public void visit(C2Element element, String data) {
-
-                switch (element) {
-                    case ElementTotalEquityAvail:
-                        assertEquals(10000d,Double.parseDouble(data),DELTA);
-                        break;
-                    case ElementCash:
-                        assertEquals(10000d,Double.parseDouble(data),DELTA);
-                        break;
-                    case ElementEquity:
-                        assertEquals(0d,Double.parseDouble(data),DELTA);
-                        break;
-                    case ElementMarginUsed:
-                        assertEquals(0d,Double.parseDouble(data),DELTA);
-                        break;
-                }
-            }
-        },C2Element.ElementTotalEquityAvail,
-                C2Element.ElementCash,
-                C2Element.ElementEquity,
-                C2Element.ElementMarginUsed);
+        validateStartingBalances(systemId, sentryService);
 
         assertEquals(0, portfolio.position("msft").quantity().intValue());
         Response openResponse = sentryService.stockSignal(ActionForStock.BuyToOpen)
@@ -121,7 +98,7 @@ public class DynamicSimulationLongTest {
         //market order sell test
         ///////////////////
         Response marketOrderResponse = sentryService.stockSignal(ActionForStock.SellToClose)
-                .marketOrder().quantity(10).symbol("msft").conditionalUpon(signalId)
+                .marketOrder().quantity(10).symbol("msft")
                 .duration(Duration.GoodTilCancel).send();
 
         //force request response now
@@ -212,7 +189,7 @@ public class DynamicSimulationLongTest {
         ///////////////////
         BigDecimal sellLimitFail = new BigDecimal("180.10");
         Response marketLimitSellResponse = sentryService.stockSignal(ActionForStock.SellToClose)
-                .limitOrder(sellLimitFail).quantity(10).symbol("msft").conditionalUpon(openSignalId)
+                .limitOrder(sellLimitFail).quantity(10).symbol("msft")
                 .duration(Duration.DayOrder).send();
 
         //force request response now
@@ -248,7 +225,7 @@ public class DynamicSimulationLongTest {
         ///////////////////
         BigDecimal sellLimitSuccess = new BigDecimal("110.10");
         marketLimitSellResponse = sentryService.stockSignal(ActionForStock.SellToClose)
-                .limitOrder(sellLimitSuccess).quantity(10).symbol("msft").conditionalUpon(openSignalId)
+                .limitOrder(sellLimitSuccess).quantity(10).symbol("msft")
                 .duration(Duration.DayOrder).send();
 
         ///////////////////////////
@@ -294,29 +271,7 @@ public class DynamicSimulationLongTest {
         C2ServiceFactory factory = new C2ServiceFactory(simulationAdapter);
         C2EntryService sentryService = factory.signalEntryService(password, systemId, eMail);
 
-        sentryService.sendSystemHypotheticalRequest(systemId).visitC2Elements(new C2ElementVisitor() {
-            @Override
-            public void visit(C2Element element, String data) {
-
-                switch (element) {
-                    case ElementTotalEquityAvail:
-                        assertEquals(10000d,Double.parseDouble(data),DELTA);
-                        break;
-                    case ElementCash:
-                        assertEquals(10000d,Double.parseDouble(data),DELTA);
-                        break;
-                    case ElementEquity:
-                        assertEquals(0d,Double.parseDouble(data),DELTA);
-                        break;
-                    case ElementMarginUsed:
-                        assertEquals(0d,Double.parseDouble(data),DELTA);
-                        break;
-                }
-            }
-        },C2Element.ElementTotalEquityAvail,
-          C2Element.ElementCash,
-          C2Element.ElementEquity,
-          C2Element.ElementMarginUsed);
+        validateStartingBalances(systemId, sentryService);
 
         BigDecimal stopLoss = new BigDecimal("20.50");
         BigDecimal profitTarget = new BigDecimal("120.50");
@@ -390,15 +345,7 @@ public class DynamicSimulationLongTest {
         Integer newCloseSignalId = adjClose.getInteger(C2Element.ElementSignalId);
 
         //confirm the pending list of signals has been updated
-        pendingSignalIdSet.clear();
-        sentryService.sendAllSignalsRequest().visitC2Elements(new C2ElementVisitor() {
-            @Override
-            public void visit(C2Element element, String data) {
-                if (C2Element.ElementSignalId==element) {
-                    pendingSignalIdSet.add(Integer.parseInt(data));
-                }
-            }
-        },C2Element.ElementSignalId);
+        updateSetWithPendingSignalIds(sentryService, pendingSignalIdSet);
 
         assertTrue(pendingSignalIdSet.contains(newCloseSignalId));
         if (noOCA) {
@@ -414,15 +361,7 @@ public class DynamicSimulationLongTest {
         assertEquals(10, portfolio.position("msft").quantity().intValue());
 
         //confirm the pending list did not change
-        pendingSignalIdSet.clear();
-        sentryService.sendAllSignalsRequest().visitC2Elements(new C2ElementVisitor() {
-            @Override
-            public void visit(C2Element element, String data) {
-                if (C2Element.ElementSignalId==element) {
-                    pendingSignalIdSet.add(Integer.parseInt(data));
-                }
-            }
-        },C2Element.ElementSignalId);
+        updateSetWithPendingSignalIds(sentryService, pendingSignalIdSet);
 
         assertTrue(pendingSignalIdSet.contains(newCloseSignalId));
         if (noOCA) {
@@ -440,6 +379,22 @@ public class DynamicSimulationLongTest {
         //because its a close against something closed.
 
         //ensure we have no pending signals now that position is closed
+        updateSetWithPendingSignalIds(sentryService, pendingSignalIdSet);
+        assertEquals("should not have found any signals but found:"+pendingSignalIdSet, (noOCA ? 1 : 0),pendingSignalIdSet.size());
+
+        //testing cancel of the remaining order because its open has already been closed
+        if (noOCA) {
+            sentryService.cancel(pendingSignalIdSet.iterator().next());
+
+            //ensure we have no pending signals now that last one is cancelled
+            updateSetWithPendingSignalIds(sentryService, pendingSignalIdSet);
+            assertEquals("should not have found any signals but found:"+pendingSignalIdSet, 0,pendingSignalIdSet.size());
+
+        }
+
+    }
+
+    private void updateSetWithPendingSignalIds(C2EntryService sentryService, final Set<Integer> pendingSignalIdSet) {
         pendingSignalIdSet.clear();
         sentryService.sendAllSignalsRequest().visitC2Elements(new C2ElementVisitor() {
             @Override
@@ -449,8 +404,6 @@ public class DynamicSimulationLongTest {
                 }
             }
         },C2Element.ElementSignalId);
-        assertEquals("should not have found any signals but found:"+pendingSignalIdSet, (noOCA ? 1 : 0),pendingSignalIdSet.size());
-
     }
 
     @Test
@@ -488,29 +441,7 @@ public class DynamicSimulationLongTest {
         C2ServiceFactory factory = new C2ServiceFactory(simulationAdapter);
         C2EntryService sentryService = factory.signalEntryService(password, systemId, eMail);
 
-        sentryService.sendSystemHypotheticalRequest(systemId).visitC2Elements(new C2ElementVisitor() {
-            @Override
-            public void visit(C2Element element, String data) {
-
-                switch (element) {
-                    case ElementTotalEquityAvail:
-                        assertEquals(10000d,Double.parseDouble(data),DELTA);
-                        break;
-                    case ElementCash:
-                        assertEquals(10000d,Double.parseDouble(data),DELTA);
-                        break;
-                    case ElementEquity:
-                        assertEquals(0d,Double.parseDouble(data),DELTA);
-                        break;
-                    case ElementMarginUsed:
-                        assertEquals(0d,Double.parseDouble(data),DELTA);
-                        break;
-                }
-            }
-        },C2Element.ElementTotalEquityAvail,
-                C2Element.ElementCash,
-                C2Element.ElementEquity,
-                C2Element.ElementMarginUsed);
+        validateStartingBalances(systemId, sentryService);
 
         BigDecimal stopLoss = new BigDecimal("20.50");
         BigDecimal profitTarget = new BigDecimal("120.50");
@@ -594,15 +525,7 @@ public class DynamicSimulationLongTest {
         simulationAdapter.tick(dataProvider,sentryService);
         assertEquals(10, portfolio.position("msft").quantity().intValue());
 
-        pendingSignalIdSet.clear();
-        sentryService.sendAllSignalsRequest().visitC2Elements(new C2ElementVisitor() {
-            @Override
-            public void visit(C2Element element, String data) {
-                if (C2Element.ElementSignalId==element) {
-                    pendingSignalIdSet.add(Integer.parseInt(data));
-                }
-            }
-        },C2Element.ElementSignalId);
+        updateSetWithPendingSignalIds(sentryService, pendingSignalIdSet);
 
         assertTrue(pendingSignalIdSet.contains(newCloseSignalId));
         if (noOCA) {
@@ -620,17 +543,46 @@ public class DynamicSimulationLongTest {
         //because its a close against something closed.
 
         //ensure we have no pending signals now that position is closed
-        pendingSignalIdSet.clear();
-        sentryService.sendAllSignalsRequest().visitC2Elements(new C2ElementVisitor() {
-            @Override
-            public void visit(C2Element element, String data) {
-                if (C2Element.ElementSignalId==element) {
-                    pendingSignalIdSet.add(Integer.parseInt(data));
-                }
-            }
-        },C2Element.ElementSignalId);
+        updateSetWithPendingSignalIds(sentryService, pendingSignalIdSet);
         assertEquals("should not have found any signals but found:"+pendingSignalIdSet, (noOCA ? 1 : 0),pendingSignalIdSet.size());
 
+        //testing cancel of the remaining order because its open has already been closed
+        if (noOCA) {
+            sentryService.cancel(pendingSignalIdSet.iterator().next());
+
+            //ensure we have no pending signals now that last one is cancelled
+            updateSetWithPendingSignalIds(sentryService, pendingSignalIdSet);
+            assertEquals("should not have found any signals but found:"+pendingSignalIdSet, 0,pendingSignalIdSet.size());
+
+        }
+
+
+    }
+
+    private void validateStartingBalances(Integer systemId, C2EntryService sentryService) {
+        sentryService.sendSystemHypotheticalRequest(systemId).visitC2Elements(new C2ElementVisitor() {
+            @Override
+            public void visit(C2Element element, String data) {
+
+                switch (element) {
+                    case ElementTotalEquityAvail:
+                        assertEquals(10000d,Double.parseDouble(data),DELTA);
+                        break;
+                    case ElementCash:
+                        assertEquals(10000d,Double.parseDouble(data),DELTA);
+                        break;
+                    case ElementEquity:
+                        assertEquals(0d,Double.parseDouble(data),DELTA);
+                        break;
+                    case ElementMarginUsed:
+                        assertEquals(0d,Double.parseDouble(data),DELTA);
+                        break;
+                }
+            }
+        },C2Element.ElementTotalEquityAvail,
+                C2Element.ElementCash,
+                C2Element.ElementEquity,
+                C2Element.ElementMarginUsed);
     }
 
     //TODO: copy this class for shorts test.

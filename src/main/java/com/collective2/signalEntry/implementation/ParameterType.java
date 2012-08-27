@@ -120,7 +120,7 @@ public enum ParameterType {
         }
     };
 
-    private static Object lookupEnum(String stringValue, Enum[] values) {
+    public static Enum lookupEnum(String stringValue, Enum[] values) {
         for(Enum e:values) {
             if (e.toString().equalsIgnoreCase(stringValue)) {
                 return e;
