@@ -6,12 +6,14 @@
  */
 package com.collective2.signalEntry.adapter.dynamicSimulator.order;
 
+import com.collective2.signalEntry.ActionForNonStock;
 import com.collective2.signalEntry.Duration;
 import com.collective2.signalEntry.adapter.dynamicSimulator.DataProvider;
-import com.collective2.signalEntry.adapter.dynamicSimulator.Portfolio;
+import com.collective2.signalEntry.adapter.dynamicSimulator.portfolio.Portfolio;
 import com.collective2.signalEntry.implementation.Action;
 
 import java.math.BigDecimal;
+import java.util.Date;
 
 
 public abstract class Order implements Comparable<Order> {
@@ -26,8 +28,13 @@ public abstract class Order implements Comparable<Order> {
     protected Order conditionalUpon;
     private int entryQuantity;
     private final Duration timeInForce;
-    private final long cancelAtMs;
+    private final long expireAtMs;
     protected final Action action;
+
+    private Date postedWhen;  //TODO: SET WITH SCHEDULED
+    private Date eMailedWhen; //TODO: SET WITH???
+    private Date killedWhen;  //TODO: SET WITH CANCEL
+    private Date tradedWhen;  //TODO: SET WITH ENTRY QUANTTY
 
     //ASSUMPTION: MARKETS ARE EVER OPEN LONGER THAN 12 HOURS
     private static final long ONE_TRADING_DAY = 60000l*60*36;
@@ -36,7 +43,7 @@ public abstract class Order implements Comparable<Order> {
         this.id = id;
         this.time = time;
         this.symbol = symbol;
-        this.cancelAtMs = cancelAtMs;
+        this.expireAtMs = cancelAtMs;
         this.timeInForce = timeInForce;
         this.action = action;
     }
@@ -66,7 +73,7 @@ public abstract class Order implements Comparable<Order> {
     }
 
     public boolean isExpired(long now) {
-        return (now>cancelAtMs); //TODO: rename
+        return (now> expireAtMs);
     }
 
     public int id() {
@@ -148,19 +155,19 @@ public abstract class Order implements Comparable<Order> {
     }
 
     public String postedWhen() {
-        return "";    //TODO: SET WITH SCHEDULED
+        return postedWhen.toString();
     }
 
     public String eMailedWhen() {
-        return "";    //TODO: SET WITH???
+        return eMailedWhen.toString();
     }
 
     public String killedWhen() {
-        return "";      //TODO: SET WITH CANCEL
+        return killedWhen.toString();
     }
 
     public String tradedWhen() {
-        return "";      //TODO: SET WITH ENTRY QUANTTY
+        return tradedWhen.toString();
     }
 
     public BigDecimal tradePrice() {

@@ -24,4 +24,14 @@ public enum ActionForNonStock {
     public String toString() {
         return value.name();
     }
+
+    public static ActionForNonStock lookupEnum(String stringValue) {
+
+        for(ActionForNonStock e:values()) {
+            if (e.toString().equalsIgnoreCase(stringValue)) {
+                return e;
+            }
+        }
+        throw new C2ServiceException("Unable to find:"+stringValue+" in "+values().getClass(),false);
+    }
 }

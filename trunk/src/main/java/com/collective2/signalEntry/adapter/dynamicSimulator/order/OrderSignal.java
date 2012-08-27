@@ -10,48 +10,33 @@ package com.collective2.signalEntry.adapter.dynamicSimulator.order;
 import com.collective2.signalEntry.Duration;
 import com.collective2.signalEntry.Instrument;
 import com.collective2.signalEntry.adapter.dynamicSimulator.DataProvider;
-import com.collective2.signalEntry.adapter.dynamicSimulator.Portfolio;
+import com.collective2.signalEntry.adapter.dynamicSimulator.portfolio.Portfolio;
 import com.collective2.signalEntry.adapter.dynamicSimulator.quantity.QuantityComputable;
 import com.collective2.signalEntry.implementation.Action;
-import com.collective2.signalEntry.implementation.RelativeNumber;
 
 import java.math.BigDecimal;
 
-public abstract class OrderSignal extends Order {
+public class OrderSignal extends Order {
 
     protected final Instrument instrument;
     protected final QuantityComputable quantityComputable;
+    protected final OrderProcessor processor;
+
     protected PriceSelector priceSelector;
 
     protected Integer oneCancelsAnother;
 
-    public OrderSignal(int id, long time, Instrument instrument, String symbol, Action action, QuantityComputable quantityComputable, long cancelAtMs, Duration timeInForce) {
+    public OrderSignal(int id, long time, Instrument instrument, String symbol,
+                       Action action, QuantityComputable quantityComputable, long cancelAtMs, Duration timeInForce, OrderProcessor processor) {
         super(id, time, symbol, cancelAtMs, timeInForce, action);
         this.instrument = instrument;
         this.quantityComputable = quantityComputable;
         this.priceSelector = PriceSelector.DEFAULT;
+        this.processor = processor;
     }
 
     public void setPriceSelector(PriceSelector priceSelector) {
         this.priceSelector = priceSelector;
-    }
-
-    protected BigDecimal absolutePrice(RelativeNumber relativeLimit, DataProvider dataProvider, Portfolio portfolio) {
-
-        //Q use most recent quote which is dataProvider.endingPrice() - its the best we have
-        //O use day open price, use open price if market was open else use end price..
-        //T fill price of the open buy/sell  portfolio.position(symbol).openPrice();
-
-        switch (relativeLimit.prefix()) {
-            case 'Q':
-                return dataProvider.endingPrice(symbol).add(relativeLimit.value());
-            case 'O':
-                return dataProvider.openingPrice(symbol).add(relativeLimit.value());
-            case 'T':
-                return portfolio.position(symbol).openPrice().add(relativeLimit.value());
-            default:
-                return relativeLimit.value();
-        }
     }
 
     protected BigDecimal priceSelection(BigDecimal bestPrice, BigDecimal worstPrice) {
@@ -65,6 +50,11 @@ public abstract class OrderSignal extends Order {
 
     public Integer oneCancelsAnother() {
         return oneCancelsAnother;
+    }
+
+    @Override
+    public boolean process(DataProvider dataProvider, Portfolio portfolio, BigDecimal commission) {
+        return processor.process(dataProvider,portfolio,commission,this);
     }
 
 }

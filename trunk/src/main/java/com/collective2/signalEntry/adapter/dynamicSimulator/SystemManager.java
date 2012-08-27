@@ -2,6 +2,11 @@ package com.collective2.signalEntry.adapter.dynamicSimulator;
 
 import com.collective2.signalEntry.*;
 import com.collective2.signalEntry.adapter.dynamicSimulator.order.*;
+import com.collective2.signalEntry.adapter.dynamicSimulator.order.OrderProcessor;
+import com.collective2.signalEntry.adapter.dynamicSimulator.order.OrderProcessorLimit;
+import com.collective2.signalEntry.adapter.dynamicSimulator.order.OrderProcessorMarket;
+import com.collective2.signalEntry.adapter.dynamicSimulator.order.OrderProcessorStop;
+import com.collective2.signalEntry.adapter.dynamicSimulator.portfolio.Portfolio;
 import com.collective2.signalEntry.adapter.dynamicSimulator.quantity.QuantityComputable;
 import com.collective2.signalEntry.adapter.dynamicSimulator.quantity.QuantityFactory;
 import com.collective2.signalEntry.implementation.Action;
@@ -161,14 +166,17 @@ public class SystemManager {
                 //convert everything to relatives, should have already been relatives?
                 RelativeNumber limit = (RelativeNumber)request.get(Parameter.RelativeLimitOrder);
                 if (limit != null) {
-                    signal = new LimitOrder(id,timeToExecute, instrument, symbol, limit, action, quantityComputable, cancelAtMs, timeInForce);
+                    OrderProcessor limitProcessor = new OrderProcessorLimit(limit);
+                    signal = new OrderSignal(id,timeToExecute, instrument, symbol, action, quantityComputable, cancelAtMs, timeInForce,limitProcessor);
                 }  else {
                     RelativeNumber stop = (RelativeNumber)request.get(Parameter.RelativeStopOrder);
                     if (stop != null) {
-                        signal = new StopOrder(id,timeToExecute, instrument, symbol, stop, action, quantityComputable, cancelAtMs, timeInForce);
+                        OrderProcessor stopProcessor = new OrderProcessorStop(stop);
+                        signal = new OrderSignal(id,timeToExecute, instrument, symbol, action, quantityComputable, cancelAtMs, timeInForce, stopProcessor);
                     } else {
                         //market
-                        signal = new MarketOrder(id,timeToExecute, instrument, symbol, action, quantityComputable, cancelAtMs, timeInForce);
+                        OrderProcessor marketProcessor = new OrderProcessorMarket();
+                        signal = new OrderSignal(id,timeToExecute, instrument, symbol, action, quantityComputable, cancelAtMs, timeInForce, marketProcessor);
                     }
                 }
 
@@ -181,6 +189,9 @@ public class SystemManager {
 
                 Integer xReplace = (Integer)request.get(XReplace);
                 if (xReplace!=null) {
+
+                    //TODO: the xReplace is not the same as the original and its getting deleted
+                    //Need more assertions to make this work.
 
                     if (xReplace<0 || (xReplace>>BITS_FOR_SYSTEM_ID)>=archive.size()) {
                         throw new C2ServiceException("Invalid signalId "+xReplace+" not found.",false);
@@ -195,6 +206,15 @@ public class SystemManager {
             }
 
             if (conditionalUponOrder!=null) {
+
+                //If you attempt to add a new order and make it conditional on an order
+                // that has already been filled or canceled, this will not be permitted.
+                // The parent order must still be pending.
+                //unless this is an xReplace
+                if (!request.containsKey(XReplace) && !conditionalUponOrder.isPending()) {
+                    throw new C2ServiceException("Can not be conditional on an order that is not pending.",false);
+                }
+
                 logger.trace("set conditional upon " + request);
                 order.conditionalUpon(conditionalUponOrder);
                 //do normal schedule however in addition to time and other
@@ -336,10 +356,8 @@ public class SystemManager {
 
     public BigDecimal totalMargin() {
 
-       // portfolio.
-         //                                hhhh
         //based on each positions instrument
-        return BigDecimal.ZERO;//TODO: margin was not used in first release, not implemented yet
+        return BigDecimal.ZERO;//TODO: margin not used in first release, not implemented yet
 
     }
 
@@ -419,5 +437,15 @@ public class SystemManager {
 
     public void unSubscribe(String eMail) {
         subscribers.remove(eMail);
+    }
+
+    public List<Order> allSignalsConditionalUpon(Integer signalIdInput) {
+        List<Order> orders = new ArrayList<Order>();
+        for(Order order:archive) {
+            if (order.conditionalUpon()!=null && order.conditionalUpon().id()==signalIdInput.intValue()) {
+                orders.add(order);
+            }
+        }
+        return orders;
     }
 }

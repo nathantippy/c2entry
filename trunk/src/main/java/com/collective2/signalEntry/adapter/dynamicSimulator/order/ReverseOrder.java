@@ -2,7 +2,7 @@ package com.collective2.signalEntry.adapter.dynamicSimulator.order;
 
 import com.collective2.signalEntry.Duration;
 import com.collective2.signalEntry.adapter.dynamicSimulator.DataProvider;
-import com.collective2.signalEntry.adapter.dynamicSimulator.Portfolio;
+import com.collective2.signalEntry.adapter.dynamicSimulator.portfolio.Portfolio;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
