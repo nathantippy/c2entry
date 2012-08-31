@@ -7,68 +7,42 @@
 package com.collective2.signalEntry.adapter.simulationXML;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 import java.util.concurrent.BlockingQueue;
 
 import javax.xml.stream.events.XMLEvent;
 
 import com.collective2.signalEntry.Duration;
 import com.collective2.signalEntry.implementation.Action;
+import com.collective2.signalEntry.implementation.RelativeNumber;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class SimulatedResponseSignalStatus extends SimulatedResponse {
 
     private static final Logger logger = LoggerFactory.getLogger(SimulatedResponseSignalStatus.class);
-    private final Integer       signalId;
-    private final String        systemname;
-    private final String        postedwhen;
-    private final String        emailedwhen;
-    private final String        killedwhen;
-    private final String        tradedwhen;
-    private final BigDecimal    tradeprice;
-
-    private boolean     showDetails;
-    private Action      action;
-    private int         quantity;
-    private String      symbol;
-    private BigDecimal  limit;
-    private BigDecimal  stop;
-    private BigDecimal  market;
-    private Duration    duration;
-    private Integer     ocaGroupId;
-
-    private boolean     showChildren = false;
-    private boolean     showParents = false;
 
     public SimulatedResponseSignalStatus(Integer signalId, String systemname, String postedwhen,
                                          String emailedwhen, String killedwhen,
                                          String tradedwhen, BigDecimal tradeprice) {
-        this.signalId = signalId;
-        this.systemname = systemname;
-        this.postedwhen = postedwhen;
-        this.emailedwhen = emailedwhen;
-        this.killedwhen = killedwhen;
-        this.tradedwhen = tradedwhen;
-        this.tradeprice = tradeprice;
-
+        super(buildEvents(signalId,systemname,postedwhen,emailedwhen,killedwhen,tradedwhen,tradeprice,
+                        false,null,0,null,null,null,null,null,null));
     }
 
-
-    public void showDetails(Action action, int quantity, String symbol, BigDecimal limit, BigDecimal stop, BigDecimal market,
-                            Duration duration, Integer ocaGroupId) {
-        this.showDetails = true;
-        this.action = action;
-        this.quantity = quantity;
-        this.symbol = symbol;
-        this.limit = limit;
-        this.stop = stop;
-        this.market = market;
-        this.duration = duration;
-        this.ocaGroupId = ocaGroupId;
+    public SimulatedResponseSignalStatus(Integer signalId, String systemname, String postedwhen,
+                                         String emailedwhen, String killedwhen,
+                                         String tradedwhen, BigDecimal tradeprice,
+                                         Action action, int quantity, String symbol, RelativeNumber limit,
+                                         RelativeNumber stop, RelativeNumber market,
+                                         Duration duration, Integer ocaGroupId) {
+        super(buildEvents(signalId,systemname,postedwhen,emailedwhen,killedwhen,tradedwhen,tradeprice,
+                true,action,quantity,symbol,limit,stop,market,duration,ocaGroupId));
     }
 
-    @Override
-    public void serverSideEventProduction(BlockingQueue<XMLEvent> queue) {
+    private static Iterator<XMLEvent> buildEvents(Integer signalId, String systemname, String postedwhen, String emailedwhen, String killedwhen, String tradedwhen, BigDecimal tradeprice,
+                                                  boolean showDetails, Action action, int quantity, String symbol, RelativeNumber limit, RelativeNumber stop, RelativeNumber market, Duration duration, Integer ocaGroupId) {
 
         /*
          * <collective2> <signal> <signalid>20919494</signalid>
@@ -78,39 +52,39 @@ public class SimulatedResponseSignalStatus extends SimulatedResponse {
          * <tradedwhen>2006-05-19 22:08:53:000</tradedwhen>
          * <tradeprice>20.87</tradeprice> </signal> </collective2>
          */
-        try {
-            queue.put(eventFactory.createStartDocument());
-            queue.put(eventFactory.createStartElement("", "", "collective2"));
+        List<XMLEvent> queue = new ArrayList<XMLEvent>();
+            queue.add(eventFactory.createStartDocument());
+            queue.add(eventFactory.createStartElement("", "", "collective2"));
 
-            queue.put(eventFactory.createStartElement("", "", "signal"));
+            queue.add(eventFactory.createStartElement("", "", "signal"));
 
-            queue.put(eventFactory.createStartElement("", "", "signalid"));
-            queue.put(eventFactory.createCharacters(signalId.toString()));
-            queue.put(eventFactory.createEndElement("", "", "signalid"));
+            queue.add(eventFactory.createStartElement("", "", "signalid"));
+            queue.add(eventFactory.createCharacters(signalId.toString()));
+            queue.add(eventFactory.createEndElement("", "", "signalid"));
 
-            queue.put(eventFactory.createStartElement("", "", "systemname"));
-            queue.put(eventFactory.createCharacters(systemname));
-            queue.put(eventFactory.createEndElement("", "", "systemname"));
+            queue.add(eventFactory.createStartElement("", "", "systemname"));
+            queue.add(eventFactory.createCharacters(systemname));
+            queue.add(eventFactory.createEndElement("", "", "systemname"));
 
-            queue.put(eventFactory.createStartElement("", "", "postedwhen"));
-            queue.put(eventFactory.createCharacters(postedwhen));
-            queue.put(eventFactory.createEndElement("", "", "postedwhen"));
+            queue.add(eventFactory.createStartElement("", "", "postedwhen"));
+            queue.add(eventFactory.createCharacters(postedwhen));
+            queue.add(eventFactory.createEndElement("", "", "postedwhen"));
 
-            queue.put(eventFactory.createStartElement("", "", "emailedwhen"));
-            queue.put(eventFactory.createCharacters(emailedwhen));
-            queue.put(eventFactory.createEndElement("", "", "emailedwhen"));
+            queue.add(eventFactory.createStartElement("", "", "emailedwhen"));
+            queue.add(eventFactory.createCharacters(emailedwhen));
+            queue.add(eventFactory.createEndElement("", "", "emailedwhen"));
 
-            queue.put(eventFactory.createStartElement("", "", "killedwhen"));
-            queue.put(eventFactory.createCharacters(killedwhen));
-            queue.put(eventFactory.createEndElement("", "", "killedwhen"));
+            queue.add(eventFactory.createStartElement("", "", "killedwhen"));
+            queue.add(eventFactory.createCharacters(killedwhen));
+            queue.add(eventFactory.createEndElement("", "", "killedwhen"));
 
-            queue.put(eventFactory.createStartElement("", "", "tradedwhen"));
-            queue.put(eventFactory.createCharacters(tradedwhen));
-            queue.put(eventFactory.createEndElement("", "", "tradedwhen"));
+            queue.add(eventFactory.createStartElement("", "", "tradedwhen"));
+            queue.add(eventFactory.createCharacters(tradedwhen));
+            queue.add(eventFactory.createEndElement("", "", "tradedwhen"));
 
-            queue.put(eventFactory.createStartElement("", "", "tradeprice"));
-            queue.put(eventFactory.createCharacters(tradeprice.toString()));
-            queue.put(eventFactory.createEndElement("", "", "tradeprice"));
+            queue.add(eventFactory.createStartElement("", "", "tradeprice"));
+            queue.add(eventFactory.createCharacters(tradeprice.toString()));
+            queue.add(eventFactory.createEndElement("", "", "tradeprice"));
 
             /*
               <action>BTO</action>
@@ -123,58 +97,48 @@ public class SimulatedResponseSignalStatus extends SimulatedResponse {
               <ocagroupid></ocagroupid>
             */
             if (showDetails) {
-                queue.put(eventFactory.createStartElement("", "", "action"));
-                queue.put(eventFactory.createCharacters(action.toString()));
-                queue.put(eventFactory.createEndElement("", "", "action"));
+                queue.add(eventFactory.createStartElement("", "", "action"));
+                queue.add(eventFactory.createCharacters(action.toString()));
+                queue.add(eventFactory.createEndElement("", "", "action"));
 
-                queue.put(eventFactory.createStartElement("", "", "quant"));
-                queue.put(eventFactory.createCharacters(Integer.toString(quantity)));
-                queue.put(eventFactory.createEndElement("", "", "quant"));
+                queue.add(eventFactory.createStartElement("", "", "quant"));
+                queue.add(eventFactory.createCharacters(Integer.toString(quantity)));
+                queue.add(eventFactory.createEndElement("", "", "quant"));
 
-                queue.put(eventFactory.createStartElement("", "", "symbol"));
-                queue.put(eventFactory.createCharacters(symbol));
-                queue.put(eventFactory.createEndElement("", "", "symbol"));
+                queue.add(eventFactory.createStartElement("", "", "symbol"));
+                queue.add(eventFactory.createCharacters(symbol));
+                queue.add(eventFactory.createEndElement("", "", "symbol"));
 
-                queue.put(eventFactory.createStartElement("", "", "limit"));
-                queue.put(eventFactory.createCharacters(limit.toString()));
-                queue.put(eventFactory.createEndElement("", "", "limit"));
+                queue.add(eventFactory.createStartElement("", "", "limit"));
+                queue.add(eventFactory.createCharacters(limit.toString()));
+                queue.add(eventFactory.createEndElement("", "", "limit"));
 
-                queue.put(eventFactory.createStartElement("", "", "stop"));
-                queue.put(eventFactory.createCharacters(stop.toString()));
-                queue.put(eventFactory.createEndElement("", "", "stop"));
+                queue.add(eventFactory.createStartElement("", "", "stop"));
+                queue.add(eventFactory.createCharacters(stop.toString()));
+                queue.add(eventFactory.createEndElement("", "", "stop"));
 
-                queue.put(eventFactory.createStartElement("", "", "market"));
-                queue.put(eventFactory.createCharacters(market.toString()));
-                queue.put(eventFactory.createEndElement("", "", "market"));
+                queue.add(eventFactory.createStartElement("", "", "market"));
+                queue.add(eventFactory.createCharacters(market.toString()));
+                queue.add(eventFactory.createEndElement("", "", "market"));
 
-                queue.put(eventFactory.createStartElement("", "", "tif"));
-                queue.put(eventFactory.createCharacters(duration.toString()));
-                queue.put(eventFactory.createEndElement("", "", "tif"));
+                queue.add(eventFactory.createStartElement("", "", "tif"));
+                queue.add(eventFactory.createCharacters(duration.toString()));
+                queue.add(eventFactory.createEndElement("", "", "tif"));
 
-                queue.put(eventFactory.createStartElement("", "", "ocagroupid"));
-                queue.put(eventFactory.createCharacters(ocaGroupId==null?"":ocaGroupId.toString()));
-                queue.put(eventFactory.createEndElement("", "", "ocagroupid"));
-
-            }
-
-            if (showChildren) {
-               throw new UnsupportedOperationException("Not implemented yet");
+                queue.add(eventFactory.createStartElement("", "", "ocagroupid"));
+                queue.add(eventFactory.createCharacters(ocaGroupId==null?"":ocaGroupId.toString()));
+                queue.add(eventFactory.createEndElement("", "", "ocagroupid"));
 
             }
 
-            if (showParents) {
-                throw new UnsupportedOperationException("Not implemented yet");
-
-            }
+            //TODO: add parent and child relationship support
 
 
-            queue.put(eventFactory.createEndElement("", "", "signal"));
+            queue.add(eventFactory.createEndElement("", "", "signal"));
 
-            queue.put(eventFactory.createEndElement("", "", "collective2"));
-            queue.put(eventFactory.createEndDocument());
-        } catch (InterruptedException e) {
-            logger.trace("exit on interruption", e);
-        }
+            queue.add(eventFactory.createEndElement("", "", "collective2"));
+            queue.add(eventFactory.createEndDocument());
+        return queue.iterator();
 
     }
 

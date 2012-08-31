@@ -17,29 +17,44 @@ public interface PriceSelector {
     PriceSelector DEFAULT = new PriceSelector() {
 
         Random generator = new Random();
-        public BigDecimal select(BigDecimal bestPrice, BigDecimal worstPrice) {
-
+        public BigDecimal select(BigDecimal bestPrice, BigDecimal worstPrice, boolean firstIsTrigger) {
             BigDecimal difference = worstPrice.subtract(bestPrice);
 
             double random = generator.nextGaussian();
-            if (random>4) {
+            if (random > 4) {
                 random = 4;
-            } else if (random<-4) {
+            } else if (random < -4) {
                 random = -4;
             }
-            double unit = difference.doubleValue()/8d;
-            double middle = bestPrice.doubleValue()+(4d*unit);
+
+            random = Math.abs(random);
+            double unit = difference.doubleValue()/4d;
             double offset = random*unit;
-            double result = middle+offset;
-            assert(result>=Math.min(bestPrice.doubleValue(),worstPrice.doubleValue()));
-            assert(result<=Math.max(bestPrice.doubleValue(), worstPrice.doubleValue()));
+            double value = bestPrice.doubleValue()+offset;
 
             int scale = Math.max(bestPrice.scale(),worstPrice.scale());
 
-            return new BigDecimal(result,new MathContext(scale));
+            if (firstIsTrigger) {
+                return bestPrice;
+            } else {
+                return worstPrice;
+            }
+
+
+          //  return new BigDecimal(value,new MathContext(scale));
+
+     //       return bestPrice;//TODO: need other implmentations
+
+            //double middle = bestPrice.doubleValue()+(4d*unit);
+//            double result = middle+offset;
+//            assert(result>=Math.min(bestPrice.doubleValue(),worstPrice.doubleValue()));
+//            assert(result<=Math.max(bestPrice.doubleValue(), worstPrice.doubleValue()));
+//
+//
         }
 
     };
 
-    BigDecimal select(BigDecimal bestPrice, BigDecimal worstPrice);
+    //TODO: needs open for leading edge?
+    BigDecimal select(BigDecimal bestPrice, BigDecimal worstPrice, boolean firstIsTrigger);
 }

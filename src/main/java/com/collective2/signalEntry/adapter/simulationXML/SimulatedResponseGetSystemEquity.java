@@ -6,6 +6,9 @@
  */
 package com.collective2.signalEntry.adapter.simulationXML;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 import java.util.concurrent.BlockingQueue;
 
 import javax.xml.stream.events.XMLEvent;
@@ -16,19 +19,13 @@ import org.slf4j.LoggerFactory;
 public class SimulatedResponseGetSystemEquity extends SimulatedResponse {
 
     private static final Logger logger = LoggerFactory.getLogger(SimulatedResponseGetSystemEquity.class);
-    
-    private final String status;
-    private final Long calctime;
-    private final Number systemEquity;
+
     
     public SimulatedResponseGetSystemEquity(String status, Long calctime, Number systemEquity) {
-        this.status = status;
-        this.calctime = calctime;
-        this.systemEquity = systemEquity;
+        super(buildEvents(status,calctime,systemEquity));
     }
 
-    @Override
-    public void serverSideEventProduction(BlockingQueue<XMLEvent> queue) {
+    private static Iterator<XMLEvent> buildEvents(String status, Long calctime, Number systemEquity) {
         /*
         <collective2>
                 <status>OK</status>
@@ -36,26 +33,24 @@ public class SimulatedResponseGetSystemEquity extends SimulatedResponse {
                 <systemEquity>8755.68</systemEquity>
         </collective2>
         */
-        try {
-            queue.put(eventFactory.createStartDocument());
-            queue.put(eventFactory.createStartElement("", "", "collective2"));
+        List<XMLEvent> queue = new ArrayList<XMLEvent>();
+            queue.add(eventFactory.createStartDocument());
+            queue.add(eventFactory.createStartElement("", "", "collective2"));
 
-            queue.put(eventFactory.createStartElement("", "", "status"));
-            queue.put(eventFactory.createCharacters(status));
-            queue.put(eventFactory.createEndElement("", "", "status"));
+            queue.add(eventFactory.createStartElement("", "", "status"));
+            queue.add(eventFactory.createCharacters(status));
+            queue.add(eventFactory.createEndElement("", "", "status"));
 
-            queue.put(eventFactory.createStartElement("", "", "calctime"));
-            queue.put(eventFactory.createCharacters(calctime.toString()));
-            queue.put(eventFactory.createEndElement("", "", "calctime"));
+            queue.add(eventFactory.createStartElement("", "", "calctime"));
+            queue.add(eventFactory.createCharacters(calctime.toString()));
+            queue.add(eventFactory.createEndElement("", "", "calctime"));
 
-            queue.put(eventFactory.createStartElement("", "", "systemEquity"));
-            queue.put(eventFactory.createCharacters(systemEquity.toString()));
-            queue.put(eventFactory.createEndElement("", "", "systemEquity"));
+            queue.add(eventFactory.createStartElement("", "", "systemEquity"));
+            queue.add(eventFactory.createCharacters(systemEquity.toString()));
+            queue.add(eventFactory.createEndElement("", "", "systemEquity"));
 
-            queue.put(eventFactory.createEndElement("", "", "collective2"));
-            queue.put(eventFactory.createEndDocument());
-        } catch (InterruptedException e) {
-            logger.trace("exit on interruption", e);
-        }
+            queue.add(eventFactory.createEndElement("", "", "collective2"));
+            queue.add(eventFactory.createEndDocument());
+        return queue.iterator();
     }
 }

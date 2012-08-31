@@ -2,6 +2,7 @@ package com.collective2.signalEntry.adapter.dynamicSimulator.quantity;
 
 import com.collective2.signalEntry.C2ServiceException;
 import com.collective2.signalEntry.Parameter;
+import com.collective2.signalEntry.adapter.dynamicSimulator.SystemManager;
 import com.collective2.signalEntry.implementation.Request;
 
 /**
@@ -13,7 +14,7 @@ import com.collective2.signalEntry.implementation.Request;
 
 public class QuantityFactory {
 
-    public QuantityComputable computable(Request request) {
+    public QuantityComputable computable(Request request, SystemManager systemManager) {
         //Dollars, Quantity, AccountPercent
 
         Integer quantity = (Integer)request.get(Parameter.Quantity);
@@ -32,7 +33,7 @@ public class QuantityFactory {
         //part of all-in-one signal where we need to close out the same sized position we opened
         Integer condUpon = (Integer)request.get(Parameter.ConditionalUpon);
         if (condUpon != null) {
-            return new QuantityComputableEntry(condUpon);
+            return new QuantityComputableEntry(systemManager.lookupOrder(condUpon));
         }
 
         throw new C2ServiceException("Unable to determine how to calculate quantity.",false);

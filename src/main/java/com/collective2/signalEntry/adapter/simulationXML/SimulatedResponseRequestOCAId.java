@@ -6,6 +6,9 @@
  */
 package com.collective2.signalEntry.adapter.simulationXML;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 import java.util.concurrent.BlockingQueue;
 
 import javax.xml.stream.events.XMLEvent;
@@ -16,38 +19,29 @@ import org.slf4j.LoggerFactory;
 public class SimulatedResponseRequestOCAId extends SimulatedResponse {
     private static final Logger logger = LoggerFactory.getLogger(SimulatedResponsePositionStatus.class);
 
-    private final Integer       ocaid;
-    private final String        status;
-
     public SimulatedResponseRequestOCAId(Integer ocaid, String status) {
-        this.ocaid = ocaid;
-        this.status = status;
+        super(buildEvents(ocaid, status));
     }
 
-    @Override
-    public void serverSideEventProduction(BlockingQueue<XMLEvent> queue) {
+    private static Iterator<XMLEvent> buildEvents(Integer ocaid, String status) {
         /*
          * <collective2> <ocaid>17195788</ocaid> <status>You may use the ocaid
          * above when adding new signals.</status> </collective2>
          */
-        try {
-            queue.put(eventFactory.createStartDocument());
-            queue.put(eventFactory.createStartElement("", "", "collective2"));
+        List<XMLEvent> queue = new ArrayList<XMLEvent>();
+            queue.add(eventFactory.createStartDocument());
+            queue.add(eventFactory.createStartElement("", "", "collective2"));
 
-            queue.put(eventFactory.createStartElement("", "", "ocaid"));
-            queue.put(eventFactory.createCharacters(ocaid.toString()));
-            queue.put(eventFactory.createEndElement("", "", "ocaid"));
+            queue.add(eventFactory.createStartElement("", "", "ocaid"));
+            queue.add(eventFactory.createCharacters(ocaid.toString()));
+            queue.add(eventFactory.createEndElement("", "", "ocaid"));
 
-            queue.put(eventFactory.createStartElement("", "", "status"));
-            queue.put(eventFactory.createCharacters(status));
-            queue.put(eventFactory.createEndElement("", "", "status"));
+            queue.add(eventFactory.createStartElement("", "", "status"));
+            queue.add(eventFactory.createCharacters(status));
+            queue.add(eventFactory.createEndElement("", "", "status"));
 
-            queue.put(eventFactory.createEndElement("", "", "collective2"));
-            queue.put(eventFactory.createEndDocument());
-        } catch (InterruptedException e) {
-            logger.trace("exit on interruption", e);
-        }
-        // To change body of implemented methods use File | Settings | File
-        // Templates.
+            queue.add(eventFactory.createEndElement("", "", "collective2"));
+            queue.add(eventFactory.createEndDocument());
+        return queue.iterator();
     }
 }

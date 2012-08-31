@@ -24,11 +24,13 @@ public class GainListenerManager {
 
     long             start;
     long             period;
+    long             lastSentTime;
     GainListener     listener;
 
     public GainListenerManager(long start, long period, GainListener listener) {
         this.start = start;
         this.period = period;
+        this.lastSentTime = start-period;
         this.listener = listener;
 
     }
@@ -78,7 +80,9 @@ public class GainListenerManager {
                                     if (unitYears==0) {
                                         unitCAGR = Double.NaN;
                                     } else {
-                                        unitCAGR = ((totalEquityList.get(i).doubleValue()/(lastTotalEquityList.get(i).doubleValue()))-1d)/unitYears;
+                                        //TODO: BOTH ARE THE SAME VALUE SO ITS 1 AND ALWAYS ZERO.
+                                        unitCAGR = ((totalEquityList.get(i).doubleValue()/lastTotalEquityList.get(i).doubleValue())-1d)/unitYears;
+                                        System.err.println("unitCAGR "+unitCAGR+" "+unitYears+" "+totalEquityList.get(i).doubleValue()+" / "+lastTotalEquityList.get(i).doubleValue());
                                     }
                                 } else {
                                     unitCAGR = computeDiscountRate(lastTotalEquityList.get(i).doubleValue(),totalEquityList.get(i).doubleValue(),unitYears);
@@ -124,8 +128,11 @@ public class GainListenerManager {
 
     private boolean isTimeToSend(long now) {
          if (now>start) {
-            long duration = now-start;
-            return 0==(duration%now);
+            long duration = now-lastSentTime;
+             if (duration>=period) {
+                 lastSentTime+=period;
+                 return true;
+             }
          }
         return false;
     }

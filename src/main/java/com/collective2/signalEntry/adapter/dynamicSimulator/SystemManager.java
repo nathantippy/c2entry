@@ -44,7 +44,6 @@ public class SystemManager {
 
     private final SortedSet<Order> scheduled;//waiting for the right time
     private final List<Order> archive;//all signals listed here by index
-    private final List<Order> active;//waiting on market conditions
     private final Map<Integer, List<Order>> ocaMap;
     private final Set<String> subscribers;
 
@@ -70,7 +69,6 @@ public class SystemManager {
         this.ocaCounter = new AtomicInteger();
         this.archive = new ArrayList<Order>();
         this.scheduled = new ConcurrentSkipListSet<Order>();
-        this.active = new ArrayList<Order>();
         this.quantityFactory = new QuantityFactory();
         this.ocaMap = new HashMap<Integer,List<Order>>();
         this.commission = commission;
@@ -116,23 +114,50 @@ public class SystemManager {
                     timeInForce = Duration.GoodTilCancel;
                 }
 
-                ReverseOrder reverseOrder =  new ReverseOrder(id,timeToExecute,symbol,timeInForce);
-
-                BigDecimal price = (BigDecimal)request.get(TriggerPrice);
-                if (price!=null) {
-                    reverseOrder.triggerPrice(price);
+                //must cancel old order and re-enter reversed.
+                //must find pending order that is for this symbol
+                List<Order> myOrders = new ArrayList<Order>();
+                for(Order possibleOrder: scheduled) {
+                    if (possibleOrder.symbol().equals(symbol)) {
+                        myOrders.add(possibleOrder);
+                    }
+                }
+                if (myOrders.isEmpty()) {
+                    //TODO: should not be throw
+                    throw new C2ServiceException("Can not reverse because no orders are pending.",false);
+                }
+                if (myOrders.size()>1) {
+                    //TODO: should not throw
+                    throw new C2ServiceException("Can not reverse because multiple orders found for this symbol",false);
                 }
 
-                Integer quantity = (Integer)request.get(Quantity);
-                if (quantity!=null) {
-                    reverseOrder.quantity(quantity);
-                }
+                Order oldOrder = myOrders.get(0);
+                oldOrder.cancelOrder();
 
-                order = reverseOrder;
+                //create new order going other direction
+
+                //TODO: need more details about old order, visit C2 documentation on line.
+
+
+
+                throw new UnsupportedOperationException("Full reverse no yet implmented");
+                //ReverseOrder reverseOrder =  new ReverseOrder(id,timeToExecute,symbol,timeInForce);
+
+//                BigDecimal price = (BigDecimal)request.get(TriggerPrice);
+//                if (price!=null) {
+//                    reverseOrder.triggerPrice(price);
+//                }
+//
+//                Integer quantity = (Integer)request.get(Quantity);
+//                if (quantity!=null) {
+//                    reverseOrder.quantity(quantity);
+//                }
+//
+//                order = reverseOrder;
             } else {
 
                 //use to compute quantity
-                QuantityComputable quantityComputable = quantityFactory.computable(request);
+                QuantityComputable quantityComputable = quantityFactory.computable(request,this);
 
                 //GTC or Day
                 Duration timeInForce = (Duration)request.get(Parameter.TimeInForce);
@@ -162,21 +187,21 @@ public class SystemManager {
                         break;
                 }
 
-                OrderSignal signal;
+                Order signal;
                 //convert everything to relatives, should have already been relatives?
                 RelativeNumber limit = (RelativeNumber)request.get(Parameter.RelativeLimitOrder);
                 if (limit != null) {
-                    OrderProcessor limitProcessor = new OrderProcessorLimit(limit);
-                    signal = new OrderSignal(id,timeToExecute, instrument, symbol, action, quantityComputable, cancelAtMs, timeInForce,limitProcessor);
+                    OrderProcessor limitProcessor = new OrderProcessorLimit(symbol,limit);
+                    signal = new Order(id,timeToExecute, instrument, symbol, action, quantityComputable, cancelAtMs, timeInForce,limitProcessor);
                 }  else {
                     RelativeNumber stop = (RelativeNumber)request.get(Parameter.RelativeStopOrder);
                     if (stop != null) {
-                        OrderProcessor stopProcessor = new OrderProcessorStop(stop);
-                        signal = new OrderSignal(id,timeToExecute, instrument, symbol, action, quantityComputable, cancelAtMs, timeInForce, stopProcessor);
+                        OrderProcessor stopProcessor = new OrderProcessorStop(symbol,stop);
+                        signal = new Order(id,timeToExecute, instrument, symbol, action, quantityComputable, cancelAtMs, timeInForce, stopProcessor);
                     } else {
                         //market
-                        OrderProcessor marketProcessor = new OrderProcessorMarket();
-                        signal = new OrderSignal(id,timeToExecute, instrument, symbol, action, quantityComputable, cancelAtMs, timeInForce, marketProcessor);
+                        OrderProcessor marketProcessor = new OrderProcessorMarket(symbol);
+                        signal = new Order(id,timeToExecute, instrument, symbol, action, quantityComputable, cancelAtMs, timeInForce, marketProcessor);
                     }
                 }
 

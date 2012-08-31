@@ -41,7 +41,7 @@ public class ResponseManager {
     };
 
     //Must be singleThreadExecutor only because each callable must be called sequentially
-    private ExecutorService             executor = Executors.newSingleThreadExecutor(threadFactory);
+    private final static ExecutorService             executor = Executors.newSingleThreadExecutor(threadFactory);
     private final static Runnable       placeHolder = new Runnable() {
         @Override
         public void run() {
@@ -57,14 +57,6 @@ public class ResponseManager {
     public Exception getHaltingException(){
         return haltingException;
     }
-
-    public void reset() {
-        //dumps all pending, after getting halting exception journal can be asked for pending if desired.
-        this.journal.dropPending();
-        this.executor.shutdownNow();
-        this.executor = Executors.newSingleThreadExecutor(threadFactory);
-    }
-
 
     public synchronized void reloadPendingRequests(String password) {
         if (!isClean) {
@@ -112,16 +104,6 @@ public class ResponseManager {
             throw new C2ServiceException("awaitPending",e.getCause(),false);
         }
 
-    }
-
-    //rarely needed in production....  if ever
-    public void shutdown() {
-        executor.shutdown();
-        try {
-            executor.awaitTermination(20,TimeUnit.SECONDS);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
     }
 
     public XMLEventReader xmlEventReader( final ImplResponse response) {

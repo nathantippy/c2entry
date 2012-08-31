@@ -6,6 +6,9 @@
  */
 package com.collective2.signalEntry.adapter.simulationXML;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 import java.util.concurrent.BlockingQueue;
 
 import javax.xml.stream.events.XMLEvent;
@@ -20,44 +23,35 @@ import org.slf4j.LoggerFactory;
 public class SimulatedResponseNewComment extends SimulatedResponse {
     private static final Logger logger = LoggerFactory.getLogger(SimulatedResponseNewComment.class);
 
-    private final String        status;
-    private final Integer       signalid;
-    private final String        previousComment;
-
     public SimulatedResponseNewComment(String status, Integer signalid, String previousComment) {
-        this.status = status;
-        this.signalid = signalid;
-        this.previousComment = previousComment;
+        super(buildEvents(status,signalid,previousComment));
     }
 
-    @Override
-    public void serverSideEventProduction(BlockingQueue<XMLEvent> queue) {
+    private static Iterator<XMLEvent> buildEvents(String status, Integer signalid, String previousComment) {
         /*
          * <collective2> <status>OK: Order 29148580 comment created</status>
          * <signalid> 29148580</signalid> <previousComment></previousComment>
          * </collective2>
          */
-        try {
-            queue.put(eventFactory.createStartDocument());
-            queue.put(eventFactory.createStartElement("", "", "collective2"));
+        List<XMLEvent> queue = new ArrayList<XMLEvent>();
+            queue.add(eventFactory.createStartDocument());
+            queue.add(eventFactory.createStartElement("", "", "collective2"));
 
-            queue.put(eventFactory.createStartElement("", "", "status"));
-            queue.put(eventFactory.createCharacters(status));
-            queue.put(eventFactory.createEndElement("", "", "status"));
+            queue.add(eventFactory.createStartElement("", "", "status"));
+            queue.add(eventFactory.createCharacters(status));
+            queue.add(eventFactory.createEndElement("", "", "status"));
 
-            queue.put(eventFactory.createStartElement("", "", "signalid"));
-            queue.put(eventFactory.createCharacters(signalid.toString()));
-            queue.put(eventFactory.createEndElement("", "", "signalid"));
+            queue.add(eventFactory.createStartElement("", "", "signalid"));
+            queue.add(eventFactory.createCharacters(signalid.toString()));
+            queue.add(eventFactory.createEndElement("", "", "signalid"));
 
-            queue.put(eventFactory.createStartElement("", "", "previousComment"));
-            queue.put(eventFactory.createCharacters(previousComment));
-            queue.put(eventFactory.createEndElement("", "", "previousComment"));
+            queue.add(eventFactory.createStartElement("", "", "previousComment"));
+            queue.add(eventFactory.createCharacters(previousComment));
+            queue.add(eventFactory.createEndElement("", "", "previousComment"));
 
-            queue.put(eventFactory.createEndElement("", "", "collective2"));
-            queue.put(eventFactory.createEndDocument());
-        } catch (InterruptedException e) {
-            logger.trace("exit on interruption", e);
-        }
+            queue.add(eventFactory.createEndElement("", "", "collective2"));
+            queue.add(eventFactory.createEndDocument());
+        return queue.iterator();
 
     }
 }
