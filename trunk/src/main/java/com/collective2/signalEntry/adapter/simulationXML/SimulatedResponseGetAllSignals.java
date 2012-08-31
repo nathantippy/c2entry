@@ -6,6 +6,8 @@
  */
 package com.collective2.signalEntry.adapter.simulationXML;
 
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
@@ -18,18 +20,11 @@ import org.slf4j.LoggerFactory;
 public class SimulatedResponseGetAllSignals extends SimulatedResponse {
 	private static final Logger logger = LoggerFactory.getLogger(SimulatedResponseGetAllSignals.class);
 
-    private final String status;
-    private final Map<Integer, List<Integer>> allPendingSignals;
-
-
     public SimulatedResponseGetAllSignals(String status, Map<Integer, List<Integer>> allPendingSignals) {
-        this.status = status;
-        this.allPendingSignals = allPendingSignals;
+        super(buildEvents(status,allPendingSignals));
     }
 
-
-    @Override
-    public void serverSideEventProduction(BlockingQueue<XMLEvent> queue) {
+    private static Iterator<XMLEvent> buildEvents(String status, Map<Integer, List<Integer>> allPendingSignals) {
         /*
         <collective2>
             <status>OK</status>
@@ -93,45 +88,43 @@ public class SimulatedResponseGetAllSignals extends SimulatedResponse {
 
          </collective2>
          */
-    	try{
-	        queue.put(eventFactory.createStartDocument());
-	        queue.put(eventFactory.createStartElement("", "", "collective2"));
+        List<XMLEvent> queue = new ArrayList<XMLEvent>();
+	        queue.add(eventFactory.createStartDocument());
+	        queue.add(eventFactory.createStartElement("", "", "collective2"));
 	
-	        queue.put(eventFactory.createStartElement("", "", "status"));
-	        queue.put(eventFactory.createCharacters(status));
-	        queue.put(eventFactory.createEndElement("", "", "status"));
+	        queue.add(eventFactory.createStartElement("", "", "status"));
+	        queue.add(eventFactory.createCharacters(status));
+	        queue.add(eventFactory.createEndElement("", "", "status"));
 	
-	        queue.put(eventFactory.createStartElement("", "", "allPendingSignals"));
+	        queue.add(eventFactory.createStartElement("", "", "allPendingSignals"));
 	
-	        for(Map.Entry<Integer,List<Integer>> entry:allPendingSignals.entrySet()) {
+	        for(Map.Entry<Integer,List<Integer>> entry: allPendingSignals.entrySet()) {
 	
-	            queue.put(eventFactory.createStartElement("", "", "system"));
+	            queue.add(eventFactory.createStartElement("", "", "system"));
 	
-	            queue.put(eventFactory.createStartElement("", "", "systemid"));
-	            queue.put(eventFactory.createCharacters(entry.getKey().toString()));
-	            queue.put(eventFactory.createEndElement("", "", "systemid"));
+	            queue.add(eventFactory.createStartElement("", "", "systemid"));
+	            queue.add(eventFactory.createCharacters(entry.getKey().toString()));
+	            queue.add(eventFactory.createEndElement("", "", "systemid"));
 	
-	            queue.put(eventFactory.createStartElement("", "", "pendingblock"));
+	            queue.add(eventFactory.createStartElement("", "", "pendingblock"));
 	            for(Integer signalid:entry.getValue()) {
-	                queue.put(eventFactory.createStartElement("", "", "signalid"));
-	                queue.put(eventFactory.createCharacters(signalid.toString()));
-	                queue.put(eventFactory.createEndElement("", "", "signalid"));
+	                queue.add(eventFactory.createStartElement("", "", "signalid"));
+	                queue.add(eventFactory.createCharacters(signalid.toString()));
+	                queue.add(eventFactory.createEndElement("", "", "signalid"));
 	            }
 	
-	            queue.put(eventFactory.createEndElement("", "", "pendingblock"));
+	            queue.add(eventFactory.createEndElement("", "", "pendingblock"));
 	
-	            queue.put(eventFactory.createEndElement("", "", "system"));
+	            queue.add(eventFactory.createEndElement("", "", "system"));
 	
 	        }
 	
-	        queue.put(eventFactory.createEndElement("", "", "allPendingSignals"));
+	        queue.add(eventFactory.createEndElement("", "", "allPendingSignals"));
 	
 	
-	        queue.put(eventFactory.createEndElement("", "", "collective2"));
-	        queue.put(eventFactory.createEndDocument());
-        } catch (InterruptedException e) {
-            logger.trace("exit on interruption",e);
-        }
+	        queue.add(eventFactory.createEndElement("", "", "collective2"));
+	        queue.add(eventFactory.createEndDocument());
+        return queue.iterator();
 
     }
 }

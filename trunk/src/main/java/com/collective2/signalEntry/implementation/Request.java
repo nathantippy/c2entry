@@ -134,7 +134,8 @@ public class Request extends EnumMap<Parameter, Object> {
     }
 
     private URL buildURL(Map<Parameter, Object> activeMap, boolean hidePassword) {
-        StringBuilder urlFileQuery = new StringBuilder(urlFile);
+        StringBuilder urlFileQuery = new StringBuilder(1024);
+        urlFileQuery.append(urlFile);
 
         for (Parameter p : activeMap.keySet()) {
             if (Parameter.Password == p && hidePassword) {

@@ -52,7 +52,7 @@ public class SimplePosition implements Position {
         }
         totalQuantity =  totalQuantity + quantity;
 
-        logger.warn("new "+(isClosing?"closing":"opening")+" transaction quantity:"+quantity+" price:"+price+" commission:"+commission+" newTotalQuantity:"+totalQuantity+(isClosing ? " newTotalCost:"+totalCost: "")+" cashFlow:"+adj);
+        //logger.warn("new "+(isClosing?"closing":"opening")+" transaction quantity:"+quantity+" price:"+price+" commission:"+commission+" newTotalQuantity:"+totalQuantity+(isClosing ? " newTotalCost:"+totalCost: "")+" cashFlow:"+adj);
 
         simplePortfolio.updatePortfolio(symbol, totalQuantity, totalCost, adj);
 

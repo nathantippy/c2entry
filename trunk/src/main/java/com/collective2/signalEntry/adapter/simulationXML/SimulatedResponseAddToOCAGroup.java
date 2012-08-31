@@ -6,6 +6,9 @@
  */
 package com.collective2.signalEntry.adapter.simulationXML;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 import java.util.concurrent.BlockingQueue;
 
 import javax.xml.stream.events.XMLEvent;
@@ -16,38 +19,32 @@ import org.slf4j.LoggerFactory;
 public class SimulatedResponseAddToOCAGroup extends SimulatedResponse {
 
     private static final Logger logger = LoggerFactory.getLogger(SimulatedResponseAddToOCAGroup.class);
-    private final String status;
-    private final String details;
 
     public SimulatedResponseAddToOCAGroup(String status, String details) {
-        this.status = status;
-        this.details = details;
+        super(buildEvents(status,details));
     }
 
-    @Override
-    public void serverSideEventProduction(BlockingQueue<XMLEvent> queue) {
+    private static Iterator<XMLEvent> buildEvents(String status, String details) {
         /*
         <collective2>
             <status>OK</status>
             <details>Order 12345 now added to ocagroup 9876</details>
         </collective2>
          */
-        try {
-            queue.put(eventFactory.createStartDocument());
-            queue.put(eventFactory.createStartElement("", "", "collective2"));
+        List<XMLEvent> queue = new ArrayList<XMLEvent>(10);
+        queue.add(eventFactory.createStartDocument());
+        queue.add(eventFactory.createStartElement("", "", "collective2"));
 
-            queue.put(eventFactory.createStartElement("", "", "status"));
-            queue.put(eventFactory.createCharacters(status));
-            queue.put(eventFactory.createEndElement("", "", "status"));
+        queue.add(eventFactory.createStartElement("", "", "status"));
+        queue.add(eventFactory.createCharacters(status));
+        queue.add(eventFactory.createEndElement("", "", "status"));
 
-            queue.put(eventFactory.createStartElement("", "", "details"));
-            queue.put(eventFactory.createCharacters(details));
-            queue.put(eventFactory.createEndElement("", "", "details"));
+        queue.add(eventFactory.createStartElement("", "", "details"));
+        queue.add(eventFactory.createCharacters(details));
+        queue.add(eventFactory.createEndElement("", "", "details"));
 
-            queue.put(eventFactory.createEndElement("", "", "collective2"));
-            queue.put(eventFactory.createEndDocument());
-        } catch (InterruptedException e) {
-            logger.trace("exit on interruption",e);
-        }
+        queue.add(eventFactory.createEndElement("", "", "collective2"));
+        queue.add(eventFactory.createEndDocument());
+        return queue.iterator();
     }
 }

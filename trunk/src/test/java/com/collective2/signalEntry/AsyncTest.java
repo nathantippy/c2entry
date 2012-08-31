@@ -144,7 +144,7 @@ public class AsyncTest {
         assertFalse(pending.hasNext());
 
         //Now dump and rebuild factory from scratch so its forced to build response list.
-        sentryService.shutdown();//must stop old daemon before starting new one
+        //sentryService.awaitPending();//.shutdown();//must stop old daemon before starting new one
 
         lock.unlock();
 

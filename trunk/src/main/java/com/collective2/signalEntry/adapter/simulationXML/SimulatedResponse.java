@@ -6,8 +6,10 @@
  */
 package com.collective2.signalEntry.adapter.simulationXML;
 
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.SynchronousQueue;
+import java.nio.channels.AsynchronousByteChannel;
+import java.util.Iterator;
+import java.util.Queue;
+import java.util.concurrent.*;
 
 import javax.xml.stream.XMLEventFactory;
 import javax.xml.stream.XMLEventReader;
@@ -17,24 +19,20 @@ import javax.xml.stream.events.XMLEvent;
 
 public abstract class SimulatedResponse implements XMLEventReader {
 
-    private final BlockingQueue<XMLEvent> queue = new SynchronousQueue<XMLEvent>();
+    private final Iterator<XMLEvent> events;
     protected static final XMLEventFactory eventFactory = XMLEventFactory.newInstance();
-    private XMLEvent next=null;
+    private XMLEvent next = null;
 
-    public SimulatedResponse() {
-        startServer();
+    public SimulatedResponse(Iterator<XMLEvent> events) {
+        this.events = events;
         waitOnNext();
     }
 
     private void waitOnNext() {
-        if (next!=null && next.isEndDocument()) {
-            next = null;
+        if (events.hasNext()) {
+            next = events.next();
         } else {
-            try {
-                next = queue.take();
-            } catch (InterruptedException e) {
-                //do nothing just exit
-            }
+            next = null;
         }
     }
 
@@ -77,17 +75,7 @@ public abstract class SimulatedResponse implements XMLEventReader {
 
     public void close() throws XMLStreamException {
         //Faux object, nothing to close
+        //TODO: upon close we must kill runnable!
     }
 
-    public abstract void serverSideEventProduction(BlockingQueue<XMLEvent> queue);
-
-    private void startServer() {
-        //faux server  how can I wrap this inside above object?
-        new Thread(new Runnable() {
-            public void run() {
-                serverSideEventProduction(queue);
-            }
-        }
-        ).start();
-    }
 }

@@ -14,10 +14,7 @@ import org.junit.Test;
 
 import javax.xml.stream.XMLEventReader;
 import javax.xml.stream.XMLStreamException;
-import java.net.ConnectException;
-import java.net.MalformedURLException;
-import java.net.SocketTimeoutException;
-import java.net.URL;
+import java.net.*;
 import java.util.logging.Handler;
 import java.util.logging.Logger;
 
@@ -57,7 +54,9 @@ public class Collective2AdapterTest {
             fail();//bad url should have timed out
         } catch (C2ServiceException e) {
             //if timeout is not set then ConnectException is returned.
-            assertTrue(e.getCause() instanceof ConnectException  ||
+            assertTrue("cause: "+e.getCause(),
+                       e.getCause() instanceof UnknownHostException ||
+                       e.getCause() instanceof ConnectException  ||
                        e.getCause() instanceof SocketTimeoutException);
             assertTrue(e.tryAgain());//recommended to try again when network it back up
         }

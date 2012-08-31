@@ -17,6 +17,11 @@ public class RelativeNumber implements Serializable {
     private final BigDecimal number;
     private final char prefix;
 
+    public RelativeNumber() {
+        number = BigDecimal.ZERO;
+        prefix = BasePrice.Absolute.prefix();
+    }
+
     public RelativeNumber(String stringValue) {
         //parse
         switch(stringValue.charAt(0)) {

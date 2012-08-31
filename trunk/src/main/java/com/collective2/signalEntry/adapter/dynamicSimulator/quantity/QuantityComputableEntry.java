@@ -13,18 +13,15 @@ import com.collective2.signalEntry.adapter.dynamicSimulator.order.Order;
 
 public class QuantityComputableEntry implements QuantityComputable {
 
-    private final Integer condUpon;
+    private final Order condUponOrder;
 
-    public QuantityComputableEntry(Integer condUpon) {
-        assert(condUpon!=null);
-        this.condUpon = condUpon;
+    public QuantityComputableEntry(Order condUponOrder) {
+        assert(condUponOrder!=null);
+        this.condUponOrder = condUponOrder;
     }
 
     @Override
-    public Integer quantity(Number price, Portfolio portfolio, DataProvider dataProvider, Order entryOrder) {
-
-        assert(entryOrder.id() == condUpon.intValue()) : "Was conditional upon "+condUpon+" but found "+entryOrder.id();
-
-        return entryOrder.entryQuantity();
+    public Integer quantity(Number price, Portfolio portfolio, DataProvider dataProvider) {
+        return condUponOrder.entryQuantity();
     }
 }

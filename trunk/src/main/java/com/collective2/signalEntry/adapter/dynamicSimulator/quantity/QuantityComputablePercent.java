@@ -19,7 +19,7 @@ public class QuantityComputablePercent implements QuantityComputable {
     }
 
     @Override
-    public Integer quantity(Number price, Portfolio portfolio, DataProvider dataProvider, Order entryOrder) {
+    public Integer quantity(Number price, Portfolio portfolio, DataProvider dataProvider) {
 
         double dollars = portfolio.cash().add(portfolio.equity(dataProvider)).doubleValue()*percent.doubleValue();
         return (int)(dollars/price.doubleValue());

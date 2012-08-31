@@ -117,7 +117,7 @@ public class DynamicSimulationLongTest {
         ///////////////////
         assertEquals(0, portfolio.position("msft").quantity().intValue());
         buyPower = sentryService.buyPower();
-        assertEquals(10784.30d,buyPower.doubleValue(),DELTA);
+        assertEquals(9980d,buyPower.doubleValue(),DELTA);
 
         systemEquity = sentryService.systemEquity(); //10 * 80.43 = 804.30
         assertEquals(0d,systemEquity.doubleValue(),DELTA);
@@ -142,7 +142,7 @@ public class DynamicSimulationLongTest {
         ///////////////////
         assertEquals(0, portfolio.position("msft").quantity().intValue());
         buyPower = sentryService.buyPower();
-        assertEquals(10784.30d,buyPower.doubleValue(),DELTA);
+        assertEquals(9980d,buyPower.doubleValue(),DELTA);
 
         systemEquity = sentryService.systemEquity(); //10 * 80.43 = 804.30
         assertEquals(0d,systemEquity.doubleValue(),DELTA);
@@ -174,7 +174,7 @@ public class DynamicSimulationLongTest {
         assertEquals(shares.intValue(), portfolio.position("msft").quantity().intValue());
 
         BigDecimal openEquity = entryPrice.multiply(shares);
-        BigDecimal expectedBuyPower = new BigDecimal("10784.30").subtract(commission.add(openEquity));
+        BigDecimal expectedBuyPower = new BigDecimal("9980").subtract(commission.add(openEquity));
 
         buyPower = sentryService.buyPower();
         assertEquals(expectedBuyPower.doubleValue(),buyPower.doubleValue(),DELTA);
@@ -211,7 +211,7 @@ public class DynamicSimulationLongTest {
         assertEquals(shares.intValue(), portfolio.position("msft").quantity().intValue());
 
         openEquity = entryPrice.multiply(shares);
-        expectedBuyPower = new BigDecimal("10784.30").subtract(commission.add(openEquity));
+        expectedBuyPower = new BigDecimal("9980").subtract(commission.add(openEquity));
 
         buyPower = sentryService.buyPower();
         assertEquals(expectedBuyPower.doubleValue(),buyPower.doubleValue(),DELTA);

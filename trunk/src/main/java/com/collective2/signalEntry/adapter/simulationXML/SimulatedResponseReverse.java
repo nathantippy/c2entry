@@ -6,6 +6,9 @@
  */
 package com.collective2.signalEntry.adapter.simulationXML;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 import java.util.concurrent.BlockingQueue;
 
 import javax.xml.stream.events.XMLEvent;
@@ -16,26 +19,21 @@ import org.slf4j.LoggerFactory;
 public class SimulatedResponseReverse extends SimulatedResponse {
     private static final Logger logger = LoggerFactory.getLogger(SimulatedResponseReverse.class);
 
-    private final String        status;
-
     public SimulatedResponseReverse(String status) {
-        this.status = status;
+        super(buildEvents(status));
     }
 
-    @Override
-    public void serverSideEventProduction(BlockingQueue<XMLEvent> queue) {
-        try {
-            queue.put(eventFactory.createStartDocument());
-            queue.put(eventFactory.createStartElement("", "", "collective2"));
+    private static Iterator<XMLEvent> buildEvents(String status) {
+        List<XMLEvent> queue = new ArrayList<XMLEvent>();
+            queue.add(eventFactory.createStartDocument());
+            queue.add(eventFactory.createStartElement("", "", "collective2"));
 
-            queue.put(eventFactory.createStartElement("", "", "status"));
-            queue.put(eventFactory.createCharacters(status));
-            queue.put(eventFactory.createEndElement("", "", "status"));
+            queue.add(eventFactory.createStartElement("", "", "status"));
+            queue.add(eventFactory.createCharacters(status));
+            queue.add(eventFactory.createEndElement("", "", "status"));
 
-            queue.put(eventFactory.createEndElement("", "", "collective2"));
-            queue.put(eventFactory.createEndDocument());
-        } catch (InterruptedException e) {
-            logger.trace("exit on interruption", e);
-        }
+            queue.add(eventFactory.createEndElement("", "", "collective2"));
+            queue.add(eventFactory.createEndDocument());
+        return queue.iterator();
     }
 }

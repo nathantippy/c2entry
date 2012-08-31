@@ -136,8 +136,8 @@ public class DynamicSimulationAdapter implements C2EntryServiceAdapter {
             switch (command) {
                 case Signal:
 
-                     long timeToExecute = extractTimeToExecute(request);
-                     int[] signalIdArray = system.scheduleSignal(timeToExecute,request);
+                     long timeToExecute       = extractTimeToExecute(request);
+                     int[] signalIdArray      = system.scheduleSignal(timeToExecute,request);
                      int signalId             = signalIdArray[0];
                      int stopLossSignalId     = signalIdArray[1];
                      int profitTargetSignalId = signalIdArray[2];
@@ -279,28 +279,38 @@ public class DynamicSimulationAdapter implements C2EntryServiceAdapter {
                     String tradedWhen = order.tradedWhen();
                     BigDecimal tradePrice = order.tradePrice();
 
-                    SimulatedResponseSignalStatus response =
-                           new SimulatedResponseSignalStatus(signalIdInput,
-                                                             systemName,
-                                                             postedwhen,
-                                                             emailedWhen,
-                                                             killedWhen,
-                                                             tradedWhen,
-                                                             tradePrice
-                                                             );
+                    SimulatedResponseSignalStatus response;
 
                     Integer showDetails = (Integer)request.get(Parameter.ShowDetails);
                     if (showDetails!=null && 1==showDetails.intValue()) {
 
-                        response.showDetails(
-                            order.action(),
-                            order.quantity(),
-                            order.symbol(),
-                            order.limit(),
-                            order.stop(),
-                            order.market(),
-                            order.timeInForce(),
-                            order.oneCancelsAnother());
+                        response =
+                                new SimulatedResponseSignalStatus(signalIdInput,
+                                        systemName,
+                                        postedwhen,
+                                        emailedWhen,
+                                        killedWhen,
+                                        tradedWhen,
+                                        tradePrice,
+                                        order.action(),
+                                        order.quantity(),
+                                        order.symbol(),
+                                        order.limit(),
+                                        order.stop(),
+                                        order.market(),
+                                        order.timeInForce(),
+                                        order.oneCancelsAnother());
+
+                    } else {
+                        response =
+                                new SimulatedResponseSignalStatus(signalIdInput,
+                                        systemName,
+                                        postedwhen,
+                                        emailedWhen,
+                                        killedWhen,
+                                        tradedWhen,
+                                        tradePrice
+                                );
 
                     }
 

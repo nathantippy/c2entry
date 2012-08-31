@@ -20,7 +20,7 @@ public class QuantityComputableDollars implements QuantityComputable {
     }
 
     @Override
-    public Integer quantity(Number price, Portfolio portfolio, DataProvider dataProvider, Order entryOrder) {
+    public Integer quantity(Number price, Portfolio portfolio, DataProvider dataProvider) {
         return (int)(dollars.doubleValue()/price.doubleValue());
     }
 }
