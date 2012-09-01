@@ -4,7 +4,7 @@
  * for the full license governing this code.
  * Nathan Tippy  8/5/12
  */
-package com.collective2.signalEntry;
+package com.collective2.signalEntry.adapter.dynamicSimulator;
 
 import com.collective2.signalEntry.adapter.dynamicSimulator.DataProvider;
 
