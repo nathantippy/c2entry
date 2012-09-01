@@ -41,8 +41,14 @@ public class SimulatedResponseSignalStatus extends SimulatedResponse {
                 true,action,quantity,symbol,limit,stop,market,duration,ocaGroupId));
     }
 
-    private static Iterator<XMLEvent> buildEvents(Integer signalId, String systemname, String postedwhen, String emailedwhen, String killedwhen, String tradedwhen, BigDecimal tradeprice,
-                                                  boolean showDetails, Action action, int quantity, String symbol, RelativeNumber limit, RelativeNumber stop, RelativeNumber market, Duration duration, Integer ocaGroupId) {
+    private static Iterator<XMLEvent> buildEvents(Integer signalId, String systemname, String postedwhen, String emailedwhen, String killedwhen,
+                                                  String tradedwhen,
+                                                  BigDecimal tradeprice, //trade price is zero until filled, real price and may not match desired limit or open
+                                                  boolean showDetails, Action action, int quantity, String symbol,
+                                                  RelativeNumber limit, //original signal value unless its relative in which case its not available?
+                                                  RelativeNumber stop,  //original signal value unless its relative in which case its not available?
+                                                  RelativeNumber market,
+                                                  Duration duration, Integer ocaGroupId) {
 
         /*
          * <collective2> <signal> <signalid>20919494</signalid>

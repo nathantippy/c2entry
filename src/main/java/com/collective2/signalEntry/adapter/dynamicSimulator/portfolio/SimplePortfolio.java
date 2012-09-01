@@ -34,7 +34,10 @@ public class SimplePortfolio implements Portfolio {
         cash = openCash;
     }
 
-    @Override
+    public Collection<String> positions() {
+        return positionMap.keySet();
+    }
+
     public Position position(String symbol) {
 
         SimplePosition position = positionMap.get(symbol);

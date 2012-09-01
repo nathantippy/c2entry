@@ -75,7 +75,6 @@ public abstract class SimulatedResponse implements XMLEventReader {
 
     public void close() throws XMLStreamException {
         //Faux object, nothing to close
-        //TODO: upon close we must kill runnable!
     }
 
 }

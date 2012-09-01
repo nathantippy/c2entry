@@ -82,7 +82,7 @@ public class GainListenerManager {
                                     } else {
                                         //TODO: BOTH ARE THE SAME VALUE SO ITS 1 AND ALWAYS ZERO.
                                         unitCAGR = ((totalEquityList.get(i).doubleValue()/lastTotalEquityList.get(i).doubleValue())-1d)/unitYears;
-                                        System.err.println("unitCAGR "+unitCAGR+" "+unitYears+" "+totalEquityList.get(i).doubleValue()+" / "+lastTotalEquityList.get(i).doubleValue());
+                                       // System.err.println("unitCAGR "+unitCAGR+" "+unitYears+" "+totalEquityList.get(i).doubleValue()+" / "+lastTotalEquityList.get(i).doubleValue());
                                     }
                                 } else {
                                     unitCAGR = computeDiscountRate(lastTotalEquityList.get(i).doubleValue(),totalEquityList.get(i).doubleValue(),unitYears);

@@ -7,6 +7,7 @@
 package com.collective2.signalEntry.adapter.dynamicSimulator.order;
 
 import com.collective2.signalEntry.ActionForNonStock;
+import com.collective2.signalEntry.C2ServiceException;
 import com.collective2.signalEntry.Duration;
 import com.collective2.signalEntry.Instrument;
 import com.collective2.signalEntry.adapter.dynamicSimulator.DataProvider;
@@ -26,7 +27,7 @@ public class Order implements Comparable<Order> {
     protected boolean cancel;
     protected boolean closed;
     protected boolean processed;
-    protected Order conditionalUpon;
+    protected final Order conditionalUpon;
     private int entryQuantity;
     private final Duration timeInForce;
     private final long expireAtMs;
@@ -50,7 +51,8 @@ public class Order implements Comparable<Order> {
     public Order(int id, Instrument instrument, String symbol,
                  Action action, QuantityComputable quantityComputable,
                  long cancelAtMs, Duration timeInForce,
-                 OrderProcessor processor) {
+                 OrderProcessor processor,
+                 Order conditionalUpon) {
         this.id = id;
         this.expireAtMs = cancelAtMs;
         this.timeInForce = timeInForce;
@@ -59,6 +61,15 @@ public class Order implements Comparable<Order> {
         this.instrument = instrument;
         this.quantityComputable = quantityComputable;
         this.processor = processor;
+        this.conditionalUpon = conditionalUpon;
+
+        //If you attempt to add a new order and make it conditional on an order
+        // that has already been filled or canceled, this will not be permitted.
+        // The parent order must still be pending.
+        if (conditionalUpon!=null && !conditionalUpon.isPending()) {
+            throw new C2ServiceException("Can not be conditional on an order that is not pending.",false);
+        }
+
     }
 
     public long time() {
@@ -67,11 +78,6 @@ public class Order implements Comparable<Order> {
 
     public Order conditionalUpon() {
         return conditionalUpon;
-    }
-
-    public void conditionalUpon(Order conditionalUpon) {
-        assert(this.conditionalUpon==null) : "only supports a single condition";
-        this.conditionalUpon = conditionalUpon;
     }
 
     public boolean isConditionProcessed() {
@@ -146,7 +152,7 @@ public class Order implements Comparable<Order> {
 
     public boolean isPending() {
         //not filled, cancelled or expired
-        return (!cancel)&&(!processed);
+        return (!cancel)&&(!processed)&&(conditionalUpon==null || !conditionalUpon.cancel);
     }
 
     public Integer entryQuantity() {
@@ -212,12 +218,6 @@ public class Order implements Comparable<Order> {
             //still return true but no need to add any transaction to the portfolio
             return true;
         }
-
-    //    Integer quantity = quantityComputable.quantity(price, portfolio, dataProvider, conditionalUpon());
-     //   if (quantity.intValue()==0) {
-      //      return true;
-       // }
-
         return processor.process(dataProvider,portfolio,commission,this, action, quantityComputable);
     }
 

@@ -13,12 +13,13 @@ import com.collective2.signalEntry.adapter.dynamicSimulator.portfolio.SimplePort
 import org.junit.Test;
 
 import java.math.BigDecimal;
-import java.util.*;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.Assert.*;
 
-public class DynamicSimulationLongTest {
+public class DynamicSimulationLongXReplaceTest {
 
     private final double DELTA=.00000001d;
 
@@ -324,14 +325,7 @@ public class DynamicSimulationLongTest {
         BigDecimal highPrice = new BigDecimal("100");
         DynamicSimulationMockDataProvider dataProvider = new DynamicSimulationMockDataProvider(
                 openTime,lowPrice,highPrice,lowPrice,highPrice,closeTime);
-        simulationAdapter.tick(dataProvider,sentryService);
 
-        assertEquals(10, portfolio.position("msft").quantity().intValue());
-
-        dataProvider.incTime(timeStep,new BigDecimal("22"));
-        simulationAdapter.tick(dataProvider,sentryService);
-
-        assertEquals(10, portfolio.position("msft").quantity().intValue());
 
         final Set<Integer> pendingSignalIdSet = new HashSet<Integer>();
         sentryService.sendAllSignalsRequest().visitC2Elements(new C2ElementVisitor() {
@@ -343,9 +337,72 @@ public class DynamicSimulationLongTest {
             }
         },C2Element.ElementSignalId);
 
-        assertEquals(profitTargetSignalId.toString(),2,pendingSignalIdSet.size());
+        assertEquals(profitTargetSignalId.toString(),3,pendingSignalIdSet.size());
         assertTrue(pendingSignalIdSet.contains(profitTargetSignalId.intValue()));
         assertTrue(pendingSignalIdSet.contains(stopLossSignalId.intValue()));
+
+        //TODO: also need pending request with the position quantity.
+
+        //confirm that the target can be adjusted
+        BigDecimal newTarget = new BigDecimal("10");
+        Response adjClose = sentryService.stockSignal(ActionForStock.SellToClose)
+                .stopOrder(newTarget).quantity(10).symbol("msft")
+                .duration(Duration.GoodTilCancel)
+                .xReplace(stopLossSignalId.intValue()).send();
+
+        Integer newCloseSignalId = adjClose.getInteger(C2Element.ElementSignalId);
+
+        //confirm the pending list of signals has been updated
+        updateSetWithPendingSignalIds(sentryService, pendingSignalIdSet);
+
+        assertTrue(pendingSignalIdSet.contains(newCloseSignalId));
+        if (noOCA) {
+            assertTrue(pendingSignalIdSet.toString(),pendingSignalIdSet.contains(profitTargetSignalId.intValue()));
+            assertEquals(3,pendingSignalIdSet.size());
+        } //else can not be tested because it's modified when tick is called
+
+        //send tick data that should not make any change
+        dataProvider.incTime(timeStep,new BigDecimal("13"));
+        simulationAdapter.tick(dataProvider,sentryService);
+
+        //confirm the pending list did not change
+        updateSetWithPendingSignalIds(sentryService, pendingSignalIdSet);
+
+        if (timeInForce==Duration.DayOrder) {
+            assertTrue(pendingSignalIdSet.isEmpty());
+        } else {
+            assertTrue(pendingSignalIdSet.contains(newCloseSignalId));
+            if (noOCA) {
+                assertTrue(pendingSignalIdSet.toString()+" can not find profit target signal "+profitTargetSignalId,pendingSignalIdSet.contains(profitTargetSignalId.intValue()));
+                assertEquals(2,pendingSignalIdSet.size());
+            } else {
+                assertEquals(1,pendingSignalIdSet.size());
+            }
+        }
+        dataProvider.incTime(timeStep,new BigDecimal("9"));
+        simulationAdapter.tick(dataProvider,sentryService);
+        assertEquals(0, portfolio.position("msft").quantity().intValue());
+
+        //for oca orders the other order will get cancelled when the first is triggered.
+        //for non oca orders there will be one closing order however it should not be valid
+        //because its a close against something closed.
+
+        //has any signal been left behind if we used good till cancel
+        if (timeInForce!=Duration.DayOrder) {
+            //ensure we have no pending signals now that position is closed
+            updateSetWithPendingSignalIds(sentryService, pendingSignalIdSet);
+            assertEquals("should not have found any signals but found:"+pendingSignalIdSet, (noOCA ? 1 : 0),pendingSignalIdSet.size());
+
+            //testing cancel of the remaining order because its open has already been closed
+            if (noOCA) {
+                sentryService.cancel(pendingSignalIdSet.iterator().next());
+
+                //ensure we have no pending signals now that last one is cancelled
+                updateSetWithPendingSignalIds(sentryService, pendingSignalIdSet);
+                assertEquals("should not have found any signals but found:"+pendingSignalIdSet, 0,pendingSignalIdSet.size());
+
+            }
+        }
 
     }
 
@@ -443,15 +500,6 @@ public class DynamicSimulationLongTest {
         BigDecimal highPrice = new BigDecimal("100");
         DynamicSimulationMockDataProvider dataProvider = new DynamicSimulationMockDataProvider(
                 openTime,lowPrice,highPrice,lowPrice,highPrice,closeTime);
-        simulationAdapter.tick(dataProvider,sentryService);
-
-        assertEquals(10, portfolio.position("msft").quantity().intValue());
-
-        //confirm that a price below target will not trigger
-        dataProvider.incTime(timeStep,new BigDecimal("119"));
-        simulationAdapter.tick(dataProvider,sentryService);
-
-        assertEquals(10, portfolio.position("msft").quantity().intValue());
 
         final Set<Integer> pendingSignalIdSet = new HashSet<Integer>();
         sentryService.sendAllSignalsRequest().visitC2Elements(new C2ElementVisitor() {
@@ -463,9 +511,56 @@ public class DynamicSimulationLongTest {
             }
         },C2Element.ElementSignalId);
 
-        assertEquals(profitTargetSignalId.toString(),2,pendingSignalIdSet.size());
+        assertEquals(profitTargetSignalId.toString(),3,pendingSignalIdSet.size());
         assertTrue(pendingSignalIdSet.contains(profitTargetSignalId.intValue()));
         assertTrue(pendingSignalIdSet.contains(stopLossSignalId.intValue()));
+
+        //confirm that the target can be adjusted
+        BigDecimal newTarget = new BigDecimal("160");
+        Response adjClose = sentryService.stockSignal(ActionForStock.SellToClose)
+                .limitOrder(newTarget).quantity(10).symbol("msft")   //TODO: is quantity optional wth xReplace?
+                .duration(Duration.GoodTilCancel)
+                .xReplace(profitTargetSignalId.intValue()).send();
+
+        Integer newCloseSignalId = adjClose.getInteger(C2Element.ElementSignalId);
+
+        dataProvider.incTime(timeStep,new BigDecimal("121"));
+        simulationAdapter.tick(dataProvider,sentryService);
+
+        //TODO: rewrite portion of test
+//        assertEquals(10, portfolio.position("msft").quantity().intValue());
+//
+//        updateSetWithPendingSignalIds(sentryService, pendingSignalIdSet);
+//
+//        assertTrue(pendingSignalIdSet.contains(newCloseSignalId));
+//        if (noOCA) {
+//            assertTrue(pendingSignalIdSet.contains(stopLossSignalId.intValue()));
+//            assertEquals(2,pendingSignalIdSet.size());
+//        } else {
+//            assertEquals(1,pendingSignalIdSet.size());
+//        }
+//        dataProvider.incTime(timeStep,new BigDecimal("161"));
+//        simulationAdapter.tick(dataProvider,sentryService);
+//        assertEquals(0, portfolio.position("msft").quantity().intValue());
+//
+//        //for oca orders the other order will get cancelled when the first is triggered.
+//        //for non oca orders there will be one closing order however it should not be valid
+//        //because its a close against something closed.
+//
+//        //ensure we have no pending signals now that position is closed
+//        updateSetWithPendingSignalIds(sentryService, pendingSignalIdSet);
+//        assertEquals("should not have found any signals but found:"+pendingSignalIdSet, (noOCA ? 1 : 0),pendingSignalIdSet.size());
+//
+//        //testing cancel of the remaining order because its open has already been closed
+//        if (noOCA) {
+//            sentryService.cancel(pendingSignalIdSet.iterator().next());
+//
+//            //ensure we have no pending signals now that last one is cancelled
+//            updateSetWithPendingSignalIds(sentryService, pendingSignalIdSet);
+//            assertEquals("should not have found any signals but found:"+pendingSignalIdSet, 0,pendingSignalIdSet.size());
+//
+//        }
+
 
     }
 
