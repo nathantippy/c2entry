@@ -187,37 +187,8 @@ public class SystemManager {
                         break;
                 }
 
-                Order signal;
-                //convert everything to relatives, should have already been relatives?
-                RelativeNumber limit = (RelativeNumber)request.get(Parameter.RelativeLimitOrder);
-                if (limit != null) {
-                    OrderProcessor limitProcessor = new OrderProcessorLimit(timeToExecute, symbol,limit);
-                    signal = new Order(id, instrument, symbol, action, quantityComputable, cancelAtMs, timeInForce,limitProcessor);
-                }  else {
-                    RelativeNumber stop = (RelativeNumber)request.get(Parameter.RelativeStopOrder);
-                    if (stop != null) {
-                        OrderProcessor stopProcessor = new OrderProcessorStop(timeToExecute, symbol,stop);
-                        signal = new Order(id, instrument, symbol, action, quantityComputable, cancelAtMs, timeInForce, stopProcessor);
-                    } else {
-                        //market
-                        OrderProcessor marketProcessor = new OrderProcessorMarket(timeToExecute, symbol);
-                        signal = new Order(id, instrument, symbol, action, quantityComputable, cancelAtMs, timeInForce, marketProcessor);
-                    }
-                }
-
-                Integer ocaId = (Integer)request.get(OCAId);
-                if (ocaId!=null) {
-                    signal.oneCancelsAnother(ocaId);
-                    //add this signal to the group under this ocaId
-                    ocaMap.get(ocaId).add(signal);
-                }
-
                 Integer xReplace = (Integer)request.get(XReplace);
                 if (xReplace!=null) {
-
-                    //TODO: the xReplace is not the same as the original and its getting deleted
-                    //Need more assertions to make this work.
-
                     if (xReplace<0 || (xReplace>>BITS_FOR_SYSTEM_ID)>=archive.size()) {
                         throw new C2ServiceException("Invalid signalId "+xReplace+" not found.",false);
                     }
@@ -227,23 +198,31 @@ public class SystemManager {
 
                 }
 
-                order = signal;
-            }
-
-            if (conditionalUponOrder!=null) {
-
-                //If you attempt to add a new order and make it conditional on an order
-                // that has already been filled or canceled, this will not be permitted.
-                // The parent order must still be pending.
-                //unless this is an xReplace
-                if (!request.containsKey(XReplace) && !conditionalUponOrder.isPending()) {
-                    throw new C2ServiceException("Can not be conditional on an order that is not pending.",false);
+                Order signal;
+                //convert everything to relatives, should have already been relatives?
+                RelativeNumber limit = (RelativeNumber)request.get(Parameter.RelativeLimitOrder);
+                if (limit != null) {
+                    OrderProcessor limitProcessor = new OrderProcessorLimit(timeToExecute, symbol,limit);
+                    signal = new Order(id, instrument, symbol, action, quantityComputable, cancelAtMs, timeInForce,limitProcessor,conditionalUponOrder);
+                }  else {
+                    RelativeNumber stop = (RelativeNumber)request.get(Parameter.RelativeStopOrder);
+                    if (stop != null) {
+                        OrderProcessor stopProcessor = new OrderProcessorStop(timeToExecute, symbol,stop);
+                        signal = new Order(id, instrument, symbol, action, quantityComputable, cancelAtMs, timeInForce, stopProcessor,conditionalUponOrder);
+                    } else {
+                        //market
+                        OrderProcessor marketProcessor = new OrderProcessorMarket(timeToExecute, symbol);
+                        signal = new Order(id, instrument, symbol, action, quantityComputable, cancelAtMs, timeInForce, marketProcessor,conditionalUponOrder);
+                    }
                 }
 
-                logger.trace("set conditional upon " + request);
-                order.conditionalUpon(conditionalUponOrder);
-                //do normal schedule however in addition to time and other
-                //critera the upon must have triggered
+                Integer ocaId = (Integer)request.get(OCAId);
+                if (ocaId!=null) {
+                    signal.oneCancelsAnother(ocaId);
+                    //add this signal to the group under this ocaId
+                    ocaMap.get(ocaId).add(signal);
+                }
+                order = signal;
             }
 
             //must be done before adding the all-in-one stop or target because they must also be added

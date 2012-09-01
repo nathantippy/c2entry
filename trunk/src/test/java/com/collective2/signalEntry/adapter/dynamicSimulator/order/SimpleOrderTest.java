@@ -7,6 +7,7 @@ import com.collective2.signalEntry.adapter.dynamicSimulator.DataProvider;
 import com.collective2.signalEntry.adapter.dynamicSimulator.portfolio.Portfolio;
 import com.collective2.signalEntry.adapter.dynamicSimulator.portfolio.SimplePortfolio;
 import com.collective2.signalEntry.adapter.dynamicSimulator.quantity.QuantityComputable;
+import com.collective2.signalEntry.adapter.dynamicSimulator.quantity.QuantityComputableEntry;
 import com.collective2.signalEntry.adapter.dynamicSimulator.quantity.QuantityComputableFixed;
 import com.collective2.signalEntry.implementation.Action;
 import org.junit.Test;
@@ -37,7 +38,7 @@ public class SimpleOrderTest {
 
 
     @Test
-    public void  buySellTest() {
+    public void  conditionalOrderTest() {
 
         Portfolio portfolio = new SimplePortfolio(new BigDecimal("1000.00"));
 
@@ -51,24 +52,25 @@ public class SimpleOrderTest {
         long cancelAtMs = Long.MAX_VALUE;
         Duration timeInForce = Duration.GoodTilCancel;
         OrderProcessorMarket processor = new OrderProcessorMarket(time, symbol);
-        Order order = new Order(id,instrument,symbol,action,quantityComputable,cancelAtMs,timeInForce,processor);
+        Order buyOrder = new Order(id,instrument,symbol,action,quantityComputable,cancelAtMs,timeInForce,processor, null);
 
-        //test only the processor and do it outside the order
-        boolean processed = processor.process(dataProvider, portfolio, commission, order, action, quantityComputable);
-
-        assertTrue(processed);
-        assertEquals(new BigDecimal("961.00"),portfolio.cash());
-        assertEquals(quantity,portfolio.position("GG").quantity());
-        assertEquals(new BigDecimal("60"),portfolio.equity(dataProvider));
-
-        //sell to close this open position.
+        //final quantity is not known until this order is processed
+        assertEquals(Integer.valueOf(0), Integer.valueOf(buyOrder.quantity()));
 
         action = Action.STC;
-        order = new Order(id,instrument,symbol,action,quantityComputable,cancelAtMs,timeInForce,processor);
+        quantityComputable = new QuantityComputableEntry(buyOrder);
+        Order sellOrder = new Order(id,instrument,symbol,action,quantityComputable,cancelAtMs,timeInForce,processor, buyOrder);
 
-        order.process(dataProvider,portfolio,commission);
+        //final quantity is not known until this order is processed
+        assertEquals(Integer.valueOf(0), Integer.valueOf(sellOrder.quantity()));
 
-        assertTrue(processed);
+        assertTrue(buyOrder.process(dataProvider,portfolio,commission));
+
+        assertEquals(quantity, Integer.valueOf(buyOrder.quantity()));
+        assertEquals(quantity, Integer.valueOf(sellOrder.quantity()));
+
+        assertTrue(sellOrder.process(dataProvider, portfolio, commission));
+
         assertEquals(new BigDecimal("982.00"),portfolio.cash());
         assertEquals(Integer.valueOf(0),portfolio.position("GG").quantity());
         assertEquals(new BigDecimal("0"),portfolio.equity(dataProvider));

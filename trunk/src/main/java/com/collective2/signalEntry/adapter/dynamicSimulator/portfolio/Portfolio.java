@@ -9,8 +9,12 @@ package com.collective2.signalEntry.adapter.dynamicSimulator.portfolio;
 import com.collective2.signalEntry.adapter.dynamicSimulator.DataProvider;
 
 import java.math.BigDecimal;
+import java.util.Collection;
+import java.util.Set;
 
 public interface Portfolio {
+
+    public Collection<String> positions();
 
     public Position position(String symbol);
 

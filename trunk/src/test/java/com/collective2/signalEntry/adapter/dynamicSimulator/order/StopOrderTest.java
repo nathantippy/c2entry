@@ -86,7 +86,7 @@ public class StopOrderTest {
 
 
         OrderProcessorStop processor = new OrderProcessorStop(time, symbol, buyBelow);
-        Order order = new Order(id,instrument,symbol,action,quantityComputable,cancelAtMs,timeInForce,processor);
+        Order order = new Order(id,instrument,symbol,action,quantityComputable,cancelAtMs,timeInForce,processor,null);
 
         //test only the processor and do it outside the order
         boolean processed = processor.process(dataProvider, portfolio, commission, order, action, quantityComputable);
@@ -104,7 +104,7 @@ public class StopOrderTest {
         action = Action.STC;
 
         OrderProcessorStop sellProcessor = new OrderProcessorStop(time, symbol, sellAbove);
-        order = new Order(id,instrument,symbol,action,quantityComputable,cancelAtMs,timeInForce,sellProcessor);
+        order = new Order(id,instrument,symbol,action,quantityComputable,cancelAtMs,timeInForce,sellProcessor,null);
 
         //test only the processor and do it outside the order
         processed = sellProcessor.process(dataProvider, portfolio, commission, order, action, quantityComputable);
@@ -159,7 +159,7 @@ public class StopOrderTest {
         Duration timeInForce = Duration.GoodTilCancel;
 
         OrderProcessorStop processor = new OrderProcessorStop(time,symbol,sellAbove);
-        Order order = new Order(id,instrument,symbol,sellAction,quantityComputable,cancelAtMs,timeInForce,processor);
+        Order order = new Order(id,instrument,symbol,sellAction,quantityComputable,cancelAtMs,timeInForce,processor,null);
 
         //test only the processor and do it outside the order
         boolean processed = processor.process(dataProvider, portfolio, commission, order, sellAction, quantityComputable);
@@ -176,7 +176,7 @@ public class StopOrderTest {
 
         Action action = Action.BTC;
         OrderProcessorStop buyProcessor = new OrderProcessorStop(time,symbol,buyBelow);
-        order = new Order(id,instrument,symbol,action,quantityComputable,cancelAtMs,timeInForce,buyProcessor);
+        order = new Order(id,instrument,symbol,action,quantityComputable,cancelAtMs,timeInForce,buyProcessor,null);
 
         processed = buyProcessor.process(dataProvider, portfolio, commission, order, action, quantityComputable);
         expectedCash = expectedCash.subtract(expectedBuy.multiply(new BigDecimal(quantity))).subtract(commission);
