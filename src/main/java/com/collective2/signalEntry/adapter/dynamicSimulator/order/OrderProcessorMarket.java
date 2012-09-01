@@ -23,8 +23,11 @@ public class OrderProcessorMarket implements OrderProcessor {
 
     private static final Logger logger = LoggerFactory.getLogger(OrderProcessorMarket.class);
     private final String symbol;
+    private final long time;
+    private BigDecimal transactionPrice;
 
-    public OrderProcessorMarket(String symbol) {
+    public OrderProcessorMarket(long time, String symbol) {
+        this.time = time;
         this.symbol = symbol;
     }
 
@@ -32,13 +35,21 @@ public class OrderProcessorMarket implements OrderProcessor {
         return symbol;
     }
 
+    public long time() {
+        return time;
+    }
+
+    public BigDecimal transactionPrice() {
+        return transactionPrice;
+    }
+
     public boolean process(DataProvider dataProvider, Portfolio portfolio, BigDecimal commission, Order order, Action action,
                            QuantityComputable quantityComputable) {
         logger.trace("process MarketOrder");
 
-            BigDecimal marketPrice = dataProvider.openingPrice(symbol);
+            transactionPrice = dataProvider.openingPrice(symbol);
 
-            Integer quantity = quantityComputable.quantity(marketPrice,portfolio,dataProvider);
+            Integer quantity = quantityComputable.quantity(transactionPrice,portfolio,dataProvider);
             if (quantity.intValue()==0){
                 return true;
             }
@@ -58,7 +69,7 @@ public class OrderProcessorMarket implements OrderProcessor {
                         }
                     }
                 case BTO:
-                    portfolio.position(symbol).addTransaction(quantity, order.time, marketPrice, commission, Action.BTC==action);
+                    portfolio.position(symbol).addTransaction(quantity, time, transactionPrice, commission, Action.BTC==action);
                     if (action==Action.BTC && order.conditionalUpon()!=null) {
                         order.conditionalUpon().closeOrder();
                     }
@@ -77,7 +88,7 @@ public class OrderProcessorMarket implements OrderProcessor {
                     }
                 case SSHORT:
                 case STO:
-                    portfolio.position(symbol).addTransaction(-quantity, order.time, marketPrice, commission, Action.STC==action);
+                    portfolio.position(symbol).addTransaction(-quantity, time, transactionPrice, commission, Action.STC==action);
 
                     if (action==Action.STC && order.conditionalUpon()!=null) {
                         order.conditionalUpon().closeOrder();

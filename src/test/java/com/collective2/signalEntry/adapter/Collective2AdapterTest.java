@@ -13,7 +13,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import javax.xml.stream.XMLEventReader;
-import javax.xml.stream.XMLStreamException;
 import java.net.*;
 import java.util.logging.Handler;
 import java.util.logging.Logger;

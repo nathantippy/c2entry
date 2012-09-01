@@ -22,7 +22,6 @@ import java.util.Date;
 public class Order implements Comparable<Order> {
     //private final Request request;
     protected final int id;
-    protected final long time;
     private String comment;
     protected boolean cancel;
     protected boolean closed;
@@ -37,8 +36,6 @@ public class Order implements Comparable<Order> {
     protected final QuantityComputable quantityComputable;
     protected final OrderProcessor processor;
 
-    protected PriceSelector priceSelector;
-
     protected Integer oneCancelsAnother;
 
     private Date postedWhen;  //TODO: SET WITH SCHEDULED
@@ -50,24 +47,22 @@ public class Order implements Comparable<Order> {
     private static final long ONE_TRADING_DAY = 60000l*60*36;
 
 
-    public Order(int id, long time, Instrument instrument, String symbol,
+    public Order(int id, Instrument instrument, String symbol,
                  Action action, QuantityComputable quantityComputable,
                  long cancelAtMs, Duration timeInForce,
                  OrderProcessor processor) {
         this.id = id;
-        this.time = time;
         this.expireAtMs = cancelAtMs;
         this.timeInForce = timeInForce;
         this.action = action;
 
         this.instrument = instrument;
         this.quantityComputable = quantityComputable;
-        this.priceSelector = PriceSelector.DEFAULT;
         this.processor = processor;
     }
 
     public long time() {
-        return time;
+        return processor.time();
     }
 
     public Order conditionalUpon() {
@@ -87,7 +82,7 @@ public class Order implements Comparable<Order> {
     public boolean isInForce(long now) {
         //TODO: wrong must start at open of market time not yesterday close!
 
-        return timeInForce==Duration.GoodTilCancel || (Duration.DayOrder==timeInForce && now<(time + ONE_TRADING_DAY));
+        return timeInForce==Duration.GoodTilCancel || (Duration.DayOrder==timeInForce && now<(time() + ONE_TRADING_DAY));
     }
 
     public boolean isExpired(long now) {
@@ -106,7 +101,7 @@ public class Order implements Comparable<Order> {
         Order signal = (Order) o;
 
         if (id != signal.id) return false;
-        if (time != signal.time) return false;
+        if (time() != signal.time()) return false;
 
         return true;
     }
@@ -114,13 +109,13 @@ public class Order implements Comparable<Order> {
     @Override
     public int hashCode() {
         int result = id;
-        result = 31 * result + (int) (time ^ (time >>> 32));
+        result = 31 * result + (int) (time() ^ (time() >>> 32));
         return result;
     }
 
     @Override
     public int compareTo(Order that) {
-        int result = Long.compare(this.time, that.time);
+        int result = Long.compare(this.time(), that.time());
         if (result == 0) {
             //if two things happen at the same "time" then use the
             //order they were submitted to determine which is first.
@@ -201,15 +196,6 @@ public class Order implements Comparable<Order> {
     public Action action() {
         return action;
     }
-
-    public void setPriceSelector(PriceSelector priceSelector) {
-        this.priceSelector = priceSelector;
-    }
-
-    protected BigDecimal priceSelection(BigDecimal bestPrice, BigDecimal worstPrice, boolean firstIsTrigger) {
-        return priceSelector.select(bestPrice, worstPrice, firstIsTrigger);
-    }
-
 
     public void oneCancelsAnother(Integer ocaId) {
         this.oneCancelsAnother = ocaId;

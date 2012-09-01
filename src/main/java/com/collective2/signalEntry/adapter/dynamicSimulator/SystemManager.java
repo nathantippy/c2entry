@@ -104,7 +104,7 @@ public class SystemManager {
             int id = (signalIdOnly << BITS_FOR_SYSTEM_ID)+systemId;
 
             String symbol = (String)request.get(Parameter.Symbol);
-
+            Action action = null;
             Order order = null;
             if (request.command()== Command.Reverse) {
 
@@ -176,7 +176,7 @@ public class SystemManager {
                 //TODO: these must be watched by async submit   CancelsAt  (seconds time), CancelsAtRelative (seconds after submit)
 
                 assert(request.command() == Command.Signal);
-                Action action;
+
                 Instrument instrument = (Instrument)request.get(Parameter.Instrument);
                 switch(instrument) {
                     case Stock:
@@ -191,17 +191,17 @@ public class SystemManager {
                 //convert everything to relatives, should have already been relatives?
                 RelativeNumber limit = (RelativeNumber)request.get(Parameter.RelativeLimitOrder);
                 if (limit != null) {
-                    OrderProcessor limitProcessor = new OrderProcessorLimit(symbol,limit);
-                    signal = new Order(id,timeToExecute, instrument, symbol, action, quantityComputable, cancelAtMs, timeInForce,limitProcessor);
+                    OrderProcessor limitProcessor = new OrderProcessorLimit(timeToExecute, symbol,limit);
+                    signal = new Order(id, instrument, symbol, action, quantityComputable, cancelAtMs, timeInForce,limitProcessor);
                 }  else {
                     RelativeNumber stop = (RelativeNumber)request.get(Parameter.RelativeStopOrder);
                     if (stop != null) {
-                        OrderProcessor stopProcessor = new OrderProcessorStop(symbol,stop);
-                        signal = new Order(id,timeToExecute, instrument, symbol, action, quantityComputable, cancelAtMs, timeInForce, stopProcessor);
+                        OrderProcessor stopProcessor = new OrderProcessorStop(timeToExecute, symbol,stop);
+                        signal = new Order(id, instrument, symbol, action, quantityComputable, cancelAtMs, timeInForce, stopProcessor);
                     } else {
                         //market
-                        OrderProcessor marketProcessor = new OrderProcessorMarket(symbol);
-                        signal = new Order(id,timeToExecute, instrument, symbol, action, quantityComputable, cancelAtMs, timeInForce, marketProcessor);
+                        OrderProcessor marketProcessor = new OrderProcessorMarket(timeToExecute, symbol);
+                        signal = new Order(id, instrument, symbol, action, quantityComputable, cancelAtMs, timeInForce, marketProcessor);
                     }
                 }
 
@@ -265,15 +265,30 @@ public class SystemManager {
                 Request stopRequest = request.baseConditional();
 
                 Instrument instrument = (Instrument)request.get(Parameter.Instrument);
+
+                //all in one stopLoss, this is sell to close on buy and buy to close on sell.
+
                 switch(instrument) {
                     case Stock:
-                        stopRequest.put(Parameter.StockAction,ActionForStock.SellToClose);   //TODO: is this right for shorts?
+                        if (action == ActionForStock.BuyToOpen.action()) {
+                            stopRequest.put(Parameter.StockAction,ActionForStock.SellToClose);
+                        } else if (action == ActionForStock.SellShort.action()) {
+                            stopRequest.put(Parameter.StockAction,ActionForStock.BuyToClose);
+                        } else {
+                            throw new UnsupportedOperationException("Action:"+action+" all-in-on stop loss undefined");
+                        }
                         break;
                     default:
-                        stopRequest.put(Parameter.NonStockAction,ActionForNonStock.SellToClose);  //TODO: is this right for shorts?
+                        if (action == ActionForNonStock.BuyToOpen.action()) {
+                            stopRequest.put(Parameter.NonStockAction,ActionForNonStock.SellToClose);
+                        } else if (action == ActionForNonStock.SellToOpen.action()) {
+                            stopRequest.put(Parameter.NonStockAction,ActionForNonStock.BuyToClose);
+                        } else {
+                            throw new UnsupportedOperationException("Action:"+action+" all-in-on stop loss undefined");
+                        }
                         break;
                 }
-                stopRequest.put(Parameter.RelativeStopOrder,stopLoss); //TODO: is this right for shorts?
+                stopRequest.put(Parameter.RelativeStopOrder,stopLoss);
 
                 //this is the only place the code will be able to get quantity because it can not be set
                 //here when Dollar or Percent is used.
@@ -298,13 +313,25 @@ public class SystemManager {
                 Instrument instrument = (Instrument)request.get(Parameter.Instrument);
                 switch(instrument) {
                     case Stock:
-                        profitTargetRequest.put(Parameter.StockAction,ActionForStock.SellToClose);   //TODO: is this right for shorts?
+                        if (action == ActionForStock.BuyToOpen.action()) {
+                            profitTargetRequest.put(Parameter.StockAction,ActionForStock.SellToClose);
+                        } else if (action == ActionForStock.SellShort.action()) {
+                            profitTargetRequest.put(Parameter.StockAction,ActionForStock.BuyToClose);
+                        } else {
+                            throw new UnsupportedOperationException("Action:"+action+" all-in-on profit target undefined");
+                        }
                         break;
                     default:
-                        profitTargetRequest.put(Parameter.NonStockAction,ActionForNonStock.SellToClose);  //TODO: is this right for shorts?
+                        if (action == ActionForNonStock.BuyToOpen.action()) {
+                            profitTargetRequest.put(Parameter.NonStockAction,ActionForNonStock.SellToClose);
+                        } else if (action == ActionForNonStock.SellToOpen.action()) {
+                            profitTargetRequest.put(Parameter.NonStockAction,ActionForNonStock.BuyToClose);
+                        } else {
+                            throw new UnsupportedOperationException("Action:"+action+" all-in-on profit target undefined");
+                        }
                         break;
                 }
-                profitTargetRequest.put(Parameter.RelativeLimitOrder,profitTarget); //TODO: is this right for shorts?
+                profitTargetRequest.put(Parameter.RelativeLimitOrder,profitTarget);
 
                 //this is the only place the code will be able to get quantity because it can not be set
                 //here when Dollar or Percent is used.

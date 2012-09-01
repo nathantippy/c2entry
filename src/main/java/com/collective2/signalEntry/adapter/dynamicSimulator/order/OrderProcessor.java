@@ -21,5 +21,9 @@ public interface OrderProcessor {
 
     String symbol();
 
+    long time();
+
+    BigDecimal transactionPrice();
+
     RelativeNumber triggerPrice();
 }
