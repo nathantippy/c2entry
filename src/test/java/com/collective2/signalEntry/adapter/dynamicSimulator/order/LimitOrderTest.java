@@ -1,7 +1,7 @@
 package com.collective2.signalEntry.adapter.dynamicSimulator.order;
 
 import com.collective2.signalEntry.Duration;
-import com.collective2.signalEntry.DynamicSimulationMockDataProvider;
+import com.collective2.signalEntry.adapter.dynamicSimulator.DynamicSimulationMockDataProvider;
 import com.collective2.signalEntry.Instrument;
 import com.collective2.signalEntry.adapter.dynamicSimulator.DataProvider;
 import com.collective2.signalEntry.adapter.dynamicSimulator.portfolio.Portfolio;
@@ -24,7 +24,7 @@ import static junit.framework.Assert.assertTrue;
  * Nathan Tippy  8/29/12
  */
 
-public class limitOrderTest {
+public class LimitOrderTest {
 
     private final long start = 0;
     private final long stop = 1000;
@@ -167,7 +167,7 @@ public class limitOrderTest {
         BigDecimal expectedCash = startingCash.add(expectedSell.multiply(new BigDecimal(quantity)).subtract(commission));
 
         assertTrue(processed);
-        assertEquals("sell ",expectedSell,processor.transactionPrice());
+        assertEquals("sell ", expectedSell, processor.transactionPrice());
         assertEquals(expectedCash,portfolio.cash());
         assertEquals(Integer.valueOf(-quantity),portfolio.position("GG").quantity());
         assertEquals(new BigDecimal("-60"),portfolio.equity(dataProvider));

@@ -1,7 +1,7 @@
 package com.collective2.signalEntry.adapter.dynamicSimulator.order;
 
 import com.collective2.signalEntry.Duration;
-import com.collective2.signalEntry.DynamicSimulationMockDataProvider;
+import com.collective2.signalEntry.adapter.dynamicSimulator.DynamicSimulationMockDataProvider;
 import com.collective2.signalEntry.Instrument;
 import com.collective2.signalEntry.adapter.dynamicSimulator.DataProvider;
 import com.collective2.signalEntry.adapter.dynamicSimulator.portfolio.Portfolio;
@@ -23,7 +23,7 @@ import static junit.framework.Assert.assertTrue;
  * Nathan Tippy  8/29/12
  */
 
-public class marketOrderTest {
+public class SimpleOrderTest {
 
     private final long start = 0;
     private final long stop = 1000;
@@ -37,7 +37,7 @@ public class marketOrderTest {
 
 
     @Test
-    public void  marketBTOTest() {
+    public void  buySellTest() {
 
         Portfolio portfolio = new SimplePortfolio(new BigDecimal("1000.00"));
 
@@ -66,8 +66,7 @@ public class marketOrderTest {
         action = Action.STC;
         order = new Order(id,instrument,symbol,action,quantityComputable,cancelAtMs,timeInForce,processor);
 
-        //test only the processor and do it outside the order
-        processed = processor.process(dataProvider, portfolio, commission, order, action, quantityComputable);
+        order.process(dataProvider,portfolio,commission);
 
         assertTrue(processed);
         assertEquals(new BigDecimal("982.00"),portfolio.cash());
@@ -76,52 +75,5 @@ public class marketOrderTest {
 
     }
 
-    @Test
-    public void  marketSTOTest() {
-        marketShortTest(Action.STO);
-    }
-
-    @Test
-    public void  marketSShortTest() {
-        marketShortTest(Action.SSHORT);
-    }
-
-
-    private void  marketShortTest(Action sellAction) {
-
-        Portfolio portfolio = new SimplePortfolio(new BigDecimal("1000.00"));
-
-        int id = 42;
-        long time = stop;
-        Instrument instrument = Instrument.Forex;
-        String symbol = "GG";
-        Integer quantity = 10;
-        QuantityComputable quantityComputable = new QuantityComputableFixed(quantity);
-        long cancelAtMs = Long.MAX_VALUE;
-        Duration timeInForce = Duration.GoodTilCancel;
-        OrderProcessorMarket processor = new OrderProcessorMarket(time, symbol);
-        Order order = new Order(id,instrument,symbol,sellAction,quantityComputable,cancelAtMs,timeInForce,processor);
-
-        //test only the processor and do it outside the order
-        boolean processed = processor.process(dataProvider, portfolio, commission, order, sellAction, quantityComputable);
-
-        assertTrue(processed);
-        assertEquals(new BigDecimal("1021.00"),portfolio.cash());
-        assertEquals(Integer.valueOf(-quantity),portfolio.position("GG").quantity());
-        assertEquals(new BigDecimal("-60"),portfolio.equity(dataProvider));
-
-        //Buy to cover this short position
-
-        Action action = Action.BTC;
-        order = new Order(id,instrument,symbol,action,quantityComputable,cancelAtMs,timeInForce,processor);
-
-        processed = processor.process(dataProvider, portfolio, commission, order, action, quantityComputable);
-
-        assertTrue(processed);
-        assertEquals(new BigDecimal("982.00"),portfolio.cash());
-        assertEquals(Integer.valueOf(0),portfolio.position("GG").quantity());
-        assertEquals(new BigDecimal("0"),portfolio.equity(dataProvider));
-
-    }
 
 }

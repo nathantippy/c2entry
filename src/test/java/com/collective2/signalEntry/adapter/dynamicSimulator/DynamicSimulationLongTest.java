@@ -4,8 +4,9 @@
  * for the full license governing this code.
  * Nathan Tippy  8/2/12
  */
-package com.collective2.signalEntry;
+package com.collective2.signalEntry.adapter.dynamicSimulator;
 
+import com.collective2.signalEntry.*;
 import com.collective2.signalEntry.adapter.DynamicSimulationAdapter;
 import com.collective2.signalEntry.adapter.dynamicSimulator.portfolio.Portfolio;
 import com.collective2.signalEntry.adapter.dynamicSimulator.portfolio.SimplePortfolio;
@@ -15,9 +16,7 @@ import java.math.BigDecimal;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 public class DynamicSimulationLongTest {
 
@@ -236,6 +235,19 @@ public class DynamicSimulationLongTest {
 
         shares = new BigDecimal("0");
         assertEquals(shares.intValue(), portfolio.position("msft").quantity().intValue());
+
+        //extra simple methods
+
+        boolean ok = sentryService.flushPendingSignals();
+        assertTrue(ok);
+
+        String firstMessage = "first test message";
+        String secondMessage = "second test message";
+        String lastMessage =  sentryService.sendNewCommentRequest(firstMessage,openSignalId).getString(C2Element.ElementPreviousComment);
+        assertFalse(firstMessage.equals(lastMessage));
+        lastMessage =  sentryService.sendNewCommentRequest(secondMessage,openSignalId).getString(C2Element.ElementPreviousComment);
+        assertEquals(firstMessage, lastMessage);
+
 
     }
 
