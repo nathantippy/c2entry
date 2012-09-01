@@ -50,8 +50,8 @@ public class marketOrderTest {
         QuantityComputable quantityComputable = new QuantityComputableFixed(quantity);
         long cancelAtMs = Long.MAX_VALUE;
         Duration timeInForce = Duration.GoodTilCancel;
-        OrderProcessorMarket processor = new OrderProcessorMarket(symbol);
-        Order order = new Order(id,time,instrument,symbol,action,quantityComputable,cancelAtMs,timeInForce,processor);
+        OrderProcessorMarket processor = new OrderProcessorMarket(time, symbol);
+        Order order = new Order(id,instrument,symbol,action,quantityComputable,cancelAtMs,timeInForce,processor);
 
         //test only the processor and do it outside the order
         boolean processed = processor.process(dataProvider, portfolio, commission, order, action, quantityComputable);
@@ -64,7 +64,7 @@ public class marketOrderTest {
         //sell to close this open position.
 
         action = Action.STC;
-        order = new Order(id,time,instrument,symbol,action,quantityComputable,cancelAtMs,timeInForce,processor);
+        order = new Order(id,instrument,symbol,action,quantityComputable,cancelAtMs,timeInForce,processor);
 
         //test only the processor and do it outside the order
         processed = processor.process(dataProvider, portfolio, commission, order, action, quantityComputable);
@@ -99,8 +99,8 @@ public class marketOrderTest {
         QuantityComputable quantityComputable = new QuantityComputableFixed(quantity);
         long cancelAtMs = Long.MAX_VALUE;
         Duration timeInForce = Duration.GoodTilCancel;
-        OrderProcessorMarket processor = new OrderProcessorMarket(symbol);
-        Order order = new Order(id,time,instrument,symbol,sellAction,quantityComputable,cancelAtMs,timeInForce,processor);
+        OrderProcessorMarket processor = new OrderProcessorMarket(time, symbol);
+        Order order = new Order(id,instrument,symbol,sellAction,quantityComputable,cancelAtMs,timeInForce,processor);
 
         //test only the processor and do it outside the order
         boolean processed = processor.process(dataProvider, portfolio, commission, order, sellAction, quantityComputable);
@@ -113,7 +113,7 @@ public class marketOrderTest {
         //Buy to cover this short position
 
         Action action = Action.BTC;
-        order = new Order(id,time,instrument,symbol,action,quantityComputable,cancelAtMs,timeInForce,processor);
+        order = new Order(id,instrument,symbol,action,quantityComputable,cancelAtMs,timeInForce,processor);
 
         processed = processor.process(dataProvider, portfolio, commission, order, action, quantityComputable);
 

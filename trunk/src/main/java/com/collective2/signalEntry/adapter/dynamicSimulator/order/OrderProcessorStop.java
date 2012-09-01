@@ -23,14 +23,25 @@ public class OrderProcessorStop implements OrderProcessor {
     private static final Logger logger = LoggerFactory.getLogger(OrderProcessorStop.class);
     private final RelativeNumber relativeStop;
     private final String symbol;
+    private final long time;
+    private BigDecimal transactionPrice;
 
-    public OrderProcessorStop(String symbol, RelativeNumber relativeStop) {
-        this.relativeStop = relativeStop;
+    public OrderProcessorStop(long time, String symbol, RelativeNumber relativeStop) {
+        this.time = time;
         this.symbol = symbol;
+        this.relativeStop = relativeStop;
     }
 
     public String symbol() {
         return symbol;
+    }
+
+    public long time() {
+        return time;
+    }
+
+    public BigDecimal transactionPrice() {
+        return transactionPrice;
     }
 
     public boolean process(DataProvider dataProvider, Portfolio portfolio, BigDecimal commission, Order order, Action action,
@@ -39,7 +50,7 @@ public class OrderProcessorStop implements OrderProcessor {
 
 
             BigDecimal absoluteStop = RelativeNumberHelper.toAbsolutePrice(symbol, relativeStop, dataProvider, portfolio);
-            BigDecimal price;
+
             switch(action) {
                 case BTC:
                     if (order.conditionalUpon()==null && portfolio.position(symbol).quantity().intValue()==0) {
@@ -62,20 +73,18 @@ public class OrderProcessorStop implements OrderProcessor {
                     if (absoluteStop.compareTo(dataProvider.lowPrice(symbol))<0) {
                         //stop is below low so anything between low and high is ok
 
-                        price = dataProvider.openingPrice(symbol);//order.priceSelection(dataProvider.openingPrice(order.symbol),dataProvider.lowPrice(order.symbol), dataProvider.highPrice(order.symbol));
+                        transactionPrice = dataProvider.openingPrice(symbol);//order.priceSelection(dataProvider.openingPrice(order.symbol),dataProvider.lowPrice(order.symbol), dataProvider.highPrice(order.symbol));
                     } else {
                         //limit is between low and high so only values between stop and high are ok
-                        price = absoluteStop;//order.priceSelection(absoluteStop, dataProvider.highPrice(order.symbol));
+                        transactionPrice = absoluteStop;//order.priceSelection(absoluteStop, dataProvider.highPrice(order.symbol));
                     }
-                    {
-                        Integer quantity = computableQuantity.quantity(price,portfolio,dataProvider);
-                        if (quantity.intValue()==0)  {
-                            return true;
-                        }
 
-                        order.entryQuantity(quantity);
+                    Integer buyQuantity = computableQuantity.quantity(transactionPrice,portfolio,dataProvider);
+                    if (buyQuantity.intValue()>0) {
+
+                        order.entryQuantity(buyQuantity);
                         //create the transaction in the portfolio
-                        portfolio.position(symbol).addTransaction(quantity, order.time, price, commission, Action.BTC==action);
+                        portfolio.position(symbol).addTransaction(buyQuantity, time, transactionPrice, commission, Action.BTC==action);
                         if (action==Action.BTC && order.conditionalUpon()!=null) {
                             order.conditionalUpon().closeOrder();
                         }
@@ -105,19 +114,17 @@ public class OrderProcessorStop implements OrderProcessor {
                     //if open price is under stop must stop out now
                     BigDecimal openPrice = dataProvider.openingPrice(symbol);
                     if (openPrice.compareTo(absoluteStop)<0) {
-                        price = openPrice;
+                        transactionPrice = openPrice;
                     } else {
                         //open is above stop but low is < stop so when we move down it will trigger
-                        price = absoluteStop;
+                        transactionPrice = absoluteStop;
                     }
-                    {
-                        Integer quantity = computableQuantity.quantity(price,portfolio,dataProvider);
-                        if (quantity.intValue()==0)  {
-                            return true;
-                        }
-                        order.entryQuantity(quantity);
+
+                    Integer shortQuantity = computableQuantity.quantity(transactionPrice,portfolio,dataProvider);
+                    if (shortQuantity.intValue()>0) {
+                        order.entryQuantity(shortQuantity);
                         //create the transaction in the portfolio
-                        portfolio.position(symbol).addTransaction(-quantity, order.time, price, commission, Action.STC==action);
+                        portfolio.position(symbol).addTransaction(-shortQuantity, time, transactionPrice, commission, Action.STC==action);
                         if (action==Action.STC && order.conditionalUpon()!=null) {
                             order.conditionalUpon().closeOrder();
                         }

@@ -13,11 +13,9 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.net.URL;
-import java.util.Map;
 
 import javax.xml.stream.XMLEventReader;
 
-import com.collective2.signalEntry.Parameter;
 import com.collective2.signalEntry.implementation.Request;
 
 public class TestAdapter extends StaticSimulationAdapter {

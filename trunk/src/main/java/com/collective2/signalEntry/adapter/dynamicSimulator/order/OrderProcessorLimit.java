@@ -23,14 +23,25 @@ public class OrderProcessorLimit implements OrderProcessor {
     private static final Logger logger = LoggerFactory.getLogger(OrderProcessorLimit.class);
     private final RelativeNumber relativeLimit;
     private final String symbol;
+    private final long time;
+    private BigDecimal transactionPrice;
 
-    public OrderProcessorLimit(String symbol, RelativeNumber relativeLimit) {
-        this.relativeLimit = relativeLimit;
+    public OrderProcessorLimit(long time, String symbol, RelativeNumber relativeLimit) {
+        this.time = time;
         this.symbol = symbol;
+        this.relativeLimit = relativeLimit;
     }
 
     public String symbol() {
         return symbol;
+    }
+
+    public long time() {
+        return time;
+    }
+
+    public BigDecimal transactionPrice() {
+        return transactionPrice;
     }
 
     public boolean process(DataProvider dataProvider, Portfolio portfolio, BigDecimal commission, Order order, Action action,
@@ -38,7 +49,6 @@ public class OrderProcessorLimit implements OrderProcessor {
         logger.trace("process LimitOrder");
 
             BigDecimal absoluteLimit = RelativeNumberHelper.toAbsolutePrice(symbol, relativeLimit, dataProvider, portfolio);
-            BigDecimal price;
 
             switch(action) {
                 case BTC:
@@ -62,22 +72,20 @@ public class OrderProcessorLimit implements OrderProcessor {
                     }
 
                     //if open price is lower than limit the buy must happen on open
-                    BigDecimal openPrice = dataProvider.openingPrice(symbol);
-                    if (openPrice.compareTo(absoluteLimit)<0) {
-                        price = openPrice;
+                    BigDecimal openPriceData = dataProvider.openingPrice(symbol);
+                    if (openPriceData.compareTo(absoluteLimit)<0) {
+                        transactionPrice = openPriceData;
                     } else {
                         //open price was above limit but we know that low was under limit
                         //assume that as price goes down it will trigger at the limit
-                        price = absoluteLimit;
+                        transactionPrice = absoluteLimit;
                     }
-                    {
-                        Integer quantity = computableQuantity.quantity(price,portfolio,dataProvider);
-                        if (quantity.intValue()==0)  {
-                            return true;
-                        }
-                        order.entryQuantity(quantity);
+
+                    Integer buyQuantity = computableQuantity.quantity(transactionPrice,portfolio,dataProvider);
+                    if (buyQuantity.intValue()>0)  {
+                        order.entryQuantity(buyQuantity);
                         //create the transaction in the portfolio
-                        portfolio.position(symbol).addTransaction(quantity, order.time, price, commission, Action.BTC==action);
+                        portfolio.position(symbol).addTransaction(buyQuantity, time, transactionPrice, commission, Action.BTC==action);
                         if (action==Action.BTC && order.conditionalUpon()!=null) {
                             order.conditionalUpon().closeOrder();
                         }
@@ -98,28 +106,28 @@ public class OrderProcessorLimit implements OrderProcessor {
                     }
                 case SSHORT:
                 case STO:
-                    //must only buy if we can do it under absoluteLimit.
+                    //must sell only above this price
 
                     if (absoluteLimit.compareTo(dataProvider.highPrice(symbol))>0) {
                         logger.trace("do not trigger "+order.action+" "+absoluteLimit+"  "+dataProvider.highPrice(symbol));
                         return false;// do not trigger can not get good deal under limit price.
                     }
 
-                    if (absoluteLimit.compareTo(dataProvider.lowPrice(symbol))<0) {
+                    //if limit is under open then trigger at open
+                    BigDecimal openPrice = dataProvider.openingPrice(symbol);
+                    if (absoluteLimit.compareTo(openPrice)<0) {
                         //limit is below low so anything between low and high is ok
-                        price = dataProvider.openingPrice(symbol);//order.priceSelection(dataProvider.highPrice(order.symbol), dataProvider.lowPrice(order.symbol));
+                        transactionPrice = openPrice;
                     } else {
-                        //limit is between low and high so only values between high and limit are ok
-                        price = absoluteLimit;//order.priceSelection(dataProvider.highPrice(order.symbol), absoluteLimit);
+                        //trigger at limit when its reached
+                        transactionPrice = absoluteLimit;
                     }
-                    {
-                        Integer quantity = computableQuantity.quantity(price,portfolio,dataProvider);
-                        if (quantity.intValue()==0)  {
-                            return true;
-                        }
-                        order.entryQuantity(quantity);
+
+                    Integer sellQuantity = computableQuantity.quantity(transactionPrice,portfolio,dataProvider);
+                    if (sellQuantity.intValue()>0)  {
+                        order.entryQuantity(sellQuantity);
                         //create the transaction in the portfolio
-                        portfolio.position(symbol).addTransaction(-quantity, order.time, price, commission, Action.STC==action);
+                        portfolio.position(symbol).addTransaction(-sellQuantity, time, transactionPrice, commission, Action.STC==action);
                         if (action==Action.STC && order.conditionalUpon()!=null) {
                             order.conditionalUpon().closeOrder();
                         }
