@@ -328,7 +328,4 @@ public class C2EntryService {
         responseManager.awaitPending();
     }
 
-//    void shutdown() {
-//        responseManager.shutdown();
-//    }
 }

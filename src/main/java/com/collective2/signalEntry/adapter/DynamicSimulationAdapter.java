@@ -12,6 +12,7 @@ import com.collective2.signalEntry.adapter.dynamicSimulator.order.Order;
 import com.collective2.signalEntry.adapter.dynamicSimulator.portfolio.Portfolio;
 import com.collective2.signalEntry.adapter.dynamicSimulator.portfolio.SimplePortfolio;
 import com.collective2.signalEntry.adapter.simulationXML.*;
+import com.collective2.signalEntry.implementation.Action;
 import com.collective2.signalEntry.implementation.Command;
 import com.collective2.signalEntry.implementation.Request;
 import org.slf4j.Logger;
@@ -154,12 +155,12 @@ public class DynamicSimulationAdapter implements C2EntryServiceAdapter {
                 case Cancel:
 
                     Integer id = (Integer)request.get(Parameter.SignalId);
-                    system.cancelSignal(id);
+                    system.cancelSignal(id,time);
                     return new SimulatedResponseCancel(OK);
 
                 case CancelAllPending:
 
-                    system.cancelAllPending();
+                    system.cancelAllPending(time);
                     return new SimulatedResponseCancelAllPending(OK);
 
                 case CloseAllPositions:

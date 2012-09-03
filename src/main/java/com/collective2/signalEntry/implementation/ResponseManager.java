@@ -41,8 +41,8 @@ public class ResponseManager {
     };
 
     //Must be singleThreadExecutor only because each callable must be called sequentially
-    private final static ExecutorService             executor = Executors.newSingleThreadExecutor(threadFactory);
-    private final static Runnable       placeHolder = new Runnable() {
+    private final static ExecutorService    executor = Executors.newSingleThreadExecutor(threadFactory);
+    private final static Runnable           placeHolder = new Runnable() {
         @Override
         public void run() {
         }
@@ -68,7 +68,7 @@ public class ResponseManager {
                 if (request.containsKey(Parameter.Password)) {
                     request.put(Parameter.Password, password);
                 }
-                executor.submit(new ImplResponse(this, request)); //Note: may want to add a recovery listener here
+                executor.submit(new ImplResponse(this, request).callable()); //Note: may want to add a recovery listener here
             }
             while(iterator.hasNext()) {
                 //never modify object passed in or this may leak the password out!
@@ -76,7 +76,7 @@ public class ResponseManager {
                 if (request.containsKey(Parameter.Password)) {
                     request.put(Parameter.Password, password);
                 }
-                executor.submit(new ImplResponse(this, request)); //Note: may want to add a recovery listener here
+                executor.submit(new ImplResponse(this, request).callable()); //Note: may want to add a recovery listener here
             }
             isClean=true;
         }
@@ -88,7 +88,7 @@ public class ResponseManager {
             journal.append(request.secureClone());
             assert(request.validate());
             assert(newResponse.secureRequest().validate());
-            executor.submit(newResponse);
+            executor.submit(newResponse.callable());
         }
         return newResponse;
     }
@@ -106,9 +106,9 @@ public class ResponseManager {
 
     }
 
-    public XMLEventReader xmlEventReader( final ImplResponse response) {
+    public XMLEventReader xmlEventReader(final ImplResponse response) {
         try {
-            return executor.submit(response).get();//block until eventReader has been populated.
+            return executor.submit(response.callable()).get();//block until eventReader has been populated.
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new C2ServiceException("xmlEventReader",e,!response.hasData());
@@ -123,7 +123,7 @@ public class ResponseManager {
 
     public XMLEventReader transmit(Request request) {
         //all down stream requests must see the same halting exception until its reset.
-        if (haltingException !=null ) {
+        if (haltingException != null ) {
             throw haltingException;
         }
 

@@ -25,6 +25,8 @@ public interface Response {
     XMLEventReader getXMLEventReader();
 
     Boolean isOk();
+
+    Response rewind();
     
     String getXML();
 

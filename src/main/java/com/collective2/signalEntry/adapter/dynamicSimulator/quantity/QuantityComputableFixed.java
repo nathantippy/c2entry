@@ -20,7 +20,7 @@ public class QuantityComputableFixed implements QuantityComputable {
     }
 
     @Override
-    public Integer quantity(Number price, Portfolio portfolio, DataProvider dataProvider) {
+    public Integer quantity(Number price, DataProvider dataProvider) {
         return quantity;
     }
 }

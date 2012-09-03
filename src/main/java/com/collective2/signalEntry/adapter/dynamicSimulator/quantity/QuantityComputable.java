@@ -13,6 +13,6 @@ import com.collective2.signalEntry.adapter.dynamicSimulator.order.Order;
 
 public interface QuantityComputable {
 
-    Integer quantity(Number price, Portfolio portfolio, DataProvider dataProvider);
+    Integer quantity(Number price, DataProvider dataProvider);
 
 }

@@ -22,7 +22,7 @@ import org.slf4j.LoggerFactory;
 
 import com.collective2.signalEntry.*;
 
-public class ImplResponse implements Response, Callable<XMLEventReader> {
+public class ImplResponse implements Response {
 
     private final static Logger  logger = LoggerFactory.getLogger(ImplResponse.class);
 
@@ -31,7 +31,7 @@ public class ImplResponse implements Response, Callable<XMLEventReader> {
 
     private final Request                   request;
     private final ResponseManager           manager;
-    private C2ServiceException optionalStackTrace;
+    private C2ServiceException              optionalStackTrace;
 
     //only created by ResponseManager
     ImplResponse(ResponseManager manager, Request request) {
@@ -41,6 +41,14 @@ public class ImplResponse implements Response, Callable<XMLEventReader> {
         this.manager = manager;
         this.request = request;
 
+    }
+
+    public Response rewind() {
+
+        //must already have the raw xml
+
+        //needs its own constructor
+        throw new UnsupportedOperationException();
     }
 
     private boolean keepStack() {
@@ -57,29 +65,43 @@ public class ImplResponse implements Response, Callable<XMLEventReader> {
         return eventReader!=null;
     }
 
-    public XMLEventReader call() {
-        try {
-            //was validated upon construction but assert it was not changed in the meantime
-            assert(request.validate());
+    Callable<XMLEventReader> callable() {
+        return new Callable<XMLEventReader>() {
 
-            //get the data and set it
-            if (eventReader==null) {
-                    //only halt exceptions are thrown from in here
-                    eventReader = manager.transmit(request);
-                    //retry is forever, only interrupt can stop it
+            @Override
+            public XMLEventReader call() throws Exception {
+                try {
+                    //was validated upon construction but assert it was not changed in the meantime
+                    assert(request.validate());
+
+                    //get the data and set it
+                    if (eventReader==null) {
+                        //only halt exceptions are thrown from in here
+                        eventReader = manager.transmit(request);
+                        //now that we have the reader use it to make a quick copy
+
+                        //String xml = captureXMLText(eventReader);
+                        //perhaps it would be easer to capture them as they stream
+
+
+                        //retry is forever, only interrupt can stop it
+                    }
+                } catch (RuntimeException e) {
+                    if (optionalStackTrace!=null) {
+                        optionalStackTrace.overrideCause(e);
+                        throw optionalStackTrace;
+                    } else {
+                        throw e;
+                    }
+                }
+                return eventReader;
             }
-        } catch (RuntimeException e) {
-            if (optionalStackTrace!=null) {
-                optionalStackTrace.overrideCause(e);
-                throw optionalStackTrace;
-            } else {
-                throw e;
-            }
-        }
-        return eventReader;
+
+        };
     }
 
 
+    //do call this method, it loops back to the above call
     public XMLEventReader getXMLEventReader() {
         return manager.xmlEventReader(this);
     }
@@ -177,50 +199,51 @@ public class ImplResponse implements Response, Callable<XMLEventReader> {
     }
     
     public String getXML() {
-       
-            XMLEventReader reader = getXMLEventReader();
-            StringBuilder builder = new StringBuilder();
-            int tabs = 0;
-            try{
-                while (reader.hasNext()) {
-                    XMLEvent event;
-                    try {
-                        event = reader.nextEvent();
-                    } catch (XMLStreamException e) {
-                        e.printStackTrace();
-                        return builder.toString();
-                    }
-                    if (event.isEndElement()) {
-                        tabs--;
-                    }
+        return captureXMLText(getXMLEventReader());
+    }
 
-                    int x = tabs;
-                    while (--x > 0) {
-                        builder.append("  ");
-                    }
-                    if (event.isEndDocument()) {
+    private String captureXMLText(XMLEventReader reader) {
+        StringBuilder builder = new StringBuilder();
+        int tabs = 0;
+        try{
+            while (reader.hasNext()) {
+                XMLEvent event;
+                try {
+                    event = reader.nextEvent();
+                } catch (XMLStreamException e) {
+                    e.printStackTrace();
+                    return builder.toString();
+                }
+                if (event.isEndElement()) {
+                    tabs--;
+                }
+
+                int x = tabs;
+                while (--x > 0) {
+                    builder.append("  ");
+                }
+                if (event.isEndDocument()) {
+                    builder.append("\n");
+                } else {
+                    String line = event.toString().trim();
+                    if (line.length()>0) {
+                        builder.append(line);
                         builder.append("\n");
-                    } else {
-                        String line = event.toString().trim();
-                        if (line.length()>0) {
-                            builder.append(line);
-                            builder.append("\n");
-                        }
-                    }
-
-                    if (event.isStartElement()) {
-                        tabs++;
                     }
                 }
-            } finally {
-                try {
-                    reader.close();
-                } catch (XMLStreamException e) {
-                    logger.warn("Unable to close xml stream", e);
+
+                if (event.isStartElement()) {
+                    tabs++;
                 }
             }
-            return builder.toString();
-
+        } finally {
+            try {
+                reader.close();
+            } catch (XMLStreamException e) {
+                logger.warn("Unable to close xml stream", e);
+            }
+        }
+        return builder.toString();
     }
 
 

@@ -43,7 +43,6 @@ public class SimplePortfolio implements Portfolio {
         SimplePosition position = positionMap.get(symbol);
         if (position==null) {
             position = new SimplePosition(this, symbol);
-            positionMap.put(symbol,position);
         }
         return position;
     }
@@ -95,11 +94,11 @@ public class SimplePortfolio implements Portfolio {
     }
 
     //package protected, only needed by SimplePosition
-    void updatePortfolio(String symbol, Integer totalQuantity, BigDecimal totalGain, BigDecimal adj) {
+    void updatePortfolio(String symbol, Integer totalQuantity, BigDecimal totalGain, BigDecimal adj, SimplePosition position) {
 
         //this portfolio implementation only supports positions and not specific transaction lots
         //as a result accumulated stats can only be measured when positions get closed
-        if (0 == totalQuantity) {
+        if (0 == totalQuantity.intValue()) {
             totalPositionsClosed ++;
 
             //the position has closed
@@ -119,7 +118,10 @@ public class SimplePortfolio implements Portfolio {
             //keep for investigation later
             closedPositions.add(closedPosition);
 
+        } else {
+            positionMap.put(symbol,position);
         }
+
         cash = cash.add(adj);
     }
 

@@ -16,6 +16,7 @@ import com.collective2.signalEntry.adapter.dynamicSimulator.quantity.QuantityCom
 import com.collective2.signalEntry.implementation.Action;
 import com.collective2.signalEntry.implementation.RelativeNumber;
 
+import javax.xml.crypto.Data;
 import java.math.BigDecimal;
 import java.util.Date;
 
@@ -24,7 +25,7 @@ public class Order implements Comparable<Order> {
     //private final Request request;
     protected final int id;
     private String comment;
-    protected boolean cancel;
+    private boolean cancel;
     protected boolean closed;
     protected boolean processed;
     protected final Order conditionalUpon;
@@ -39,10 +40,10 @@ public class Order implements Comparable<Order> {
 
     protected Integer oneCancelsAnother;
 
-    private Date postedWhen;  //TODO: SET WITH SCHEDULED
-    private Date eMailedWhen; //TODO: SET WITH???
-    private Date killedWhen;  //TODO: SET WITH CANCEL
-    private Date tradedWhen;  //TODO: SET WITH ENTRY QUANTTY
+    private final Date postedWhen;
+    private final Date eMailedWhen;
+    private Date killedWhen;
+    private Date tradedWhen;
 
     //ASSUMPTION: MARKETS ARE EVER OPEN LONGER THAN 12 HOURS
     private static final long ONE_TRADING_DAY = 60000l*60*36;
@@ -63,13 +64,15 @@ public class Order implements Comparable<Order> {
         this.processor = processor;
         this.conditionalUpon = conditionalUpon;
 
+        this.postedWhen = new Date(processor.time());
+        this.eMailedWhen = new Date(processor.time());
+
         //If you attempt to add a new order and make it conditional on an order
         // that has already been filled or canceled, this will not be permitted.
         // The parent order must still be pending.
         if (conditionalUpon!=null && !conditionalUpon.isPending()) {
             throw new C2ServiceException("Can not be conditional on an order that is not pending.",false);
         }
-
     }
 
     public long time() {
@@ -142,8 +145,9 @@ public class Order implements Comparable<Order> {
         return processed;
     }
 
-    public void cancelOrder() {
+    public void cancelOrder(long time) {
         cancel = true;
+        killedWhen = new Date(time);
     }
 
     public void closeOrder() {
@@ -156,6 +160,13 @@ public class Order implements Comparable<Order> {
     }
 
     public Integer entryQuantity() {
+        if (entryQuantity==0) {
+            //signal status request with quantity value can only work if the values are known
+            BigDecimal price = null;
+            DataProvider dataProvider = null;
+            entryQuantity = this.quantityComputable.quantity(price,dataProvider);
+
+        }
         return entryQuantity;
     }
 
@@ -165,6 +176,10 @@ public class Order implements Comparable<Order> {
 
     public boolean isClosed() {
         return cancel || closed;
+    }
+
+    public boolean isCancel() {
+        return cancel;
     }
 
     public String postedWhen() {
@@ -188,7 +203,7 @@ public class Order implements Comparable<Order> {
     }
 
     public int quantity() {
-        return (conditionalUpon==null?entryQuantity():conditionalUpon.entryQuantity());
+        return (conditionalUpon==null ? entryQuantity() : conditionalUpon.entryQuantity());
     }
 
     public String symbol() {
@@ -218,7 +233,11 @@ public class Order implements Comparable<Order> {
             //still return true but no need to add any transaction to the portfolio
             return true;
         }
-        return processor.process(dataProvider,portfolio,commission,this, action, quantityComputable);
+        boolean result = processor.process(dataProvider,portfolio,commission,this, action, quantityComputable);
+        if (result) {
+            tradedWhen = new Date(dataProvider.openingTime()); //may be later but this is the best our simulator can do
+        }
+        return result;
     }
 
     //TODO: change to return type and single trigger price.

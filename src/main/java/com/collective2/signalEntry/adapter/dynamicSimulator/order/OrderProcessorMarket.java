@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
+import java.util.Date;
 
 /**
  * This notice shall not be removed.
@@ -48,8 +49,12 @@ public class OrderProcessorMarket implements OrderProcessor {
         logger.trace("process MarketOrder");
 
             transactionPrice = dataProvider.openingPrice(symbol);
+            if (transactionPrice.doubleValue()==0d) {
+                logger.warn("missing opening price for "+symbol()+" on "+new Date(dataProvider.openingTime())+" "+dataProvider.openingTime());
+                return true;
+            }
 
-            Integer quantity = quantityComputable.quantity(transactionPrice,portfolio,dataProvider);
+            Integer quantity = quantityComputable.quantity(transactionPrice,dataProvider);
             if (quantity.intValue()==0){
                 return true;
             }
@@ -63,8 +68,8 @@ public class OrderProcessorMarket implements OrderProcessor {
                     }
                     //close order but make sure its not already been closed
                     if (order.conditionalUpon()!=null){
-                        if ((order.conditionalUpon().isProcessed() && order.conditionalUpon().isClosed()) || order.conditionalUpon().cancel) {
-                            order.cancelOrder();
+                        if ((order.conditionalUpon().isProcessed() && order.conditionalUpon().isClosed()) || order.conditionalUpon().isCancel()) {
+                            order.cancelOrder(dataProvider.openingTime());
                             return true;
                         }
                     }
@@ -81,8 +86,8 @@ public class OrderProcessorMarket implements OrderProcessor {
                     }
                     //close order but make sure its not already been closed
                     if (order.conditionalUpon()!=null) {
-                        if ((order.conditionalUpon().isProcessed() && order.conditionalUpon().isClosed()) || order.conditionalUpon().cancel) {
-                            order.cancelOrder();
+                        if ((order.conditionalUpon().isProcessed() && order.conditionalUpon().isClosed()) || order.conditionalUpon().isCancel()) {
+                            order.cancelOrder(dataProvider.openingTime());
                             return true;
                         }
                     }

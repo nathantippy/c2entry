@@ -27,7 +27,7 @@ public class QuantityFactory {
         }
         Number percent = (Number)request.get(Parameter.AccountPercent);
         if (percent != null) {
-            return new QuantityComputablePercent(percent);
+            return new QuantityComputablePercent(percent, systemManager.portfolio());
         }
 
         //part of all-in-one signal where we need to close out the same sized position we opened

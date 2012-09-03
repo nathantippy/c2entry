@@ -13,14 +13,17 @@ import com.collective2.signalEntry.adapter.dynamicSimulator.order.Order;
 public class QuantityComputablePercent implements QuantityComputable {
 
     private final Number percent;
+    private final Portfolio portfolio;
 
-    public QuantityComputablePercent(Number percent) {
+    public QuantityComputablePercent(Number percent, Portfolio portfolio) {
         this.percent = percent;
+        this.portfolio = portfolio;
     }
 
-    @Override
-    public Integer quantity(Number price, Portfolio portfolio, DataProvider dataProvider) {
-
+    public Integer quantity(Number price, DataProvider dataProvider) {
+        if (null==price || null==dataProvider) {
+            return 0;
+        }
         double dollars = portfolio.cash().add(portfolio.equity(dataProvider)).doubleValue()*percent.doubleValue();
         return (int)(dollars/price.doubleValue());
     }
