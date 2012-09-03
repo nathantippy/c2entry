@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
+import java.util.Date;
 
 /**
  * This notice shall not be removed.
@@ -54,12 +55,13 @@ public class OrderProcessorStop implements OrderProcessor {
             switch(action) {
                 case BTC:
                     if (order.conditionalUpon()==null && portfolio.position(symbol).quantity().intValue()==0) {
-                        throw new C2ServiceException("BuyToClose requires conditional open order",false);
+                        order.cancelOrder(dataProvider.openingTime());
+                        return true;
                     }
                     //close order but make sure its not already been closed
                     if (order.conditionalUpon()!=null){
-                        if ((order.conditionalUpon().isProcessed() && order.conditionalUpon().isClosed()) || order.conditionalUpon.cancel) {
-                            order.cancelOrder();
+                        if ((order.conditionalUpon().isProcessed() && order.conditionalUpon().isClosed()) || order.conditionalUpon.isCancel()) {
+                            order.cancelOrder(dataProvider.openingTime());
                             return true;
                         }
                     }
@@ -70,16 +72,22 @@ public class OrderProcessorStop implements OrderProcessor {
                         return false;// do not trigger can not buy above this stop price
                     }
 
+                    BigDecimal openPrice = dataProvider.openingPrice(symbol);
+                    if (openPrice.doubleValue()==0d) {
+                        logger.warn("missing opening price for "+symbol()+" on "+new Date(dataProvider.openingTime())+" "+dataProvider.openingTime());
+                        return true;
+                    }
+
                     if (absoluteStop.compareTo(dataProvider.lowPrice(symbol))<0) {
                         //stop is below low so anything between low and high is ok
 
-                        transactionPrice = dataProvider.openingPrice(symbol);//order.priceSelection(dataProvider.openingPrice(order.symbol),dataProvider.lowPrice(order.symbol), dataProvider.highPrice(order.symbol));
+                        transactionPrice = openPrice;//order.priceSelection(dataProvider.openingPrice(order.symbol),dataProvider.lowPrice(order.symbol), dataProvider.highPrice(order.symbol));
                     } else {
                         //limit is between low and high so only values between stop and high are ok
                         transactionPrice = absoluteStop;//order.priceSelection(absoluteStop, dataProvider.highPrice(order.symbol));
                     }
 
-                    Integer buyQuantity = computableQuantity.quantity(transactionPrice,portfolio,dataProvider);
+                    Integer buyQuantity = computableQuantity.quantity(transactionPrice,dataProvider);
                     if (buyQuantity.intValue()>0) {
 
                         order.entryQuantity(buyQuantity);
@@ -94,12 +102,13 @@ public class OrderProcessorStop implements OrderProcessor {
 
                 case STC:
                     if (order.conditionalUpon()==null && portfolio.position(symbol).quantity().intValue()==0) {
-                        throw new C2ServiceException("SellToClose requires conditional open order",false);
+                        order.cancelOrder(dataProvider.openingTime());
+                        return true;
                     }
                     //close order but make sure its not already been closed
                     if (order.conditionalUpon()!=null){
-                        if ((order.conditionalUpon().isProcessed() && order.conditionalUpon().isClosed()) || order.conditionalUpon.cancel) {
-                            order.cancelOrder();
+                        if ((order.conditionalUpon().isProcessed() && order.conditionalUpon().isClosed()) || order.conditionalUpon.isCancel()) {
+                            order.cancelOrder(dataProvider.openingTime());
                             return true;
                         }
                     }
@@ -112,15 +121,20 @@ public class OrderProcessorStop implements OrderProcessor {
                     }
 
                     //if open price is under stop must stop out now
-                    BigDecimal openPrice = dataProvider.openingPrice(symbol);
-                    if (openPrice.compareTo(absoluteStop)<0) {
-                        transactionPrice = openPrice;
+                    BigDecimal openPriceData = dataProvider.openingPrice(symbol);
+                    if (openPriceData.doubleValue()==0d) {
+                        logger.warn("missing opening price for "+symbol()+" on "+new Date(dataProvider.openingTime())+" "+dataProvider.openingTime());
+                        return true;
+                    }
+
+                    if (openPriceData.compareTo(absoluteStop)<0) {
+                        transactionPrice = openPriceData;
                     } else {
                         //open is above stop but low is < stop so when we move down it will trigger
                         transactionPrice = absoluteStop;
                     }
 
-                    Integer shortQuantity = computableQuantity.quantity(transactionPrice,portfolio,dataProvider);
+                    Integer shortQuantity = computableQuantity.quantity(transactionPrice,dataProvider);
                     if (shortQuantity.intValue()>0) {
                         order.entryQuantity(shortQuantity);
                         //create the transaction in the portfolio

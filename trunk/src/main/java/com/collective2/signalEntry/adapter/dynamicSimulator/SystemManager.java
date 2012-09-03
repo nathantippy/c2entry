@@ -94,6 +94,7 @@ public class SystemManager {
             Integer conditionalUponId = (Integer)request.get(Parameter.ConditionalUpon);
             Order conditionalUponOrder = (conditionalUponId==null? null : archive.get(conditionalUponId>>BITS_FOR_SYSTEM_ID));
 
+      //TODO: do not trigger dependent signals on same day as entry, unless on close price?
 
             int signalIdOnly = archive.size();
 
@@ -114,29 +115,39 @@ public class SystemManager {
                     timeInForce = Duration.GoodTilCancel;
                 }
 
-                //must cancel old order and re-enter reversed.
-                //must find pending order that is for this symbol
-                List<Order> myOrders = new ArrayList<Order>();
-                for(Order possibleOrder: scheduled) {
-                    if (possibleOrder.symbol().equals(symbol)) {
-                        myOrders.add(possibleOrder);
-                    }
-                }
-                if (myOrders.isEmpty()) {
-                    //TODO: should not be throw
-                    throw new C2ServiceException("Can not reverse because no orders are pending.",false);
-                }
-                if (myOrders.size()>1) {
-                    //TODO: should not throw
-                    throw new C2ServiceException("Can not reverse because multiple orders found for this symbol",false);
+                Integer existingQuantity = portfolio.position(symbol).quantity();
+
+                //buy or sell to make quantity revert to zero
+                int closeId;
+                Request requestToClose = request.baseConditional();
+                requestToClose.put(Parameter.Quantity,existingQuantity);
+                requestToClose.put(Parameter.MarketOrder,true);
+                requestToClose.put(Parameter.Symbol,symbol);
+
+                if (existingQuantity>0)  {
+                    //STC
+                    //TODO: redo request object to only take the one action master type
+                    //requestToClose.put(Parameter.StockAction, ActionForStockType.SellToClose);
+
+
+                    // schedule signal
+                }  else {
+                    //BTC
+                    //TODO: finish reverse implementation
+                    //requestToClose.put(Parameter.StockAction, ActionForStockType.SellToClose);
+
                 }
 
-                Order oldOrder = myOrders.get(0);
-                oldOrder.cancelOrder();
+                int[] parentId = scheduleSignal(timeToExecute,requestToClose);
 
-                //create new order going other direction
+                Request requestToOpen = request.baseConditional();
+                //requestToOpen.put(Parameter.StockAction, ActionForStoack)
 
-                //TODO: need more details about old order, visit C2 documentation on line.
+
+
+
+                //
+                // conditioned upon that one do the same but open a position.
 
 
 
@@ -193,8 +204,10 @@ public class SystemManager {
                         throw new C2ServiceException("Invalid signalId "+xReplace+" not found.",false);
                     }
                     Order oldOrder = archive.get(xReplace>>BITS_FOR_SYSTEM_ID);
-                    oldOrder.cancelOrder();//cancel old order to be replaced
+                    oldOrder.cancelOrder(timeToExecute);//cancel old order to be replaced
                     conditionalUponOrder = oldOrder.conditionalUpon();
+                    assert(conditionalUponOrder!=null);
+                    assert(conditionalUponOrder.quantity()>0 || conditionalUponOrder.isPending());
 
                 }
 
@@ -330,14 +343,14 @@ public class SystemManager {
         }
     }
 
-    public void cancelSignal(Integer id) {
+    public void cancelSignal(Integer id, long time) {
         Order order = archive.get(id>>BITS_FOR_SYSTEM_ID);
-        order.cancelOrder();
+        order.cancelOrder(time);
     }
 
-    public void cancelAllPending() {
+    public void cancelAllPending(long time) {
         for(Order order:scheduled) {
-            order.cancelOrder();
+            order.cancelOrder(time);
         }
     }
 
@@ -387,13 +400,14 @@ public class SystemManager {
 
     public BigDecimal totalMargin() {
 
+
         //based on each positions instrument
         return BigDecimal.ZERO;//TODO: margin not used in first release, not implemented yet
 
     }
 
-    public boolean isPassword(String password) {
-        return true;//TODO: add implementation with test
+    public boolean isPassword(String text) {
+        return password.equals(text);
     }
 
     public void flushPendingSignals(DataProvider dataProvider) {
@@ -423,11 +437,11 @@ public class SystemManager {
 
                    long nowTime = dataProvider.endingTime();
                    if (!signal.isInForce(nowTime)) {
-                       signal.cancelOrder();
+                       signal.cancelOrder(nowTime);
                    }
 
                    if (signal.isExpired(nowTime)) {
-                       signal.cancelOrder();
+                       signal.cancelOrder(nowTime);
                    }
 
                    if (signal.process(dataProvider,portfolio,commission)) {
@@ -439,7 +453,7 @@ public class SystemManager {
                            List<Order> ocaList = ocaMap.get(signal.oneCancelsAnother());
                            for (Order order:ocaList) {
                                if (order!=signal) {
-                                   order.cancelOrder();
+                                   order.cancelOrder(dataProvider.openingTime());
                                }
                            }
                            //oca triggered now remove so its not triggered again.

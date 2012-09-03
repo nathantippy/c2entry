@@ -54,7 +54,7 @@ public class SimplePosition implements Position {
 
         //logger.warn("new "+(isClosing?"closing":"opening")+" transaction quantity:"+quantity+" price:"+price+" commission:"+commission+" newTotalQuantity:"+totalQuantity+(isClosing ? " newTotalCost:"+totalCost: "")+" cashFlow:"+adj);
 
-        simplePortfolio.updatePortfolio(symbol, totalQuantity, totalCost, adj);
+        simplePortfolio.updatePortfolio(symbol, totalQuantity, totalCost, adj, this);
 
     }
 

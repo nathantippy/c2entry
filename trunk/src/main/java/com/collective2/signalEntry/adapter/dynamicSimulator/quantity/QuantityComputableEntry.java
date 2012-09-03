@@ -21,7 +21,7 @@ public class QuantityComputableEntry implements QuantityComputable {
     }
 
     @Override
-    public Integer quantity(Number price, Portfolio portfolio, DataProvider dataProvider) {
+    public Integer quantity(Number price, DataProvider dataProvider) {
         return condUponOrder.entryQuantity();
     }
 }

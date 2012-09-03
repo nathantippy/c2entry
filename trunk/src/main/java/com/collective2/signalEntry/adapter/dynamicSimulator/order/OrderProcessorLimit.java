@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory;
 import com.collective2.signalEntry.implementation.RelativeNumber;
 
 import java.math.BigDecimal;
+import java.util.Date;
 
 public class OrderProcessorLimit implements OrderProcessor {
 
@@ -53,12 +54,13 @@ public class OrderProcessorLimit implements OrderProcessor {
             switch(action) {
                 case BTC:
                     if (order.conditionalUpon()==null && portfolio.position(symbol).quantity().intValue()==0) {
-                        throw new C2ServiceException("BuyToClose requires conditional open order",false);
+                        order.cancelOrder(dataProvider.openingTime());
+                        return true;
                     }
                     //close order but make sure its not already been closed
                     if (order.conditionalUpon()!=null) {
-                        if ((order.conditionalUpon().isProcessed() && order.conditionalUpon().isClosed()) || order.conditionalUpon.cancel) {
-                            order.cancelOrder();
+                        if ((order.conditionalUpon().isProcessed() && order.conditionalUpon().isClosed()) || order.conditionalUpon.isCancel()) {
+                            order.cancelOrder(dataProvider.openingTime());
                             return true;
                         }
                     }
@@ -73,6 +75,11 @@ public class OrderProcessorLimit implements OrderProcessor {
 
                     //if open price is lower than limit the buy must happen on open
                     BigDecimal openPriceData = dataProvider.openingPrice(symbol);
+                    if (openPriceData.doubleValue()==0d) {
+                        logger.warn("missing opening price for "+symbol()+" on "+new Date(dataProvider.openingTime())+" "+dataProvider.openingTime());
+                        return true;
+                    }
+
                     if (openPriceData.compareTo(absoluteLimit)<0) {
                         transactionPrice = openPriceData;
                     } else {
@@ -81,7 +88,7 @@ public class OrderProcessorLimit implements OrderProcessor {
                         transactionPrice = absoluteLimit;
                     }
 
-                    Integer buyQuantity = computableQuantity.quantity(transactionPrice,portfolio,dataProvider);
+                    Integer buyQuantity = computableQuantity.quantity(transactionPrice,dataProvider);
                     if (buyQuantity.intValue()>0)  {
                         order.entryQuantity(buyQuantity);
                         //create the transaction in the portfolio
@@ -95,12 +102,13 @@ public class OrderProcessorLimit implements OrderProcessor {
 
                 case STC:
                     if (order.conditionalUpon()==null && portfolio.position(symbol).quantity().intValue()==0) {
-                        throw new C2ServiceException("SellToClose requires conditional open order",false);
+                        order.cancelOrder(dataProvider.openingTime());
+                        return true;
                     }
                     //close order but make sure its not already been closed
                     if (order.conditionalUpon()!=null) {
-                        if ((order.conditionalUpon().isProcessed() && order.conditionalUpon().isClosed()) || order.conditionalUpon.cancel) {
-                            order.cancelOrder();
+                        if ((order.conditionalUpon().isProcessed() && order.conditionalUpon().isClosed()) || order.conditionalUpon.isCancel()) {
+                            order.cancelOrder(dataProvider.openingTime());
                             return true;
                         }
                     }
@@ -115,6 +123,10 @@ public class OrderProcessorLimit implements OrderProcessor {
 
                     //if limit is under open then trigger at open
                     BigDecimal openPrice = dataProvider.openingPrice(symbol);
+                    if (openPrice.doubleValue()==0d) {
+                        logger.warn("missing opening price for "+symbol()+" on "+new Date(dataProvider.openingTime())+" "+dataProvider.openingTime());
+                        return true;
+                    }
                     if (absoluteLimit.compareTo(openPrice)<0) {
                         //limit is below low so anything between low and high is ok
                         transactionPrice = openPrice;
@@ -123,7 +135,7 @@ public class OrderProcessorLimit implements OrderProcessor {
                         transactionPrice = absoluteLimit;
                     }
 
-                    Integer sellQuantity = computableQuantity.quantity(transactionPrice,portfolio,dataProvider);
+                    Integer sellQuantity = computableQuantity.quantity(transactionPrice,dataProvider);
                     if (sellQuantity.intValue()>0)  {
                         order.entryQuantity(sellQuantity);
                         //create the transaction in the portfolio

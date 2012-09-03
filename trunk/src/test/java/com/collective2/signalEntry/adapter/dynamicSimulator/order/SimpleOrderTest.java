@@ -55,14 +55,16 @@ public class SimpleOrderTest {
         Order buyOrder = new Order(id,instrument,symbol,action,quantityComputable,cancelAtMs,timeInForce,processor, null);
 
         //final quantity is not known until this order is processed
-        assertEquals(Integer.valueOf(0), Integer.valueOf(buyOrder.quantity()));
+        //this however has the quantity because QuantityComputableFixed is used above
+        assertEquals(Integer.valueOf(10), Integer.valueOf(buyOrder.quantity()));
 
         action = Action.STC;
         quantityComputable = new QuantityComputableEntry(buyOrder);
         Order sellOrder = new Order(id,instrument,symbol,action,quantityComputable,cancelAtMs,timeInForce,processor, buyOrder);
 
         //final quantity is not known until this order is processed
-        assertEquals(Integer.valueOf(0), Integer.valueOf(sellOrder.quantity()));
+        //this however has the quantity because QuantityComputableFixed is used above
+        assertEquals(Integer.valueOf(10), Integer.valueOf(sellOrder.quantity()));
 
         assertTrue(buyOrder.process(dataProvider,portfolio,commission));
 

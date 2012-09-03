@@ -21,7 +21,7 @@ import static org.junit.Assert.*;
 public class DynamicSimulationLongTest {
 
     private final double DELTA=.00000001d;
-
+         //TODO: add new test for password checking
     @Test
     public void longBuySellTest() {
 
