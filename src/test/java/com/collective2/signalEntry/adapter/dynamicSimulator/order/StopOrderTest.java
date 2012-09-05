@@ -52,7 +52,7 @@ public class StopOrderTest {
         RelativeNumber buyBelow = new RelativeNumber("2");//must buy ABOVE this price
         RelativeNumber sellAbove = new RelativeNumber("2");//must sell BELOW this price
 
-        BigDecimal expectedBuy = new BigDecimal("2");
+        BigDecimal expectedBuy = new BigDecimal("3");
         BigDecimal expectedSell = new BigDecimal("2");
 
         stopBTOTest(buyBelow, sellAbove, expectedBuy, expectedSell);
@@ -63,7 +63,7 @@ public class StopOrderTest {
         RelativeNumber buyBelow = new RelativeNumber("1");//must buy ABOVE this price
         RelativeNumber sellAbove = new RelativeNumber("7");//must sell BELOW this price
 
-        BigDecimal expectedBuy = new BigDecimal("1");
+        BigDecimal expectedBuy = new BigDecimal("3");
         BigDecimal expectedSell = new BigDecimal("3");
 
         stopBTOTest(buyBelow, sellAbove, expectedBuy, expectedSell);
@@ -89,7 +89,7 @@ public class StopOrderTest {
         Order order = new Order(id,instrument,symbol,action,quantityComputable,cancelAtMs,timeInForce,processor,null);
 
         //test only the processor and do it outside the order
-        boolean processed = processor.process(dataProvider, portfolio, commission, order, action, quantityComputable);
+        boolean processed = processor.process(dataProvider, portfolio, commission, order, action, quantityComputable, null);
 
         assertTrue(processed);
         BigDecimal expectedCash = startingCash.subtract(expectedBuy.multiply(new BigDecimal(quantity)).add(commission));
@@ -107,7 +107,7 @@ public class StopOrderTest {
         order = new Order(id,instrument,symbol,action,quantityComputable,cancelAtMs,timeInForce,sellProcessor,null);
 
         //test only the processor and do it outside the order
-        processed = sellProcessor.process(dataProvider, portfolio, commission, order, action, quantityComputable);
+        processed = sellProcessor.process(dataProvider, portfolio, commission, order, action, quantityComputable, null);
 
         assertTrue(processed);
         expectedCash = expectedCash.add(expectedSell.multiply(new BigDecimal(quantity))).subtract(commission);
@@ -138,7 +138,7 @@ public class StopOrderTest {
         RelativeNumber buyBelow = new RelativeNumber("2");//must buy ABOVE this price
 
         BigDecimal expectedSell = new BigDecimal("2");
-        BigDecimal expectedBuy = new BigDecimal("2");
+        BigDecimal expectedBuy = new BigDecimal("3");
 
         stopShortTest(Action.SSHORT, sellAbove, buyBelow, expectedSell, expectedBuy);
     }
@@ -162,7 +162,7 @@ public class StopOrderTest {
         Order order = new Order(id,instrument,symbol,sellAction,quantityComputable,cancelAtMs,timeInForce,processor,null);
 
         //test only the processor and do it outside the order
-        boolean processed = processor.process(dataProvider, portfolio, commission, order, sellAction, quantityComputable);
+        boolean processed = processor.process(dataProvider, portfolio, commission, order, sellAction, quantityComputable, null);
 
         BigDecimal expectedCash = startingCash.add(expectedSell.multiply(new BigDecimal(quantity)).subtract(commission));
 
@@ -178,7 +178,7 @@ public class StopOrderTest {
         OrderProcessorStop buyProcessor = new OrderProcessorStop(time,symbol,buyBelow);
         order = new Order(id,instrument,symbol,action,quantityComputable,cancelAtMs,timeInForce,buyProcessor,null);
 
-        processed = buyProcessor.process(dataProvider, portfolio, commission, order, action, quantityComputable);
+        processed = buyProcessor.process(dataProvider, portfolio, commission, order, action, quantityComputable, null);
         expectedCash = expectedCash.subtract(expectedBuy.multiply(new BigDecimal(quantity))).subtract(commission);
 
         assertTrue(processed);

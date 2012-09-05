@@ -4,6 +4,8 @@ import com.collective2.signalEntry.adapter.dynamicSimulator.DataProvider;
 import com.collective2.signalEntry.adapter.dynamicSimulator.portfolio.Portfolio;
 import com.collective2.signalEntry.adapter.dynamicSimulator.order.Order;
 
+import java.math.BigDecimal;
+
 /**
  * This notice shall not be removed.
  * See the "LICENSE.txt" file found in the root folder
@@ -13,6 +15,6 @@ import com.collective2.signalEntry.adapter.dynamicSimulator.order.Order;
 
 public interface QuantityComputable {
 
-    Integer quantity(Number price, DataProvider dataProvider);
+    Integer quantity(BigDecimal price, DataProvider dataProvider);
 
 }

@@ -47,7 +47,7 @@ public class SimplePosition implements Position {
         BigDecimal adj = price.multiply(new BigDecimal(quantity)).negate().subtract(commission);
 
         totalCost = totalCost.add(adj);
-        if (0 == totalQuantity && null == openPrice) {
+        if ((0 == totalQuantity.intValue()) && null == openPrice) {
             openPrice = price;
         }
         totalQuantity =  totalQuantity + quantity;

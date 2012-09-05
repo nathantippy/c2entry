@@ -4,6 +4,8 @@ import com.collective2.signalEntry.adapter.dynamicSimulator.DataProvider;
 import com.collective2.signalEntry.adapter.dynamicSimulator.portfolio.Portfolio;
 import com.collective2.signalEntry.adapter.dynamicSimulator.order.Order;
 
+import java.math.BigDecimal;
+
 /**
  * This notice shall not be removed.
  * See the "LICENSE.txt" file found in the root folder
@@ -21,7 +23,7 @@ public class QuantityComputableEntry implements QuantityComputable {
     }
 
     @Override
-    public Integer quantity(Number price, DataProvider dataProvider) {
-        return condUponOrder.entryQuantity();
+    public Integer quantity(BigDecimal price, DataProvider dataProvider) {
+        return condUponOrder.tradeQuantity();
     }
 }

@@ -6,7 +6,6 @@
  */
 package com.collective2.signalEntry.adapter.dynamicSimulator.order;
 
-import com.collective2.signalEntry.ActionForNonStock;
 import com.collective2.signalEntry.C2ServiceException;
 import com.collective2.signalEntry.Duration;
 import com.collective2.signalEntry.Instrument;
@@ -14,9 +13,8 @@ import com.collective2.signalEntry.adapter.dynamicSimulator.DataProvider;
 import com.collective2.signalEntry.adapter.dynamicSimulator.portfolio.Portfolio;
 import com.collective2.signalEntry.adapter.dynamicSimulator.quantity.QuantityComputable;
 import com.collective2.signalEntry.implementation.Action;
-import com.collective2.signalEntry.implementation.RelativeNumber;
 
-import javax.xml.crypto.Data;
+import javax.jnlp.IntegrationService;
 import java.math.BigDecimal;
 import java.util.Date;
 
@@ -29,7 +27,9 @@ public class Order implements Comparable<Order> {
     protected boolean closed;
     protected boolean processed;
     protected final Order conditionalUpon;
-    private int entryQuantity;
+
+ //   private int entryQuantity;
+
     private final Duration timeInForce;
     private final long expireAtMs;
     protected final Action action;
@@ -40,14 +40,14 @@ public class Order implements Comparable<Order> {
 
     protected Integer oneCancelsAnother;
 
-    private final Date postedWhen;
-    private final Date eMailedWhen;
-    private Date killedWhen;
-    private Date tradedWhen;
+    private final long postedWhen;
+    private final long eMailedWhen;
+    private long killedWhen;
+    private long tradedWhen;
 
-    //ASSUMPTION: MARKETS ARE EVER OPEN LONGER THAN 12 HOURS
-    private static final long ONE_TRADING_DAY = 60000l*60*36;
-
+    public String toString() {
+        return id+" "+processor.toString()+" transactionPrice:"+processor.transactionPrice()+" quantity:"+tradeQuantity();
+    }
 
     public Order(int id, Instrument instrument, String symbol,
                  Action action, QuantityComputable quantityComputable,
@@ -64,8 +64,8 @@ public class Order implements Comparable<Order> {
         this.processor = processor;
         this.conditionalUpon = conditionalUpon;
 
-        this.postedWhen = new Date(processor.time());
-        this.eMailedWhen = new Date(processor.time());
+        this.postedWhen = processor.time();
+        this.eMailedWhen = processor.time();
 
         //If you attempt to add a new order and make it conditional on an order
         // that has already been filled or canceled, this will not be permitted.
@@ -88,10 +88,18 @@ public class Order implements Comparable<Order> {
         return (conditionalUpon == null) || (!conditionalUpon.isPending());
     }
 
-    public boolean isInForce(long now) {
-        //TODO: wrong must start at open of market time not yesterday close!
+    private long firstTimeAttempted;
 
-        return timeInForce==Duration.GoodTilCancel || (Duration.DayOrder==timeInForce && now<(time() + ONE_TRADING_DAY));
+    public boolean isInForce(long now, DataProvider dayMarketOpenData, DataProvider dayMarketCloseData) {
+        if (0==firstTimeAttempted) {
+            firstTimeAttempted = now;
+        }
+        return (timeInForce == Duration.GoodTilCancel) ||
+               (dayMarketOpenData == null) ||
+               (timeInForce == Duration.DayOrder &&
+                (firstTimeAttempted>=dayMarketCloseData.startingTime()) &&
+                (dayMarketCloseData==null || firstTimeAttempted<dayMarketCloseData.endingTime())
+               );
     }
 
     public boolean isExpired(long now) {
@@ -147,7 +155,7 @@ public class Order implements Comparable<Order> {
 
     public void cancelOrder(long time) {
         cancel = true;
-        killedWhen = new Date(time);
+        killedWhen = time;
     }
 
     public void closeOrder() {
@@ -155,23 +163,35 @@ public class Order implements Comparable<Order> {
     }
 
     public boolean isPending() {
+        if (processed) {
+            if (tradeQuantity()<=0) {
+                throw new C2ServiceException("bad quantity for processed "+tradeQuantity(),false);
+            }
+            if (tradePrice().compareTo(BigDecimal.ZERO)<=0) {
+                throw new C2ServiceException("bad price for processed "+tradePrice(),false);
+            }
+            return false;
+        }
+
         //not filled, cancelled or expired
         return (!cancel)&&(!processed)&&(conditionalUpon==null || !conditionalUpon.cancel);
     }
 
-    public Integer entryQuantity() {
-        if (entryQuantity==0) {
+    public Integer tradeQuantity() {
+        Integer result = processor.transactionQuantity();
+        if (result==0) {
             //signal status request with quantity value can only work if the values are known
             BigDecimal price = null;
             DataProvider dataProvider = null;
-            entryQuantity = this.quantityComputable.quantity(price,dataProvider);
+            return  this.quantityComputable.quantity(price,dataProvider);
 
         }
-        return entryQuantity;
+        return result;
     }
 
-    public void entryQuantity(Integer quantity) {
-        entryQuantity = quantity;
+
+    public BigDecimal tradePrice() {
+        return processor.transactionPrice();
     }
 
     public boolean isClosed() {
@@ -183,27 +203,23 @@ public class Order implements Comparable<Order> {
     }
 
     public String postedWhen() {
-        return postedWhen==null?"":postedWhen.toString();
+        return 0==postedWhen?"":new Date(postedWhen).toString();
     }
 
     public String eMailedWhen() {
-        return eMailedWhen==null?"":eMailedWhen.toString();
+        return 0==eMailedWhen?"":new Date(eMailedWhen).toString();
     }
 
     public String killedWhen() {
-        return killedWhen==null?"":killedWhen.toString();
+        return 0==killedWhen?"":new Date(killedWhen).toString();
     }
 
     public String tradedWhen() {
-        return tradedWhen==null?"":tradedWhen.toString();
-    }
-
-    public BigDecimal tradePrice() {
-        return BigDecimal.ZERO; //TODO: SET WITH ENTRY QUANTTY
+        return 0==tradedWhen ? "" : new Date(tradedWhen).toString();
     }
 
     public int quantity() {
-        return (conditionalUpon==null ? entryQuantity() : conditionalUpon.entryQuantity());
+        return (conditionalUpon==null ? tradeQuantity() : conditionalUpon.tradeQuantity());
     }
 
     public String symbol() {
@@ -226,30 +242,39 @@ public class Order implements Comparable<Order> {
         return oneCancelsAnother;
     }
 
-    public boolean process(DataProvider dataProvider, Portfolio portfolio, BigDecimal commission) {
+    public boolean process(DataProvider dataProvider, Portfolio portfolio, BigDecimal commission, DataProvider dayOpen) {
 
         if (processed || cancel) {
             //cancel instead of submit order
             //still return true but no need to add any transaction to the portfolio
             return true;
         }
-        boolean result = processor.process(dataProvider,portfolio,commission,this, action, quantityComputable);
+        //if this is a conditional order and that one has been canceled then cancel this one
+        if (conditionalUpon!=null && conditionalUpon.isCancel()) {
+            cancelOrder(dataProvider.startingTime());
+            return true;
+        }
+
+        boolean result = processor.process(dataProvider,portfolio,commission,this, action, quantityComputable, dayOpen);
         if (result) {
-            tradedWhen = new Date(dataProvider.openingTime()); //may be later but this is the best our simulator can do
+            tradedWhen = dataProvider.startingTime(); //may be later but this is the best our simulator can do
         }
         return result;
     }
 
-    //TODO: change to return type and single trigger price.
-    public RelativeNumber limit() {
-        return processor instanceof OrderProcessorLimit ? processor.triggerPrice()  : new RelativeNumber();
+    public BigDecimal limit() {
+        return processor instanceof OrderProcessorLimit ? processor.triggerPrice()  : BigDecimal.ZERO;
     }
 
-    public RelativeNumber stop() {
-        return processor instanceof OrderProcessorStop ? processor.triggerPrice()  : new RelativeNumber();
+    public BigDecimal stop() {
+        return processor instanceof OrderProcessorStop ? processor.triggerPrice()  : BigDecimal.ZERO;
     }
 
-    public RelativeNumber market() {
-        return processor instanceof OrderProcessorMarket ? processor.triggerPrice()  : new RelativeNumber();
+    public BigDecimal market() {
+        return processor instanceof OrderProcessorMarket ? processor.triggerPrice()  : BigDecimal.ZERO;
+    }
+
+    public boolean isTradedThisSession(DataProvider dataProvider) {
+        return tradedWhen>=dataProvider.startingTime() && tradedWhen<dataProvider.endingTime();
     }
 }

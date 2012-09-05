@@ -52,7 +52,7 @@ public class DynamicSimulationLongTest {
         long time = 100000l;
         BigDecimal fixedPrice = new BigDecimal("80.43");
 
-        DynamicSimulationMockDataProvider dataProvider = new DynamicSimulationMockDataProvider(time,fixedPrice,fixedPrice,fixedPrice,fixedPrice,time);
+        DynamicSimulationMockDataProvider dataProvider = new DynamicSimulationMockDataProvider(time,fixedPrice,fixedPrice,fixedPrice,fixedPrice,time+timeStep);
 
         simulationAdapter.tick(dataProvider,sentryService);
 
@@ -106,9 +106,10 @@ public class DynamicSimulationLongTest {
         ///////////////////////
         //tick for market buy
         /////////////////////
-        long closeTime = 200000l;
+        long startTime = time+timeStep;
+        long closeTime = startTime+timeStep;
         BigDecimal closePrice = new BigDecimal("160.86");
-        dataProvider = new DynamicSimulationMockDataProvider(time,fixedPrice,closePrice,fixedPrice,closePrice,closeTime);
+        dataProvider = new DynamicSimulationMockDataProvider(startTime,fixedPrice,closePrice,fixedPrice,closePrice,closeTime);
         simulationAdapter.tick(dataProvider,sentryService);
 
         ////////////////////
@@ -133,7 +134,7 @@ public class DynamicSimulationLongTest {
         ///////////////////////////
         //tick for limit order fail
         ////////////////////////////
-        dataProvider.incTime(timeStep);
+        dataProvider = dataProvider.incTime(timeStep);
         simulationAdapter.tick(dataProvider,sentryService);
 
         ////////////////////
@@ -160,14 +161,14 @@ public class DynamicSimulationLongTest {
         ///////////////////////////
         //tick for limit order success
         ////////////////////////////
-        dataProvider.incTime(timeStep);
+        dataProvider = dataProvider.incTime(timeStep);
         simulationAdapter.tick(dataProvider,sentryService);
 
         ////////////////////
         //confirm changed
         ///////////////////
         BigDecimal entryPrice = portfolio.position("msft").openPrice();
-        assertTrue(entryPrice.compareTo(successLimit)<=0);
+        assertTrue(entryPrice == null || entryPrice.compareTo(successLimit)<=0);
 
         BigDecimal shares = new BigDecimal("10");
         assertEquals(shares.intValue(), portfolio.position("msft").quantity().intValue());
@@ -197,7 +198,7 @@ public class DynamicSimulationLongTest {
         ///////////////////////////
         //tick for limit order fail
         ////////////////////////////
-        dataProvider.incTime(timeStep);
+        dataProvider = dataProvider.incTime(timeStep);
         simulationAdapter.tick(dataProvider,sentryService);
 
         ////////////////////
@@ -230,7 +231,7 @@ public class DynamicSimulationLongTest {
         ///////////////////////////
         //tick for limit order success
         ////////////////////////////
-        dataProvider.incTime(timeStep);
+        dataProvider = dataProvider.incTime(timeStep);
         simulationAdapter.tick(dataProvider,sentryService);
 
         shares = new BigDecimal("0");
@@ -289,6 +290,13 @@ public class DynamicSimulationLongTest {
         BigDecimal profitTarget = new BigDecimal("120.50");
 
         assertEquals(0, portfolio.position("msft").quantity().intValue());
+
+        int time = 10000;
+        long timeStep = 60000l*60l*24l;
+        BigDecimal price = new BigDecimal("50");
+        simulationAdapter.tick(new DynamicSimulationMockDataProvider(
+                time,price,price,price,price,time+=timeStep),sentryService);
+
         Response openResponse = sentryService.stockSignal(ActionForStock.BuyToOpen)
                 .marketOrder().quantity(10).symbol("msft")
                 .stopLoss(BasePrice.Absolute,stopLoss,noOCA).profitTarget(profitTarget)
@@ -316,19 +324,16 @@ public class DynamicSimulationLongTest {
         }, C2Element.ElementSignalId, C2Element.ElementStopLossSignalId, C2Element.ElementProfitTaretSignalId );
 
 
-        long timeStep = 60000l*60l*24l;
-        long openTime = 0l;
-        long closeTime = openTime+timeStep;
 
         BigDecimal lowPrice = new BigDecimal("80");
         BigDecimal highPrice = new BigDecimal("100");
         DynamicSimulationMockDataProvider dataProvider = new DynamicSimulationMockDataProvider(
-                openTime,lowPrice,highPrice,lowPrice,highPrice,closeTime);
+                time,lowPrice,highPrice,lowPrice,highPrice,time+=timeStep);
         simulationAdapter.tick(dataProvider,sentryService);
 
         assertEquals(10, portfolio.position("msft").quantity().intValue());
 
-        dataProvider.incTime(timeStep,new BigDecimal("22"));
+        dataProvider = dataProvider.incTime(timeStep,new BigDecimal("22"));
         simulationAdapter.tick(dataProvider,sentryService);
 
         assertEquals(10, portfolio.position("msft").quantity().intValue());
@@ -448,7 +453,7 @@ public class DynamicSimulationLongTest {
         assertEquals(10, portfolio.position("msft").quantity().intValue());
 
         //confirm that a price below target will not trigger
-        dataProvider.incTime(timeStep,new BigDecimal("119"));
+        dataProvider = dataProvider.incTime(timeStep,new BigDecimal("119"));
         simulationAdapter.tick(dataProvider,sentryService);
 
         assertEquals(10, portfolio.position("msft").quantity().intValue());
@@ -488,6 +493,7 @@ public class DynamicSimulationLongTest {
                         assertEquals(0d,Double.parseDouble(data),DELTA);
                         break;
                 }
+
             }
         },C2Element.ElementTotalEquityAvail,
                 C2Element.ElementCash,

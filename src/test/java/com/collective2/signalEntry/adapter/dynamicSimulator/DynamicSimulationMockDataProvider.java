@@ -12,12 +12,12 @@ import java.math.BigDecimal;
 
 public class DynamicSimulationMockDataProvider implements DataProvider {
 
-    long openingTime;
-    BigDecimal open;
-    BigDecimal high;
-    BigDecimal low;
-    BigDecimal close;
-    long endingTime;
+    private final long openingTime;
+    private final BigDecimal open;
+    private final BigDecimal high;
+    private final BigDecimal low;
+    private final BigDecimal close;
+    private final long endingTime;
 
     //only used when testing single symbols so that field is never checked
     public DynamicSimulationMockDataProvider(long openingTime, BigDecimal open, BigDecimal high, BigDecimal low, BigDecimal close, long endingTime) {
@@ -35,18 +35,12 @@ public class DynamicSimulationMockDataProvider implements DataProvider {
         this.endingTime = endingTime;
     }
 
-    public void incTime(long step) {
-        openingTime = endingTime;
-        endingTime += step;
+    public DynamicSimulationMockDataProvider incTime(long step) {
+        return new DynamicSimulationMockDataProvider(endingTime,open,high,low,close,endingTime+step);
     }
 
-    public void incTime(long step, BigDecimal flatLine) {
-        openingTime = endingTime;
-        endingTime += step;
-        open = flatLine;
-        close = flatLine;
-        high = flatLine;
-        low = flatLine;
+    public DynamicSimulationMockDataProvider incTime(long step, BigDecimal flatLine) {
+        return new DynamicSimulationMockDataProvider(endingTime,flatLine,flatLine,flatLine,flatLine,endingTime+step);
     }
 
     @Override
@@ -70,12 +64,22 @@ public class DynamicSimulationMockDataProvider implements DataProvider {
     }
 
     @Override
-    public long openingTime() {
+    public long startingTime() {
         return openingTime;
+    }
+
+    @Override
+    public boolean isStartingTimeMarketOpen() {
+        return true;
     }
 
     @Override
     public long endingTime() {
         return endingTime;
+    }
+
+    @Override
+    public boolean isEndingTimeMarketClose() {
+        return true;
     }
 }

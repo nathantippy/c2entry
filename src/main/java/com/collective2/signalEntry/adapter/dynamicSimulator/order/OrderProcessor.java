@@ -17,13 +17,16 @@ import java.math.BigDecimal;
 
 public interface OrderProcessor {
 
-    boolean process(DataProvider dataProvider, Portfolio portfolio, BigDecimal commission, Order order, Action action, QuantityComputable quantity);
+    boolean process(DataProvider currentPriceData, Portfolio portfolio, BigDecimal commission, Order order, Action action,
+                    QuantityComputable quantity, DataProvider dayOpenData);
 
     String symbol();
 
     long time();
 
     BigDecimal transactionPrice();
+    Integer transactionQuantity();
 
-    RelativeNumber triggerPrice();
+
+    BigDecimal triggerPrice();
 }
