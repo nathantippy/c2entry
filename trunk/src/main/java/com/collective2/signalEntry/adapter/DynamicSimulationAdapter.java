@@ -95,6 +95,14 @@ public class DynamicSimulationAdapter implements C2EntryServiceAdapter {
         }
     };
 
+    public void sendFinalGainEvent(DataProvider dataProvider, C2EntryService entryService) {
+        for(GainListenerManager manager:gainListeners) {
+            manager.sendFinal(gainExecutor, dataProvider, systems.get(entryService.systemId()));
+        }
+        awaitGainListeners();
+        gainExecutor.shutdownNow();
+    }
+
     public void awaitGainListeners() {
         Future<?> future = gainExecutor.submit(new Runnable() {
             @Override
@@ -267,9 +275,14 @@ public class DynamicSimulationAdapter implements C2EntryServiceAdapter {
 
                     SystemManager systemForSignal = systems.get(systemId);
 
-                    //TODO: confirm this is the right email/password
+
                     String signalSubscriberEmail = (String)request.get(Parameter.EMail);
+                    boolean isSubscribed = systemForSignal.isSubscribed(signalSubscriberEmail);
+                    //TODO: what should the response be if a non-subscriber is passed in?
+
                     String subscriberPassword = (String)request.get(Parameter.Password);
+                    //TODO: this is wrong method and is checking the system not subscriber
+                    boolean isSystemPassword = systemForSignal.isPassword(subscriberPassword);
 
                     Order order = systemForSignal.lookupOrder(signalIdInput);
 

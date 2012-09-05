@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 
 /**
  * This notice shall not be removed.
@@ -26,6 +27,7 @@ public class GainListenerManager {
     long             period;
     long             lastSentTime;
     GainListener     listener;
+    boolean          isFinal;
 
     public GainListenerManager(long start, long period, GainListener listener) {
         this.start = start;
@@ -40,9 +42,9 @@ public class GainListenerManager {
 
         //establish start time
         if (firstTime == Long.MIN_VALUE) {
-            firstTime = dataProvider.openingTime();
+            firstTime = dataProvider.startingTime();
         }
-        lastTime = dataProvider.openingTime();
+        lastTime = dataProvider.startingTime();
         assert(now>=0);
 
         if (isTimeToSend(now)) {
@@ -80,9 +82,7 @@ public class GainListenerManager {
                                     if (unitYears==0) {
                                         unitCAGR = Double.NaN;
                                     } else {
-                                        //TODO: BOTH ARE THE SAME VALUE SO ITS 1 AND ALWAYS ZERO.
                                         unitCAGR = ((totalEquityList.get(i).doubleValue()/lastTotalEquityList.get(i).doubleValue())-1d)/unitYears;
-                                       // System.err.println("unitCAGR "+unitCAGR+" "+unitYears+" "+totalEquityList.get(i).doubleValue()+" / "+lastTotalEquityList.get(i).doubleValue());
                                     }
                                 } else {
                                     unitCAGR = computeDiscountRate(lastTotalEquityList.get(i).doubleValue(),totalEquityList.get(i).doubleValue(),unitYears);
@@ -104,6 +104,8 @@ public class GainListenerManager {
                             //move down so its seen every time!
                             listener.gainData(now, nameList, firstTotalEquityList, fullCAGRList, lastTotalEquityList, unitCAGRList, totalEquityList);
 
+                            //store these equity values for next time
+                            lastTotalEquityList = totalEquityList;
                     }
 
                     /*
@@ -117,16 +119,24 @@ public class GainListenerManager {
                 });
             }
 
-            //store these equity values for next time
-            lastTotalEquityList = totalEquityList;
             if (firstTotalEquityList == null) {
+                //kick start these values
                 firstTotalEquityList = totalEquityList;
+                lastTotalEquityList = totalEquityList;
             }
+
+            if (totalEquityList.size()!=lastTotalEquityList.size()) {
+                lastTotalEquityList = totalEquityList;
+            }
+
         }
 
     }
 
     private boolean isTimeToSend(long now) {
+         if (isFinal) {
+             return true;
+         }
          if (now>start) {
             long duration = now-lastSentTime;
              if (duration>=period) {
@@ -135,5 +145,10 @@ public class GainListenerManager {
              }
          }
         return false;
+    }
+
+    public void sendFinal(ExecutorService gainExecutor, DataProvider dataProvider, SystemManager systemManager) {
+        isFinal = true;
+        send(gainExecutor,dataProvider,systemManager);
     }
 }

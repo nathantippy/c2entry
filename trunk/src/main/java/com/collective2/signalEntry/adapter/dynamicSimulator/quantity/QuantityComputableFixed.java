@@ -10,6 +10,8 @@ import com.collective2.signalEntry.adapter.dynamicSimulator.DataProvider;
 import com.collective2.signalEntry.adapter.dynamicSimulator.portfolio.Portfolio;
 import com.collective2.signalEntry.adapter.dynamicSimulator.order.Order;
 
+import java.math.BigDecimal;
+
 
 public class QuantityComputableFixed implements QuantityComputable {
 
@@ -20,7 +22,7 @@ public class QuantityComputableFixed implements QuantityComputable {
     }
 
     @Override
-    public Integer quantity(Number price, DataProvider dataProvider) {
+    public Integer quantity(BigDecimal price, DataProvider dataProvider) {
         return quantity;
     }
 }

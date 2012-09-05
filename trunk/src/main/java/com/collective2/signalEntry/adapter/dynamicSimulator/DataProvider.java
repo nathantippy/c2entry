@@ -17,6 +17,9 @@ public interface DataProvider {
     BigDecimal highPrice(String symbol);
     BigDecimal lowPrice(String symbol);
 
-    long openingTime();
+    long startingTime();
+    boolean isStartingTimeMarketOpen();
+
     long endingTime();
+    boolean isEndingTimeMarketClose();
 }

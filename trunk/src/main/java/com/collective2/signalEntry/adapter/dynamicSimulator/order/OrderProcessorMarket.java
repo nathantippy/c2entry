@@ -1,12 +1,10 @@
 package com.collective2.signalEntry.adapter.dynamicSimulator.order;
 
-import com.collective2.signalEntry.BasePrice;
 import com.collective2.signalEntry.C2ServiceException;
 import com.collective2.signalEntry.adapter.dynamicSimulator.DataProvider;
 import com.collective2.signalEntry.adapter.dynamicSimulator.portfolio.Portfolio;
 import com.collective2.signalEntry.adapter.dynamicSimulator.quantity.QuantityComputable;
 import com.collective2.signalEntry.implementation.Action;
-import com.collective2.signalEntry.implementation.RelativeNumber;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,7 +23,8 @@ public class OrderProcessorMarket implements OrderProcessor {
     private static final Logger logger = LoggerFactory.getLogger(OrderProcessorMarket.class);
     private final String symbol;
     private final long time;
-    private BigDecimal transactionPrice;
+    private Integer transactionQuantity = 0;
+    private BigDecimal transactionPrice = BigDecimal.ZERO;
 
     public OrderProcessorMarket(long time, String symbol) {
         this.time = time;
@@ -44,22 +43,39 @@ public class OrderProcessorMarket implements OrderProcessor {
         return transactionPrice;
     }
 
+    public Integer transactionQuantity() {
+        return transactionQuantity;
+    }
+
     public boolean process(DataProvider dataProvider, Portfolio portfolio, BigDecimal commission, Order order, Action action,
-                           QuantityComputable quantityComputable) {
-        logger.trace("process MarketOrder");
+                           QuantityComputable quantityComputable, DataProvider dayOpenData) {
+            logger.trace("process MarketOrder");
 
-            transactionPrice = dataProvider.openingPrice(symbol);
-            if (transactionPrice.doubleValue()==0d) {
-                logger.warn("missing opening price for "+symbol()+" on "+new Date(dataProvider.openingTime())+" "+dataProvider.openingTime());
-                return true;
+
+            BigDecimal myOpenPrice;
+
+            //if my conditional upon was today we can never use open because the time
+            // for it has already gone by. For and open we must use
+            //the transaction price of our conditional upon order
+            if (null != order.conditionalUpon() && order.conditionalUpon().isTradedThisSession(dataProvider)) {
+                myOpenPrice = order.conditionalUpon().tradePrice();
+                assert(myOpenPrice.compareTo(BigDecimal.ZERO)>0);
+            } else {
+                myOpenPrice = dataProvider.openingPrice(symbol);
+                if (BigDecimal.ZERO.compareTo(myOpenPrice)>=0) {
+                    logger.warn("missing opening price for "+symbol()+" on "+new Date(dataProvider.startingTime())+" "+dataProvider.startingTime());
+                    return true;
+                }
             }
 
-            Integer quantity = quantityComputable.quantity(transactionPrice,dataProvider);
+            Integer quantity = quantityComputable.quantity(myOpenPrice,dataProvider);
             if (quantity.intValue()==0){
+                System.err.println("no quantity so transaction not set");
+
                 return true;
             }
-
-            order.entryQuantity(quantity);
+            transactionPrice = myOpenPrice; //only set transaction price if the transaction is executed
+            transactionQuantity = quantity;
 
             switch(action) {
                 case BTC:
@@ -69,7 +85,7 @@ public class OrderProcessorMarket implements OrderProcessor {
                     //close order but make sure its not already been closed
                     if (order.conditionalUpon()!=null){
                         if ((order.conditionalUpon().isProcessed() && order.conditionalUpon().isClosed()) || order.conditionalUpon().isCancel()) {
-                            order.cancelOrder(dataProvider.openingTime());
+                            order.cancelOrder(dataProvider.startingTime());
                             return true;
                         }
                     }
@@ -87,7 +103,7 @@ public class OrderProcessorMarket implements OrderProcessor {
                     //close order but make sure its not already been closed
                     if (order.conditionalUpon()!=null) {
                         if ((order.conditionalUpon().isProcessed() && order.conditionalUpon().isClosed()) || order.conditionalUpon().isCancel()) {
-                            order.cancelOrder(dataProvider.openingTime());
+                            order.cancelOrder(dataProvider.startingTime());
                             return true;
                         }
                     }
@@ -108,7 +124,7 @@ public class OrderProcessorMarket implements OrderProcessor {
     }
 
     @Override
-    public RelativeNumber triggerPrice() {
-        return new RelativeNumber(BasePrice.Absolute,BigDecimal.ZERO);
+    public BigDecimal triggerPrice() {
+        return transactionPrice;
     }
 }

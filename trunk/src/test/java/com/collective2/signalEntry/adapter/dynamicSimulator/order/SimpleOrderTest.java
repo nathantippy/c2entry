@@ -66,12 +66,12 @@ public class SimpleOrderTest {
         //this however has the quantity because QuantityComputableFixed is used above
         assertEquals(Integer.valueOf(10), Integer.valueOf(sellOrder.quantity()));
 
-        assertTrue(buyOrder.process(dataProvider,portfolio,commission));
+        assertTrue(buyOrder.process(dataProvider,portfolio,commission,null));
 
         assertEquals(quantity, Integer.valueOf(buyOrder.quantity()));
         assertEquals(quantity, Integer.valueOf(sellOrder.quantity()));
 
-        assertTrue(sellOrder.process(dataProvider, portfolio, commission));
+        assertTrue(sellOrder.process(dataProvider, portfolio, commission,null));
 
         assertEquals(new BigDecimal("982.00"),portfolio.cash());
         assertEquals(Integer.valueOf(0),portfolio.position("GG").quantity());

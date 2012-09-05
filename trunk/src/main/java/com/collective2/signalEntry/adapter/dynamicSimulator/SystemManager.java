@@ -42,6 +42,10 @@ public class SystemManager {
 
     private final BigDecimal commission;
 
+    private DataProvider  dayMarketOpenData;
+    private DataProvider  dayMarketCloseData;
+    private DataProvider  lastDataProvider;
+
     private final SortedSet<Order> scheduled;//waiting for the right time
     private final List<Order> archive;//all signals listed here by index
     private final Map<Integer, List<Order>> ocaMap;
@@ -93,8 +97,6 @@ public class SystemManager {
         synchronized(archive) {
             Integer conditionalUponId = (Integer)request.get(Parameter.ConditionalUpon);
             Order conditionalUponOrder = (conditionalUponId==null? null : archive.get(conditionalUponId>>BITS_FOR_SYSTEM_ID));
-
-      //TODO: do not trigger dependent signals on same day as entry, unless on close price?
 
             int signalIdOnly = archive.size();
 
@@ -415,6 +417,11 @@ public class SystemManager {
     }
 
     public void tick(long time, DataProvider dataProvider) {
+        //special case where Long.MAX_VALUE is used to flush pending signals
+        //in this case do not record the open/close
+        if (time < Long.MAX_VALUE) {
+            recordMarketOpenClose(dataProvider);
+       }
        //flush everything <= time
        if (!scheduled.isEmpty()) {
 
@@ -432,11 +439,8 @@ public class SystemManager {
                }
 
                if (signal.isConditionProcessed()) {
-
-                   //TODO: count gaps in data provider tick calls as days for inForce
-
-                   long nowTime = dataProvider.endingTime();
-                   if (!signal.isInForce(nowTime)) {
+                   long nowTime = dataProvider.startingTime();
+                   if (!signal.isInForce(nowTime,dayMarketOpenData,dayMarketCloseData)) {
                        signal.cancelOrder(nowTime);
                    }
 
@@ -444,7 +448,7 @@ public class SystemManager {
                        signal.cancelOrder(nowTime);
                    }
 
-                   if (signal.process(dataProvider,portfolio,commission)) {
+                   if (signal.process(dataProvider,portfolio,commission,dayMarketOpenData)) {
                        logger.trace("processed, signal " + signal);
                        scheduled.remove(signal);
 
@@ -453,7 +457,7 @@ public class SystemManager {
                            List<Order> ocaList = ocaMap.get(signal.oneCancelsAnother());
                            for (Order order:ocaList) {
                                if (order!=signal) {
-                                   order.cancelOrder(dataProvider.openingTime());
+                                   order.cancelOrder(dataProvider.startingTime());
                                }
                            }
                            //oca triggered now remove so its not triggered again.
@@ -466,6 +470,39 @@ public class SystemManager {
                }
            }
        }
+    }
+
+    private void recordMarketOpenClose(DataProvider dataProvider) {
+
+        validateDataProvider(dataProvider);
+
+        if (dataProvider.isStartingTimeMarketOpen()) {
+            //start of a new day so set the open and clear the end
+            dayMarketOpenData = dataProvider;
+            dayMarketCloseData = null;
+        }
+        if (dataProvider.isEndingTimeMarketClose()) {
+            dayMarketCloseData = dataProvider;
+        }
+    }
+
+    private void validateDataProvider(DataProvider dataProvider) {
+        if (dataProvider.endingTime()<= dataProvider.startingTime()) {
+            throw new C2ServiceException("DataProvider must not have same starting and ending times.",false);
+        }
+        if (dataProvider.endingTime()<dataProvider.startingTime()) {
+            throw new C2ServiceException("DataProvider startingTime must be before endingTime.",false);
+        }
+        if (null != lastDataProvider) {
+            if (lastDataProvider == dataProvider) { //checking for same instance not equivalence
+                throw new C2ServiceException("DataProvider instances are held for simulation so instances must be immutable and never reused. ",false);
+            }
+            if (dataProvider.startingTime()<lastDataProvider.endingTime()) {
+                throw new C2ServiceException("DataProviders must not overlap times.",false);
+            }
+
+        }
+        lastDataProvider = dataProvider;
     }
 
     public String statusMessage() {

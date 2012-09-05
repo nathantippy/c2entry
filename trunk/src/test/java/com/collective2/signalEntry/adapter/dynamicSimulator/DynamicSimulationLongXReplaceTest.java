@@ -53,7 +53,7 @@ public class DynamicSimulationLongXReplaceTest {
         long time = 100000l;
         BigDecimal fixedPrice = new BigDecimal("80.43");
 
-        DynamicSimulationMockDataProvider dataProvider = new DynamicSimulationMockDataProvider(time,fixedPrice,fixedPrice,fixedPrice,fixedPrice,time);
+        DynamicSimulationMockDataProvider dataProvider = new DynamicSimulationMockDataProvider(time,fixedPrice,fixedPrice,fixedPrice,fixedPrice,time+timeStep);
 
         simulationAdapter.tick(dataProvider,sentryService);
 
@@ -107,9 +107,10 @@ public class DynamicSimulationLongXReplaceTest {
         ///////////////////////
         //tick for market buy
         /////////////////////
-        long closeTime = 200000l;
+        long startTime = time+timeStep;
+        long closeTime = startTime+timeStep;
         BigDecimal closePrice = new BigDecimal("160.86");
-        dataProvider = new DynamicSimulationMockDataProvider(time,fixedPrice,closePrice,fixedPrice,closePrice,closeTime);
+        dataProvider = new DynamicSimulationMockDataProvider(startTime,fixedPrice,closePrice,fixedPrice,closePrice,closeTime);
         simulationAdapter.tick(dataProvider,sentryService);
 
         ////////////////////
@@ -134,7 +135,7 @@ public class DynamicSimulationLongXReplaceTest {
         ///////////////////////////
         //tick for limit order fail
         ////////////////////////////
-        dataProvider.incTime(timeStep);
+        dataProvider = dataProvider.incTime(timeStep);
         simulationAdapter.tick(dataProvider,sentryService);
 
         ////////////////////
@@ -161,14 +162,14 @@ public class DynamicSimulationLongXReplaceTest {
         ///////////////////////////
         //tick for limit order success
         ////////////////////////////
-        dataProvider.incTime(timeStep);
+        dataProvider = dataProvider.incTime(timeStep);
         simulationAdapter.tick(dataProvider,sentryService);
 
         ////////////////////
         //confirm changed
         ///////////////////
         BigDecimal entryPrice = portfolio.position("msft").openPrice();
-        assertTrue(entryPrice.compareTo(successLimit)<=0);
+        assertTrue(null == entryPrice || entryPrice.compareTo(successLimit)<=0);
 
         BigDecimal shares = new BigDecimal("10");
         assertEquals(shares.intValue(), portfolio.position("msft").quantity().intValue());
@@ -198,7 +199,7 @@ public class DynamicSimulationLongXReplaceTest {
         ///////////////////////////
         //tick for limit order fail
         ////////////////////////////
-        dataProvider.incTime(timeStep);
+        dataProvider = dataProvider.incTime(timeStep);
         simulationAdapter.tick(dataProvider,sentryService);
 
         ////////////////////
@@ -231,7 +232,7 @@ public class DynamicSimulationLongXReplaceTest {
         ///////////////////////////
         //tick for limit order success
         ////////////////////////////
-        dataProvider.incTime(timeStep);
+        dataProvider = dataProvider.incTime(timeStep);
         simulationAdapter.tick(dataProvider,sentryService);
 
         shares = new BigDecimal("0");
@@ -364,31 +365,28 @@ public class DynamicSimulationLongXReplaceTest {
         assertEquals(Integer.valueOf(10),sentryService.sendSignalStatusRequest(newCloseSignalId,true).getInteger(C2Element.ElementQuant));
 
         //send tick data to force open position if its still in force
-        dataProvider.incTime(timeStep,new BigDecimal("13"));
+        dataProvider = dataProvider.incTime(timeStep,new BigDecimal("13"));
         simulationAdapter.tick(dataProvider,sentryService);
 
         updateSetWithPendingSignalIds(sentryService, pendingSignalIdSet);
 
-        if (timeInForce==Duration.DayOrder) {
-            assertEquals(0, portfolio.position("msft").quantity().intValue());
-            assertTrue(pendingSignalIdSet.isEmpty());
+        assertEquals(10, portfolio.position("msft").quantity().intValue());
+
+        assertTrue(pendingSignalIdSet.contains(newCloseSignalId));
+
+        //get signal details
+        assertEquals(Integer.valueOf(10),sentryService.sendSignalStatusRequest(newCloseSignalId,true).getInteger(C2Element.ElementQuant));
+
+        if (noOCA) {
+            assertTrue(pendingSignalIdSet.toString()+" can not find profit target signal "+profitTargetSignalId,pendingSignalIdSet.contains(profitTargetSignalId.intValue()));
+            assertEquals(2,pendingSignalIdSet.size());
+            assertEquals(Integer.valueOf(10),sentryService.sendSignalStatusRequest(profitTargetSignalId.intValue(),true).getInteger(C2Element.ElementQuant));
+
         } else {
-            assertEquals(10, portfolio.position("msft").quantity().intValue());
-            assertTrue(pendingSignalIdSet.contains(newCloseSignalId));
-
-            //get signal details
-            assertEquals(Integer.valueOf(10),sentryService.sendSignalStatusRequest(newCloseSignalId,true).getInteger(C2Element.ElementQuant));
-
-            if (noOCA) {
-                assertTrue(pendingSignalIdSet.toString()+" can not find profit target signal "+profitTargetSignalId,pendingSignalIdSet.contains(profitTargetSignalId.intValue()));
-                assertEquals(2,pendingSignalIdSet.size());
-                assertEquals(Integer.valueOf(10),sentryService.sendSignalStatusRequest(profitTargetSignalId.intValue(),true).getInteger(C2Element.ElementQuant));
-
-            } else {
-                assertEquals(1,pendingSignalIdSet.size());
-            }
+            assertEquals(1,pendingSignalIdSet.size());
         }
-        dataProvider.incTime(timeStep,new BigDecimal("9"));
+
+        dataProvider = dataProvider.incTime(timeStep,new BigDecimal("9"));
         simulationAdapter.tick(dataProvider,sentryService);
         assertEquals(0, portfolio.position("msft").quantity().intValue());
 
@@ -533,7 +531,7 @@ public class DynamicSimulationLongXReplaceTest {
 
         Integer newCloseSignalId = adjClose.getInteger(C2Element.ElementSignalId);
 
-        dataProvider.incTime(timeStep,new BigDecimal("121"));
+        dataProvider = dataProvider.incTime(timeStep,new BigDecimal("121"));
         simulationAdapter.tick(dataProvider,sentryService);
 
         //these tests do not work for DayOrders because all the signals have already expired
@@ -549,7 +547,7 @@ public class DynamicSimulationLongXReplaceTest {
             } else {
                 assertEquals(1,pendingSignalIdSet.size());
             }
-            dataProvider.incTime(timeStep,new BigDecimal("161"));
+            dataProvider = dataProvider.incTime(timeStep,new BigDecimal("161"));
             simulationAdapter.tick(dataProvider,sentryService);
             assertEquals(0, portfolio.position("msft").quantity().intValue());
 

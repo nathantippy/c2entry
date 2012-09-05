@@ -51,7 +51,7 @@ public class DynamicSimulationQuanityTest {
         long time = 100000l;
         BigDecimal fixedPrice = new BigDecimal("80.43");
 
-        DynamicSimulationMockDataProvider dataProvider = new DynamicSimulationMockDataProvider(time,fixedPrice,fixedPrice,fixedPrice,fixedPrice,time);
+        DynamicSimulationMockDataProvider dataProvider = new DynamicSimulationMockDataProvider(time,fixedPrice,fixedPrice,fixedPrice,fixedPrice,time+timeStep);
 
         simulationAdapter.tick(dataProvider,sentryService);
 
@@ -121,7 +121,7 @@ public class DynamicSimulationQuanityTest {
         long time = 100000l;
         BigDecimal fixedPrice = new BigDecimal("80.43");
 
-        DynamicSimulationMockDataProvider dataProvider = new DynamicSimulationMockDataProvider(time,fixedPrice,fixedPrice,fixedPrice,fixedPrice,time);
+        DynamicSimulationMockDataProvider dataProvider = new DynamicSimulationMockDataProvider(time,fixedPrice,fixedPrice,fixedPrice,fixedPrice,time+timeStep);
 
         simulationAdapter.tick(dataProvider,sentryService);
 

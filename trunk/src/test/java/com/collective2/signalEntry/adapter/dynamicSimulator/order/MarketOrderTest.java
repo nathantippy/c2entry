@@ -54,7 +54,7 @@ public class MarketOrderTest {
         Order order = new Order(id,instrument,symbol,action,quantityComputable,cancelAtMs,timeInForce,processor, null);
 
         //test only the processor and do it outside the order
-        boolean processed = processor.process(dataProvider, portfolio, commission, order, action, quantityComputable);
+        boolean processed = processor.process(dataProvider, portfolio, commission, order, action, quantityComputable, null);
 
         assertTrue(processed);
         assertEquals(new BigDecimal("961.00"),portfolio.cash());
@@ -67,7 +67,7 @@ public class MarketOrderTest {
         order = new Order(id,instrument,symbol,action,quantityComputable,cancelAtMs,timeInForce,processor, null);
 
         //test only the processor and do it outside the order
-        processed = processor.process(dataProvider, portfolio, commission, order, action, quantityComputable);
+        processed = processor.process(dataProvider, portfolio, commission, order, action, quantityComputable, null);
 
         assertTrue(processed);
         assertEquals(new BigDecimal("982.00"),portfolio.cash());
@@ -103,7 +103,7 @@ public class MarketOrderTest {
         Order order = new Order(id,instrument,symbol,sellAction,quantityComputable,cancelAtMs,timeInForce,processor, null);
 
         //test only the processor and do it outside the order
-        boolean processed = processor.process(dataProvider, portfolio, commission, order, sellAction, quantityComputable);
+        boolean processed = processor.process(dataProvider, portfolio, commission, order, sellAction, quantityComputable, null);
 
         assertTrue(processed);
         assertEquals(new BigDecimal("1021.00"),portfolio.cash());
@@ -115,7 +115,7 @@ public class MarketOrderTest {
         Action action = Action.BTC;
         order = new Order(id,instrument,symbol,action,quantityComputable,cancelAtMs,timeInForce,processor, null);
 
-        processed = processor.process(dataProvider, portfolio, commission, order, action, quantityComputable);
+        processed = processor.process(dataProvider, portfolio, commission, order, action, quantityComputable, null);
 
         assertTrue(processed);
         assertEquals(new BigDecimal("982.00"),portfolio.cash());
