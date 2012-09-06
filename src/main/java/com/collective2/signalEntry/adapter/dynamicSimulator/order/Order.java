@@ -12,9 +12,8 @@ import com.collective2.signalEntry.Instrument;
 import com.collective2.signalEntry.adapter.dynamicSimulator.DataProvider;
 import com.collective2.signalEntry.adapter.dynamicSimulator.portfolio.Portfolio;
 import com.collective2.signalEntry.adapter.dynamicSimulator.quantity.QuantityComputable;
-import com.collective2.signalEntry.implementation.Action;
+import com.collective2.signalEntry.implementation.SignalAction;
 
-import javax.jnlp.IntegrationService;
 import java.math.BigDecimal;
 import java.util.Date;
 
@@ -32,7 +31,7 @@ public class Order implements Comparable<Order> {
 
     private final Duration timeInForce;
     private final long expireAtMs;
-    protected final Action action;
+    protected final SignalAction action;
 
     protected final Instrument instrument;
     protected final QuantityComputable quantityComputable;
@@ -50,7 +49,7 @@ public class Order implements Comparable<Order> {
     }
 
     public Order(int id, Instrument instrument, String symbol,
-                 Action action, QuantityComputable quantityComputable,
+                 SignalAction action, QuantityComputable quantityComputable,
                  long cancelAtMs, Duration timeInForce,
                  OrderProcessor processor,
                  Order conditionalUpon) {
@@ -230,7 +229,7 @@ public class Order implements Comparable<Order> {
         return timeInForce;
     }
 
-    public Action action() {
+    public SignalAction action() {
         return action;
     }
 

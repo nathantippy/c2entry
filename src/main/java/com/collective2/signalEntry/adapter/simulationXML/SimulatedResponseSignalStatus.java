@@ -10,13 +10,11 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.concurrent.BlockingQueue;
 
 import javax.xml.stream.events.XMLEvent;
 
 import com.collective2.signalEntry.Duration;
-import com.collective2.signalEntry.implementation.Action;
-import com.collective2.signalEntry.implementation.RelativeNumber;
+import com.collective2.signalEntry.implementation.SignalAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,7 +32,7 @@ public class SimulatedResponseSignalStatus extends SimulatedResponse {
     public SimulatedResponseSignalStatus(Integer signalId, String systemname, String postedwhen,
                                          String emailedwhen, String killedwhen,
                                          String tradedwhen, BigDecimal tradeprice,
-                                         Action action, int quantity, String symbol, BigDecimal limit,
+                                         SignalAction action, int quantity, String symbol, BigDecimal limit,
                                          BigDecimal stop, BigDecimal market,
                                          Duration duration, Integer ocaGroupId) {
         super(buildEvents(signalId,systemname,postedwhen,emailedwhen,killedwhen,tradedwhen,tradeprice,
@@ -44,7 +42,7 @@ public class SimulatedResponseSignalStatus extends SimulatedResponse {
     private static Iterator<XMLEvent> buildEvents(Integer signalId, String systemname, String postedwhen, String emailedwhen, String killedwhen,
                                                   String tradedwhen,
                                                   BigDecimal tradeprice, //trade price is zero until filled, real price and may not match desired limit or open
-                                                  boolean showDetails, Action action, int quantity, String symbol,
+                                                  boolean showDetails, SignalAction action, int quantity, String symbol,
                                                   BigDecimal limit, //original signal value unless its relative in which case its not available
                                                   BigDecimal stop,  //original signal value unless its relative in which case its not available
                                                   BigDecimal market,

@@ -8,7 +8,7 @@ import com.collective2.signalEntry.adapter.dynamicSimulator.portfolio.Portfolio;
 import com.collective2.signalEntry.adapter.dynamicSimulator.portfolio.SimplePortfolio;
 import com.collective2.signalEntry.adapter.dynamicSimulator.quantity.QuantityComputable;
 import com.collective2.signalEntry.adapter.dynamicSimulator.quantity.QuantityComputableFixed;
-import com.collective2.signalEntry.implementation.Action;
+import com.collective2.signalEntry.implementation.SignalAction;
 import com.collective2.signalEntry.implementation.RelativeNumber;
 import org.junit.Test;
 
@@ -78,7 +78,7 @@ public class LimitOrderTest {
         long time = stop;
         Instrument instrument = Instrument.Forex;
         String symbol = "GG";
-        Action action = Action.BTO;
+        SignalAction action = SignalAction.BTO;
         Integer quantity = 10;
         QuantityComputable quantityComputable = new QuantityComputableFixed(quantity);
         long cancelAtMs = Long.MAX_VALUE;
@@ -101,7 +101,7 @@ public class LimitOrderTest {
 
         //sell to close this open position.
 
-        action = Action.STC;
+        action = SignalAction.STC;
 
         OrderProcessorLimit sellProcessor = new OrderProcessorLimit(time, symbol, sellAbove);
         order = new Order(id,instrument,symbol,action,quantityComputable,cancelAtMs,timeInForce,sellProcessor,null);
@@ -128,7 +128,7 @@ public class LimitOrderTest {
         BigDecimal expectedSell = new BigDecimal("3");
         BigDecimal expectedBuy = new BigDecimal("3");
 
-        limitShortTest(Action.STO, sellAbove, buyBelow, expectedSell, expectedBuy);
+        limitShortTest(SignalAction.STO, sellAbove, buyBelow, expectedSell, expectedBuy);
     }
 
     @Test
@@ -140,11 +140,11 @@ public class LimitOrderTest {
         BigDecimal expectedSell = new BigDecimal("4");
         BigDecimal expectedBuy = new BigDecimal("2");
 
-        limitShortTest(Action.SSHORT, sellAbove, buyBelow, expectedSell, expectedBuy);
+        limitShortTest(SignalAction.SSHORT, sellAbove, buyBelow, expectedSell, expectedBuy);
     }
 
 
-    private void  limitShortTest(Action sellAction, RelativeNumber sellAbove, RelativeNumber buyBelow, BigDecimal expectedSell, BigDecimal expectedBuy) {
+    private void  limitShortTest(SignalAction sellAction, RelativeNumber sellAbove, RelativeNumber buyBelow, BigDecimal expectedSell, BigDecimal expectedBuy) {
 
         BigDecimal startingCash = new BigDecimal("1000.00");
         Portfolio portfolio = new SimplePortfolio(startingCash);
@@ -174,7 +174,7 @@ public class LimitOrderTest {
 
         //Buy to cover this short position
 
-        Action action = Action.BTC;
+        SignalAction action = SignalAction.BTC;
         OrderProcessorLimit buyProcessor = new OrderProcessorLimit(time,symbol,buyBelow);
         order = new Order(id,instrument,symbol,action,quantityComputable,cancelAtMs,timeInForce,buyProcessor,null);
 

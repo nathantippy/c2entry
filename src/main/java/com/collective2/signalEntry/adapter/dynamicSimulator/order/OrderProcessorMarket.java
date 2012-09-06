@@ -4,7 +4,7 @@ import com.collective2.signalEntry.C2ServiceException;
 import com.collective2.signalEntry.adapter.dynamicSimulator.DataProvider;
 import com.collective2.signalEntry.adapter.dynamicSimulator.portfolio.Portfolio;
 import com.collective2.signalEntry.adapter.dynamicSimulator.quantity.QuantityComputable;
-import com.collective2.signalEntry.implementation.Action;
+import com.collective2.signalEntry.implementation.SignalAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,7 +47,7 @@ public class OrderProcessorMarket implements OrderProcessor {
         return transactionQuantity;
     }
 
-    public boolean process(DataProvider dataProvider, Portfolio portfolio, BigDecimal commission, Order order, Action action,
+    public boolean process(DataProvider dataProvider, Portfolio portfolio, BigDecimal commission, Order order, SignalAction action,
                            QuantityComputable quantityComputable, DataProvider dayOpenData) {
             logger.trace("process MarketOrder");
 
@@ -90,8 +90,8 @@ public class OrderProcessorMarket implements OrderProcessor {
                         }
                     }
                 case BTO:
-                    portfolio.position(symbol).addTransaction(quantity, time, transactionPrice, commission, Action.BTC==action);
-                    if (action==Action.BTC && order.conditionalUpon()!=null) {
+                    portfolio.position(symbol).addTransaction(quantity, time, transactionPrice, commission, SignalAction.BTC==action);
+                    if (action== SignalAction.BTC && order.conditionalUpon()!=null) {
                         order.conditionalUpon().closeOrder();
                     }
                     order.processed = true;
@@ -109,9 +109,9 @@ public class OrderProcessorMarket implements OrderProcessor {
                     }
                 case SSHORT:
                 case STO:
-                    portfolio.position(symbol).addTransaction(-quantity, time, transactionPrice, commission, Action.STC==action);
+                    portfolio.position(symbol).addTransaction(-quantity, time, transactionPrice, commission, SignalAction.STC==action);
 
-                    if (action==Action.STC && order.conditionalUpon()!=null) {
+                    if (action== SignalAction.STC && order.conditionalUpon()!=null) {
                         order.conditionalUpon().closeOrder();
                     }
                     order.processed = true;

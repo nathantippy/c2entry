@@ -9,7 +9,7 @@ import com.collective2.signalEntry.adapter.dynamicSimulator.order.OrderProcessor
 import com.collective2.signalEntry.adapter.dynamicSimulator.portfolio.Portfolio;
 import com.collective2.signalEntry.adapter.dynamicSimulator.quantity.QuantityComputable;
 import com.collective2.signalEntry.adapter.dynamicSimulator.quantity.QuantityFactory;
-import com.collective2.signalEntry.implementation.Action;
+import com.collective2.signalEntry.implementation.SignalAction;
 import com.collective2.signalEntry.implementation.Command;
 import com.collective2.signalEntry.implementation.RelativeNumber;
 import com.collective2.signalEntry.implementation.Request;
@@ -107,7 +107,7 @@ public class SystemManager {
             int id = (signalIdOnly << BITS_FOR_SYSTEM_ID)+systemId;
 
             String symbol = (String)request.get(Parameter.Symbol);
-            Action action = null;
+            SignalAction action = null;
             Order order = null;
             if (request.command()== Command.Reverse) {
 
@@ -128,7 +128,7 @@ public class SystemManager {
 
                 if (existingQuantity>0)  {
                     //STC
-                    //TODO: redo request object to only take the one action master type
+
                     //requestToClose.put(Parameter.StockAction, ActionForStockType.SellToClose);
 
 
@@ -191,14 +191,7 @@ public class SystemManager {
                 assert(request.command() == Command.Signal);
 
                 Instrument instrument = (Instrument)request.get(Parameter.Instrument);
-                switch(instrument) {
-                    case Stock:
-                        action = ((ActionForStock)request.get(Parameter.StockAction)).action();
-                        break;
-                    default:
-                        action = ((ActionForNonStock)request.get(Parameter.NonStockAction)).action();
-                        break;
-                }
+                action = (SignalAction)request.get(Parameter.Action);
 
                 Integer xReplace = (Integer)request.get(XReplace);
                 if (xReplace!=null) {
@@ -262,26 +255,14 @@ public class SystemManager {
 
                 //all in one stopLoss, this is sell to close on buy and buy to close on sell.
 
-                switch(instrument) {
-                    case Stock:
-                        if (action == ActionForStock.BuyToOpen.action()) {
-                            stopRequest.put(Parameter.StockAction,ActionForStock.SellToClose);
-                        } else if (action == ActionForStock.SellShort.action()) {
-                            stopRequest.put(Parameter.StockAction,ActionForStock.BuyToClose);
-                        } else {
-                            throw new UnsupportedOperationException("Action:"+action+" all-in-on stop loss undefined");
-                        }
-                        break;
-                    default:
-                        if (action == ActionForNonStock.BuyToOpen.action()) {
-                            stopRequest.put(Parameter.NonStockAction,ActionForNonStock.SellToClose);
-                        } else if (action == ActionForNonStock.SellToOpen.action()) {
-                            stopRequest.put(Parameter.NonStockAction,ActionForNonStock.BuyToClose);
-                        } else {
-                            throw new UnsupportedOperationException("Action:"+action+" all-in-on stop loss undefined");
-                        }
-                        break;
+                if (action == SignalAction.BTO) {
+                    stopRequest.put(Parameter.Action, SignalAction.STC);
+                } else if (action == SignalAction.SSHORT || action == SignalAction.STO) {
+                    stopRequest.put(Parameter.Action, SignalAction.BTC);
+                } else {
+                    throw new UnsupportedOperationException("ActionType:"+action+" all-in-on stop loss undefined");
                 }
+
                 stopRequest.put(Parameter.RelativeStopOrder,stopLoss);
 
                 //this is the only place the code will be able to get quantity because it can not be set
@@ -305,26 +286,15 @@ public class SystemManager {
                 Request profitTargetRequest = request.baseConditional();
 
                 Instrument instrument = (Instrument)request.get(Parameter.Instrument);
-                switch(instrument) {
-                    case Stock:
-                        if (action == ActionForStock.BuyToOpen.action()) {
-                            profitTargetRequest.put(Parameter.StockAction,ActionForStock.SellToClose);
-                        } else if (action == ActionForStock.SellShort.action()) {
-                            profitTargetRequest.put(Parameter.StockAction,ActionForStock.BuyToClose);
-                        } else {
-                            throw new UnsupportedOperationException("Action:"+action+" all-in-on profit target undefined");
-                        }
-                        break;
-                    default:
-                        if (action == ActionForNonStock.BuyToOpen.action()) {
-                            profitTargetRequest.put(Parameter.NonStockAction,ActionForNonStock.SellToClose);
-                        } else if (action == ActionForNonStock.SellToOpen.action()) {
-                            profitTargetRequest.put(Parameter.NonStockAction,ActionForNonStock.BuyToClose);
-                        } else {
-                            throw new UnsupportedOperationException("Action:"+action+" all-in-on profit target undefined");
-                        }
-                        break;
+
+                if (action == SignalAction.BTO) {
+                    profitTargetRequest.put(Parameter.Action, SignalAction.STC);
+                } else if (action == SignalAction.SSHORT || action == SignalAction.STO) {
+                    profitTargetRequest.put(Parameter.Action, SignalAction.BTC);
+                } else {
+                    throw new UnsupportedOperationException("ActionType:"+action+" all-in-on stop loss undefined");
                 }
+
                 profitTargetRequest.put(Parameter.RelativeLimitOrder,profitTarget);
 
                 //this is the only place the code will be able to get quantity because it can not be set

@@ -12,7 +12,6 @@ import com.collective2.signalEntry.adapter.dynamicSimulator.order.Order;
 import com.collective2.signalEntry.adapter.dynamicSimulator.portfolio.Portfolio;
 import com.collective2.signalEntry.adapter.dynamicSimulator.portfolio.SimplePortfolio;
 import com.collective2.signalEntry.adapter.simulationXML.*;
-import com.collective2.signalEntry.implementation.Action;
 import com.collective2.signalEntry.implementation.Command;
 import com.collective2.signalEntry.implementation.Request;
 import org.slf4j.Logger;

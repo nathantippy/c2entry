@@ -10,14 +10,13 @@ package com.collective2.signalEntry.adapter.dynamicSimulator.order;
 import com.collective2.signalEntry.adapter.dynamicSimulator.DataProvider;
 import com.collective2.signalEntry.adapter.dynamicSimulator.portfolio.Portfolio;
 import com.collective2.signalEntry.adapter.dynamicSimulator.quantity.QuantityComputable;
-import com.collective2.signalEntry.implementation.Action;
-import com.collective2.signalEntry.implementation.RelativeNumber;
+import com.collective2.signalEntry.implementation.SignalAction;
 
 import java.math.BigDecimal;
 
 public interface OrderProcessor {
 
-    boolean process(DataProvider currentPriceData, Portfolio portfolio, BigDecimal commission, Order order, Action action,
+    boolean process(DataProvider currentPriceData, Portfolio portfolio, BigDecimal commission, Order order, SignalAction action,
                     QuantityComputable quantity, DataProvider dayOpenData);
 
     String symbol();

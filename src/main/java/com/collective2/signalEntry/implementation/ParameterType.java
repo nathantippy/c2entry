@@ -51,16 +51,10 @@ public enum ParameterType {
             return new DotString<Integer>(data);
         }
     },
-    ActionForStockType(ActionForStock.class) {
+    ActionType(SignalAction.class) {
         @Override
         public Object parse(String stringValue) {
-            return lookupEnum(stringValue, ActionForStock.values());
-        }
-    },
-    ActionForNonStockType(ActionForNonStock.class) {
-        @Override
-        public Object parse(String stringValue) {
-            return lookupEnum(stringValue, ActionForNonStock.values());
+            return SignalAction.valueOf(stringValue);
         }
     },
     DurationType(Duration.class) {

@@ -9,7 +9,7 @@ import com.collective2.signalEntry.adapter.dynamicSimulator.portfolio.SimplePort
 import com.collective2.signalEntry.adapter.dynamicSimulator.quantity.QuantityComputable;
 import com.collective2.signalEntry.adapter.dynamicSimulator.quantity.QuantityComputableEntry;
 import com.collective2.signalEntry.adapter.dynamicSimulator.quantity.QuantityComputableFixed;
-import com.collective2.signalEntry.implementation.Action;
+import com.collective2.signalEntry.implementation.SignalAction;
 import org.junit.Test;
 
 import java.math.BigDecimal;
@@ -46,7 +46,7 @@ public class SimpleOrderTest {
         long time = stop;
         Instrument instrument = Instrument.Forex;
         String symbol = "GG";
-        Action action = Action.BTO;
+        SignalAction action = SignalAction.BTO;
         Integer quantity = 10;
         QuantityComputable quantityComputable = new QuantityComputableFixed(quantity);
         long cancelAtMs = Long.MAX_VALUE;
@@ -58,7 +58,7 @@ public class SimpleOrderTest {
         //this however has the quantity because QuantityComputableFixed is used above
         assertEquals(Integer.valueOf(10), Integer.valueOf(buyOrder.quantity()));
 
-        action = Action.STC;
+        action = SignalAction.STC;
         quantityComputable = new QuantityComputableEntry(buyOrder);
         Order sellOrder = new Order(id,instrument,symbol,action,quantityComputable,cancelAtMs,timeInForce,processor, buyOrder);
 

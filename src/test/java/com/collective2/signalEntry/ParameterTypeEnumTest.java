@@ -7,15 +7,13 @@
 package com.collective2.signalEntry;
 
 
-import com.collective2.signalEntry.*;
 import com.collective2.signalEntry.implementation.*;
 import org.junit.Test;
-import static com.collective2.signalEntry.ActionForNonStock.*;
 
 import java.math.BigDecimal;
 
+import static com.collective2.signalEntry.ActionForNonStock.BuyToClose;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 public class ParameterTypeEnumTest {
 
@@ -29,11 +27,8 @@ public class ParameterTypeEnumTest {
                 case IntDotStringType:
                     input = new DotString<Integer>(1,2,3);
                     break;
-                case ActionForNonStockType:
-                    input = ActionForNonStock.SellToOpen;
-                    break;
-                case ActionForStockType:
-                    input = ActionForStock.SellShort;
+                case ActionType:
+                    input = SignalAction.STO;
                     break;
                 case CommandType:
                     input = Command.GetSystemHypothetical;
@@ -105,9 +100,9 @@ public class ParameterTypeEnumTest {
     @Test
     public void actionTest() {
 
-        for(Action e: Action.values()) {
-            assertEquals(e,Action.valueOf(e.name())); //valueOf call marks this enum as covered
-            assertEquals(e,ParameterType.lookupEnum(e.toString(),Action.values()));
+        for(SignalAction e: SignalAction.values()) {
+            assertEquals(e, SignalAction.valueOf(e.name())); //valueOf call marks this enum as covered
+            assertEquals(e,ParameterType.lookupEnum(e.toString(), SignalAction.values()));
         }
     }
 
@@ -138,7 +133,7 @@ public class ParameterTypeEnumTest {
         for(ActionForNonStock e: ActionForNonStock.values()) {
             assertEquals(e,ActionForNonStock.valueOf(ActionForNonStock.class,e.name())); //valueOf call marks this enum as covered
             assertEquals(e,ActionForNonStock.lookupEnum(e.toString()));
-            assertEquals(e.action(),Action.valueOf(e.action().name()));
+            assertEquals(e.action(), SignalAction.valueOf(e.action().name()));
         }
     }
 

@@ -8,7 +8,7 @@ import com.collective2.signalEntry.adapter.dynamicSimulator.portfolio.Portfolio;
 import com.collective2.signalEntry.adapter.dynamicSimulator.portfolio.SimplePortfolio;
 import com.collective2.signalEntry.adapter.dynamicSimulator.quantity.QuantityComputable;
 import com.collective2.signalEntry.adapter.dynamicSimulator.quantity.QuantityComputableFixed;
-import com.collective2.signalEntry.implementation.Action;
+import com.collective2.signalEntry.implementation.SignalAction;
 import org.junit.Test;
 
 import java.math.BigDecimal;
@@ -45,7 +45,7 @@ public class MarketOrderTest {
         long time = stop;
         Instrument instrument = Instrument.Forex;
         String symbol = "GG";
-        Action action = Action.BTO;
+        SignalAction action = SignalAction.BTO;
         Integer quantity = 10;
         QuantityComputable quantityComputable = new QuantityComputableFixed(quantity);
         long cancelAtMs = Long.MAX_VALUE;
@@ -63,7 +63,7 @@ public class MarketOrderTest {
 
         //sell to close this open position.
 
-        action = Action.STC;
+        action = SignalAction.STC;
         order = new Order(id,instrument,symbol,action,quantityComputable,cancelAtMs,timeInForce,processor, null);
 
         //test only the processor and do it outside the order
@@ -78,16 +78,16 @@ public class MarketOrderTest {
 
     @Test
     public void  marketSTOTest() {
-        marketShortTest(Action.STO);
+        marketShortTest(SignalAction.STO);
     }
 
     @Test
     public void  marketSShortTest() {
-        marketShortTest(Action.SSHORT);
+        marketShortTest(SignalAction.SSHORT);
     }
 
 
-    private void  marketShortTest(Action sellAction) {
+    private void  marketShortTest(SignalAction sellAction) {
 
         Portfolio portfolio = new SimplePortfolio(new BigDecimal("1000.00"));
 
@@ -112,7 +112,7 @@ public class MarketOrderTest {
 
         //Buy to cover this short position
 
-        Action action = Action.BTC;
+        SignalAction action = SignalAction.BTC;
         order = new Order(id,instrument,symbol,action,quantityComputable,cancelAtMs,timeInForce,processor, null);
 
         processed = processor.process(dataProvider, portfolio, commission, order, action, quantityComputable, null);
