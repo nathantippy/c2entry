@@ -10,7 +10,6 @@ import com.collective2.signalEntry.adapter.dynamicSimulator.DataProvider;
 
 import java.math.BigDecimal;
 import java.util.Collection;
-import java.util.Set;
 
 public interface Portfolio {
 

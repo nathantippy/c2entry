@@ -1,8 +1,6 @@
 package com.collective2.signalEntry.adapter.dynamicSimulator.quantity;
 
 import com.collective2.signalEntry.adapter.dynamicSimulator.DataProvider;
-import com.collective2.signalEntry.adapter.dynamicSimulator.portfolio.Portfolio;
-import com.collective2.signalEntry.adapter.dynamicSimulator.order.Order;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

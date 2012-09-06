@@ -6,43 +6,19 @@
  */
 package com.collective2.signalEntry.adapter;
 
-import static com.collective2.signalEntry.C2Element.ElementCash;
-import static com.collective2.signalEntry.C2Element.ElementEquity;
-import static com.collective2.signalEntry.C2Element.ElementMarginUsed;
-import static com.collective2.signalEntry.C2Element.ElementSystemId;
-import static com.collective2.signalEntry.C2Element.ElementSystemName;
-import static com.collective2.signalEntry.C2Element.ElementTotalEquityAvail;
-
-import java.math.BigDecimal;
-import java.util.*;
-
-import javax.xml.stream.XMLEventReader;
-
 import com.collective2.signalEntry.C2Element;
+import com.collective2.signalEntry.C2ServiceException;
+import com.collective2.signalEntry.Parameter;
+import com.collective2.signalEntry.adapter.simulationXML.*;
 import com.collective2.signalEntry.implementation.Request;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.collective2.signalEntry.C2ServiceException;
-import com.collective2.signalEntry.Parameter;
-import com.collective2.signalEntry.adapter.simulationXML.SimulatedResponseAddToOCAGroup;
-import com.collective2.signalEntry.adapter.simulationXML.SimulatedResponseAllSystems;
-import com.collective2.signalEntry.adapter.simulationXML.SimulatedResponseCancel;
-import com.collective2.signalEntry.adapter.simulationXML.SimulatedResponseCancelAllPending;
-import com.collective2.signalEntry.adapter.simulationXML.SimulatedResponseCloseAllPositions;
-import com.collective2.signalEntry.adapter.simulationXML.SimulatedResponseFlushPendingSignals;
-import com.collective2.signalEntry.adapter.simulationXML.SimulatedResponseGetAllSignals;
-import com.collective2.signalEntry.adapter.simulationXML.SimulatedResponseGetBuyPower;
-import com.collective2.signalEntry.adapter.simulationXML.SimulatedResponseGetSystemEquity;
-import com.collective2.signalEntry.adapter.simulationXML.SimulatedResponseGetSystemHypothetical;
-import com.collective2.signalEntry.adapter.simulationXML.SimulatedResponseNewComment;
-import com.collective2.signalEntry.adapter.simulationXML.SimulatedResponsePositionStatus;
-import com.collective2.signalEntry.adapter.simulationXML.SimulatedResponseRequestOCAId;
-import com.collective2.signalEntry.adapter.simulationXML.SimulatedResponseReverse;
-import com.collective2.signalEntry.adapter.simulationXML.SimulatedResponseSendSubscriberBroadcast;
-import com.collective2.signalEntry.adapter.simulationXML.SimulatedResponseSetMinBuyPower;
-import com.collective2.signalEntry.adapter.simulationXML.SimulatedResponseSignal;
-import com.collective2.signalEntry.adapter.simulationXML.SimulatedResponseSignalStatus;
+import javax.xml.stream.XMLEventReader;
+import java.math.BigDecimal;
+import java.util.*;
+
+import static com.collective2.signalEntry.C2Element.*;
 
 /**
  * Simulated response adapter for running tests without actually hitting

@@ -6,17 +6,16 @@
  */
 package com.collective2.signalEntry.adapter.simulationXML;
 
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-
-import javax.xml.stream.events.XMLEvent;
-
 import com.collective2.signalEntry.Duration;
 import com.collective2.signalEntry.implementation.SignalAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.xml.stream.events.XMLEvent;
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 public class SimulatedResponseSignalStatus extends SimulatedResponse {
 

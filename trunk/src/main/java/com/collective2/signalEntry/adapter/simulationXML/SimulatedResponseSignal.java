@@ -6,16 +6,14 @@
  */
 package com.collective2.signalEntry.adapter.simulationXML;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.concurrent.BlockingQueue;
-
-import javax.xml.stream.events.XMLEvent;
-
 import com.collective2.signalEntry.C2Element;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.xml.stream.events.XMLEvent;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 public class SimulatedResponseSignal extends SimulatedResponse {
 

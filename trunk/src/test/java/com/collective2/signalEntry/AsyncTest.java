@@ -8,9 +8,9 @@ package com.collective2.signalEntry;
 
 import com.collective2.signalEntry.adapter.C2EntryServiceAdapter;
 import com.collective2.signalEntry.adapter.StaticSimulationAdapter;
-import com.collective2.signalEntry.journal.C2EntryServiceJournal;
 import com.collective2.signalEntry.implementation.ImplResponse;
 import com.collective2.signalEntry.implementation.Request;
+import com.collective2.signalEntry.journal.C2EntryServiceJournal;
 import com.collective2.signalEntry.journal.C2EntryServiceMemoryJournal;
 import org.junit.Test;
 
@@ -20,9 +20,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.locks.ReentrantLock;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public class AsyncTest {
 

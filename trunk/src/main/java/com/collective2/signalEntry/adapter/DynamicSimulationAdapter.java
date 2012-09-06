@@ -7,7 +7,10 @@
 package com.collective2.signalEntry.adapter;
 
 import com.collective2.signalEntry.*;
-import com.collective2.signalEntry.adapter.dynamicSimulator.*;
+import com.collective2.signalEntry.adapter.dynamicSimulator.DataProvider;
+import com.collective2.signalEntry.adapter.dynamicSimulator.GainListener;
+import com.collective2.signalEntry.adapter.dynamicSimulator.GainListenerManager;
+import com.collective2.signalEntry.adapter.dynamicSimulator.SystemManager;
 import com.collective2.signalEntry.adapter.dynamicSimulator.order.Order;
 import com.collective2.signalEntry.adapter.dynamicSimulator.portfolio.Portfolio;
 import com.collective2.signalEntry.adapter.dynamicSimulator.portfolio.SimplePortfolio;

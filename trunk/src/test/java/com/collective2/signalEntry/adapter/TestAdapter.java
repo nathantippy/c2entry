@@ -6,17 +6,16 @@
  */
 package com.collective2.signalEntry.adapter;
 
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import com.collective2.signalEntry.implementation.Request;
 
+import javax.xml.stream.XMLEventReader;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.net.URL;
 
-import javax.xml.stream.XMLEventReader;
-
-import com.collective2.signalEntry.implementation.Request;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 public class TestAdapter extends StaticSimulationAdapter {
 

@@ -16,7 +16,10 @@ import org.slf4j.LoggerFactory;
 
 import javax.xml.stream.XMLEventReader;
 import java.util.Iterator;
-import java.util.concurrent.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 
 public class ResponseManager {
     private static final Logger         logger = LoggerFactory.getLogger(ResponseManager.class);

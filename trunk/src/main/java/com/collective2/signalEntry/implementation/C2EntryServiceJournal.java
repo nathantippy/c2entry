@@ -6,10 +6,7 @@
  */
 package com.collective2.signalEntry.implementation;
 
-import com.collective2.signalEntry.Parameter;
-
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 

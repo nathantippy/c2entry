@@ -12,10 +12,11 @@ import com.collective2.signalEntry.Parameter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.EnumSet;
+import java.util.Map;
 
-import static com.collective2.signalEntry.Parameter.*;
 import static com.collective2.signalEntry.C2Element.*;
+import static com.collective2.signalEntry.Parameter.*;
 
 public enum Command {
 

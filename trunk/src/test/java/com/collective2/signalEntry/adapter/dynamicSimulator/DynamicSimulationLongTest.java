@@ -13,7 +13,8 @@ import com.collective2.signalEntry.adapter.dynamicSimulator.portfolio.SimplePort
 import org.junit.Test;
 
 import java.math.BigDecimal;
-import java.util.*;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.Assert.*;

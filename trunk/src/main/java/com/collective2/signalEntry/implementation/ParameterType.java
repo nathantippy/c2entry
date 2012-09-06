@@ -6,7 +6,10 @@
  */
 package com.collective2.signalEntry.implementation;
 
-import com.collective2.signalEntry.*;
+import com.collective2.signalEntry.C2ServiceException;
+import com.collective2.signalEntry.Duration;
+import com.collective2.signalEntry.Instrument;
+import com.collective2.signalEntry.Related;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -7,7 +7,6 @@
 package com.collective2.signalEntry;
 
 import java.math.BigDecimal;
-import java.util.concurrent.Callable;
 
 public interface Signal {
 
