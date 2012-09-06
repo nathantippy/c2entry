@@ -6,7 +6,7 @@
  */
 package com.collective2.signalEntry.implementation;
 
-public enum Action {
+public enum SignalAction {
 
     BTO, STO, BTC, STC, SSHORT
 

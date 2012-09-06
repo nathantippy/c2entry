@@ -6,12 +6,12 @@
  */
 package com.collective2.signalEntry;
 
-import static com.collective2.signalEntry.C2Element.ElementOCAId;
-import static com.collective2.signalEntry.Instrument.*;
-
 import com.collective2.signalEntry.implementation.*;
 
 import java.math.BigDecimal;
+
+import static com.collective2.signalEntry.C2Element.ElementOCAId;
+import static com.collective2.signalEntry.Instrument.*;
 
 public class C2EntryService {
 
@@ -77,7 +77,7 @@ public class C2EntryService {
     }
 
     public Signal stockSignal(ActionForStock action) {
-        return new SignalBase(commonSystemId, commonPassword, action, Stock, responseManager);
+        return new SignalBase(commonSystemId, commonPassword, action, responseManager);
     }
 
     public Signal optionSignal(ActionForNonStock action) {

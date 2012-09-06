@@ -26,7 +26,7 @@ public enum Command {
         }
         protected EnumSet<Parameter>[] paraRequiredExclusiveSets() {
             return new EnumSet[] {
-                    EnumSet.of(StockAction,NonStockAction),
+                    EnumSet.of(Action),
                     EnumSet.of(Dollars, Quantity, AccountPercent),
                     EnumSet.of(RelativeLimitOrder, RelativeStopOrder, MarketOrder)
             };

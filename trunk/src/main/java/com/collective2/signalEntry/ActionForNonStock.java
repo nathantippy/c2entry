@@ -6,18 +6,18 @@
  */
 package com.collective2.signalEntry;
 
-import com.collective2.signalEntry.implementation.Action;
+import com.collective2.signalEntry.implementation.SignalAction;
 
 public enum ActionForNonStock {
-    BuyToOpen(Action.BTO), SellToOpen(Action.STO), BuyToClose(Action.BTC), SellToClose(Action.STC);
+    BuyToOpen(SignalAction.BTO), SellToOpen(SignalAction.STO), BuyToClose(SignalAction.BTC), SellToClose(SignalAction.STC);
 
-    final private Action value;
+    final private SignalAction value;
 
-    ActionForNonStock(Action value) {
+    ActionForNonStock(SignalAction value) {
         this.value = value;
     }
 
-    public Action action(){
+    public SignalAction action(){
         return this.value;
     }
 

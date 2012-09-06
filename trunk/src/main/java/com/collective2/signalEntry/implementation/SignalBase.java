@@ -6,7 +6,8 @@
  */
 package com.collective2.signalEntry.implementation;
 
-import static com.collective2.signalEntry.Instrument.Stock;
+import com.collective2.signalEntry.ActionForNonStock;
+import com.collective2.signalEntry.ActionForStock;
 import com.collective2.signalEntry.Instrument;
 import com.collective2.signalEntry.Parameter;
 
@@ -15,10 +16,19 @@ public class SignalBase extends ImplSignal {
     private final ResponseManager responseManager;
     private final Integer systemId;
     private final String password;
-    private final Object action;
+    private final SignalAction action;
     private final Instrument instrument;
 
-    public SignalBase(Integer systemId, String password, Object action, Instrument instrument, ResponseManager responseManager) {
+    public SignalBase(Integer systemId, String password, ActionForStock action, ResponseManager responseManager) {
+        this(systemId,password,action.action(),Instrument.Stock,responseManager);
+    }
+
+    public SignalBase(Integer systemId, String password, ActionForNonStock action, Instrument instrument, ResponseManager responseManager) {
+        this(systemId,password,action.action(),instrument,responseManager);
+        assert(instrument!=Instrument.Stock);
+    }
+
+    private SignalBase(Integer systemId, String password, SignalAction action, Instrument instrument, ResponseManager responseManager) {
 
         this.responseManager = responseManager;
         this.systemId        = systemId;
@@ -38,11 +48,7 @@ public class SignalBase extends ImplSignal {
         request.put(Parameter.Password, password);
 
         request.put(Parameter.Instrument, instrument);
-        if (Stock == instrument) {
-            request.put(Parameter.StockAction, action);
-        } else {
-            request.put(Parameter.NonStockAction, action);
-        }
+        request.put(Parameter.Action, action);
         return request;
 
     }

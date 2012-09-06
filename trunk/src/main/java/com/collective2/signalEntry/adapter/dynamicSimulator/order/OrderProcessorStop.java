@@ -3,7 +3,7 @@ package com.collective2.signalEntry.adapter.dynamicSimulator.order;
 import com.collective2.signalEntry.adapter.dynamicSimulator.DataProvider;
 import com.collective2.signalEntry.adapter.dynamicSimulator.portfolio.Portfolio;
 import com.collective2.signalEntry.adapter.dynamicSimulator.quantity.QuantityComputable;
-import com.collective2.signalEntry.implementation.Action;
+import com.collective2.signalEntry.implementation.SignalAction;
 import com.collective2.signalEntry.implementation.RelativeNumber;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,7 +50,7 @@ public class OrderProcessorStop implements OrderProcessor {
         return transactionQuantity;
     }
 
-    public boolean process(DataProvider dataProvider, Portfolio portfolio, BigDecimal commission, Order order, Action action,
+    public boolean process(DataProvider dataProvider, Portfolio portfolio, BigDecimal commission, Order order, SignalAction action,
                            QuantityComputable computableQuantity, DataProvider dayOpenData) {
         logger.trace("process StopOrder");
 
@@ -108,8 +108,8 @@ public class OrderProcessorStop implements OrderProcessor {
                     if (buyQuantity.intValue()>0) {
                         transactionQuantity = buyQuantity;
                         //create the transaction in the portfolio
-                        portfolio.position(symbol).addTransaction(buyQuantity, time, transactionPrice, commission, Action.BTC==action);
-                        if (action==Action.BTC && order.conditionalUpon()!=null) {
+                        portfolio.position(symbol).addTransaction(buyQuantity, time, transactionPrice, commission, SignalAction.BTC==action);
+                        if (action== SignalAction.BTC && order.conditionalUpon()!=null) {
                             order.conditionalUpon().closeOrder();
                         }
                         order.processed = true;
@@ -147,8 +147,8 @@ public class OrderProcessorStop implements OrderProcessor {
                     if (shortQuantity.intValue()>0) {
                         transactionQuantity = shortQuantity;
                         //create the transaction in the portfolio
-                        portfolio.position(symbol).addTransaction(-shortQuantity, time, transactionPrice, commission, Action.STC==action);
-                        if (action==Action.STC && order.conditionalUpon()!=null) {
+                        portfolio.position(symbol).addTransaction(-shortQuantity, time, transactionPrice, commission, SignalAction.STC==action);
+                        if (action== SignalAction.STC && order.conditionalUpon()!=null) {
                             order.conditionalUpon().closeOrder();
                         }
                         order.processed = true;

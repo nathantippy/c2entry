@@ -10,13 +10,6 @@ import com.collective2.signalEntry.implementation.ParameterType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.collective2.signalEntry.implementation.Command;
-import com.collective2.signalEntry.implementation.DotString;
-import com.collective2.signalEntry.implementation.RelativeNumber;
-
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
-
 public enum Parameter {
     // do not mess with this order, it controls the order in the final URL and
     // the unit tests are dependent upon it.
@@ -33,9 +26,7 @@ public enum Parameter {
 
     Instrument("&instrument=",              ParameterType.InstrumentType),
     Symbol("&symbol=",                      ParameterType.StringType),
-
-    StockAction("&action=",                 ParameterType.ActionForStockType),
-    NonStockAction("&action=",              ParameterType.ActionForNonStockType),
+    Action("&action=",                      ParameterType.ActionType),
 
     TimeInForce("&duration=",               ParameterType.DurationType),
 
