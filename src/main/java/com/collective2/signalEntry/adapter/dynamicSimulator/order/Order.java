@@ -13,10 +13,8 @@ import com.collective2.signalEntry.adapter.dynamicSimulator.DataProvider;
 import com.collective2.signalEntry.adapter.dynamicSimulator.portfolio.Portfolio;
 import com.collective2.signalEntry.adapter.dynamicSimulator.quantity.QuantityComputable;
 import com.collective2.signalEntry.implementation.SignalAction;
-
 import java.math.BigDecimal;
 import java.util.Date;
-
 
 public class Order implements Comparable<Order> {
     //private final Request request;
