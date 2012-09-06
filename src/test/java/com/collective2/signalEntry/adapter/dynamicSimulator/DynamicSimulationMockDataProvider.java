@@ -6,8 +6,6 @@
  */
 package com.collective2.signalEntry.adapter.dynamicSimulator;
 
-import com.collective2.signalEntry.adapter.dynamicSimulator.DataProvider;
-
 import java.math.BigDecimal;
 
 public class DynamicSimulationMockDataProvider implements DataProvider {

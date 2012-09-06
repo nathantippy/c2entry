@@ -6,21 +6,19 @@
  */
 package com.collective2.signalEntry;
 
-import static com.collective2.signalEntry.C2Element.ElementStatus;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
-import javax.xml.stream.XMLEventReader;
-import javax.xml.stream.XMLStreamException;
-
 import com.collective2.signalEntry.adapter.C2EntryServiceAdapter;
+import com.collective2.signalEntry.adapter.Collective2Adapter;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.collective2.signalEntry.adapter.Collective2Adapter;
+import javax.xml.stream.XMLEventReader;
+import javax.xml.stream.XMLStreamException;
+
+import static com.collective2.signalEntry.C2Element.ElementStatus;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class LiveTest {
 

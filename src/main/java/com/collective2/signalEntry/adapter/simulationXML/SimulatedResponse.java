@@ -6,15 +6,11 @@
  */
 package com.collective2.signalEntry.adapter.simulationXML;
 
-import java.nio.channels.AsynchronousByteChannel;
-import java.util.Iterator;
-import java.util.Queue;
-import java.util.concurrent.*;
-
 import javax.xml.stream.XMLEventFactory;
 import javax.xml.stream.XMLEventReader;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.events.XMLEvent;
+import java.util.Iterator;
 
 
 public abstract class SimulatedResponse implements XMLEventReader {

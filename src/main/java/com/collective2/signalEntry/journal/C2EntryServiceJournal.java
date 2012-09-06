@@ -8,9 +8,7 @@ package com.collective2.signalEntry.journal;
 
 import com.collective2.signalEntry.implementation.Request;
 
-import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 
 public interface C2EntryServiceJournal {
 

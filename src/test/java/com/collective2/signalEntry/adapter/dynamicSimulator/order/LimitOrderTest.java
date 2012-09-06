@@ -1,15 +1,15 @@
 package com.collective2.signalEntry.adapter.dynamicSimulator.order;
 
 import com.collective2.signalEntry.Duration;
-import com.collective2.signalEntry.adapter.dynamicSimulator.DynamicSimulationMockDataProvider;
 import com.collective2.signalEntry.Instrument;
 import com.collective2.signalEntry.adapter.dynamicSimulator.DataProvider;
+import com.collective2.signalEntry.adapter.dynamicSimulator.DynamicSimulationMockDataProvider;
 import com.collective2.signalEntry.adapter.dynamicSimulator.portfolio.Portfolio;
 import com.collective2.signalEntry.adapter.dynamicSimulator.portfolio.SimplePortfolio;
 import com.collective2.signalEntry.adapter.dynamicSimulator.quantity.QuantityComputable;
 import com.collective2.signalEntry.adapter.dynamicSimulator.quantity.QuantityComputableFixed;
-import com.collective2.signalEntry.implementation.SignalAction;
 import com.collective2.signalEntry.implementation.RelativeNumber;
+import com.collective2.signalEntry.implementation.SignalAction;
 import org.junit.Test;
 
 import java.math.BigDecimal;

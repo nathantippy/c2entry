@@ -6,10 +6,9 @@
  */
 package com.collective2.signalEntry.implementation;
 
+import com.collective2.signalEntry.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.collective2.signalEntry.Response;
 
 public abstract class AbstractCommand {
 

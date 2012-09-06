@@ -6,23 +6,19 @@
  */
 package com.collective2.signalEntry.adapter;
 
-import java.io.*;
-import java.net.URL;
-import java.net.URLConnection;
-import java.nio.channels.Channels;
-import java.nio.channels.ReadableByteChannel;
-import java.nio.channels.SocketChannel;
-
-
-import javax.xml.stream.XMLEventReader;
-import javax.xml.stream.XMLInputFactory;
-import javax.xml.stream.XMLStreamException;
-
+import com.collective2.signalEntry.C2ServiceException;
 import com.collective2.signalEntry.implementation.Request;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.collective2.signalEntry.C2ServiceException;
+import javax.xml.stream.XMLEventReader;
+import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLStreamException;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.net.URLConnection;
 
 public class Collective2Adapter implements C2EntryServiceAdapter {
 

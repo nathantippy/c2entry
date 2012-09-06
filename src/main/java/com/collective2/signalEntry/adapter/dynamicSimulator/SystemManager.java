@@ -1,18 +1,17 @@
 package com.collective2.signalEntry.adapter.dynamicSimulator;
 
-import com.collective2.signalEntry.*;
+import com.collective2.signalEntry.C2ServiceException;
+import com.collective2.signalEntry.Duration;
+import com.collective2.signalEntry.Instrument;
+import com.collective2.signalEntry.Parameter;
 import com.collective2.signalEntry.adapter.dynamicSimulator.order.*;
-import com.collective2.signalEntry.adapter.dynamicSimulator.order.OrderProcessor;
-import com.collective2.signalEntry.adapter.dynamicSimulator.order.OrderProcessorLimit;
-import com.collective2.signalEntry.adapter.dynamicSimulator.order.OrderProcessorMarket;
-import com.collective2.signalEntry.adapter.dynamicSimulator.order.OrderProcessorStop;
 import com.collective2.signalEntry.adapter.dynamicSimulator.portfolio.Portfolio;
 import com.collective2.signalEntry.adapter.dynamicSimulator.quantity.QuantityComputable;
 import com.collective2.signalEntry.adapter.dynamicSimulator.quantity.QuantityFactory;
-import com.collective2.signalEntry.implementation.SignalAction;
 import com.collective2.signalEntry.implementation.Command;
 import com.collective2.signalEntry.implementation.RelativeNumber;
 import com.collective2.signalEntry.implementation.Request;
+import com.collective2.signalEntry.implementation.SignalAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -8,8 +8,6 @@ package com.collective2.signalEntry;
 
 import org.junit.Test;
 
-import java.io.UnsupportedEncodingException;
-
 import static org.junit.Assert.*;
 
 public class ParameterTest {

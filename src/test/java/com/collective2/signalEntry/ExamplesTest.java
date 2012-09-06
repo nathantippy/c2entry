@@ -6,21 +6,19 @@
  */
 package com.collective2.signalEntry;
 
-import static org.junit.Assert.assertTrue;
-
 import com.collective2.signalEntry.adapter.C2EntryServiceAdapter;
+import com.collective2.signalEntry.adapter.Collective2Adapter;
 import com.collective2.signalEntry.adapter.StaticSimulationAdapter;
 import com.collective2.signalEntry.journal.C2EntryServiceJournal;
 import com.collective2.signalEntry.journal.C2EntryServiceLogFileJournal;
 import org.junit.Test;
 
-import com.collective2.signalEntry.adapter.Collective2Adapter;
-
 import java.io.File;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
-import static com.collective2.signalEntry.BasePrice.*;
+
+import static com.collective2.signalEntry.BasePrice.SessionOpenPlus;
 
 public class ExamplesTest {
 

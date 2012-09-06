@@ -6,11 +6,11 @@
  */
 package com.collective2.signalEntry.implementation;
 
-import java.io.Serializable;
-import java.math.BigDecimal;
-
 import com.collective2.signalEntry.BasePrice;
 import com.collective2.signalEntry.C2ServiceException;
+
+import java.io.Serializable;
+import java.math.BigDecimal;
 
 public class RelativeNumber implements Serializable {
 

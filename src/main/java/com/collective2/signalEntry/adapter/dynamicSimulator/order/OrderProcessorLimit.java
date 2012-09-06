@@ -10,10 +10,10 @@ package com.collective2.signalEntry.adapter.dynamicSimulator.order;
 import com.collective2.signalEntry.adapter.dynamicSimulator.DataProvider;
 import com.collective2.signalEntry.adapter.dynamicSimulator.portfolio.Portfolio;
 import com.collective2.signalEntry.adapter.dynamicSimulator.quantity.QuantityComputable;
+import com.collective2.signalEntry.implementation.RelativeNumber;
 import com.collective2.signalEntry.implementation.SignalAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.collective2.signalEntry.implementation.RelativeNumber;
 
 import java.math.BigDecimal;
 import java.util.Date;

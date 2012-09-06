@@ -6,16 +6,14 @@
  */
 package com.collective2.signalEntry;
 
-import static com.collective2.signalEntry.C2Element.ElementBuyPower;
-import static com.collective2.signalEntry.C2Element.ElementCalcTime;
-import static com.collective2.signalEntry.C2Element.ElementSignalId;
-import static com.collective2.signalEntry.C2Element.ElementStatus;
-import static com.collective2.signalEntry.Parameter.*;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import com.collective2.signalEntry.adapter.TestAdapter;
+import org.junit.Before;
+import org.junit.Test;
 
+import javax.xml.stream.XMLEventReader;
+import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.events.StartElement;
+import javax.xml.stream.events.XMLEvent;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.math.BigDecimal;
@@ -25,15 +23,9 @@ import java.util.List;
 import java.util.logging.Handler;
 import java.util.logging.Logger;
 
-import org.junit.Before;
-import org.junit.Test;
-
-import com.collective2.signalEntry.adapter.TestAdapter;
-
-import javax.xml.stream.XMLEventReader;
-import javax.xml.stream.XMLInputFactory;
-import javax.xml.stream.events.StartElement;
-import javax.xml.stream.events.XMLEvent;
+import static com.collective2.signalEntry.C2Element.*;
+import static com.collective2.signalEntry.Parameter.*;
+import static org.junit.Assert.*;
 
 /**
  * This notice shall not be removed. See the "LICENSE.txt" file found in the

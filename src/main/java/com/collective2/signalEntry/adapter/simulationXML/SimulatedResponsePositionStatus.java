@@ -6,16 +6,14 @@
  */
 package com.collective2.signalEntry.adapter.simulationXML;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.xml.stream.events.XMLEvent;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
-import java.util.concurrent.BlockingQueue;
-
-import javax.xml.stream.events.XMLEvent;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class SimulatedResponsePositionStatus extends SimulatedResponse {
 	private static final Logger logger = LoggerFactory.getLogger(SimulatedResponsePositionStatus.class);

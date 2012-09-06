@@ -6,17 +6,14 @@
  */
 package com.collective2.signalEntry.adapter.simulationXML;
 
-import static com.collective2.signalEntry.C2Element.*;
-
-import java.util.*;
-import java.util.concurrent.BlockingQueue;
-
-import javax.xml.stream.events.XMLEvent;
-
+import com.collective2.signalEntry.C2Element;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.collective2.signalEntry.C2Element;
+import javax.xml.stream.events.XMLEvent;
+import java.util.*;
+
+import static com.collective2.signalEntry.C2Element.*;
 
 public class SimulatedResponseGetSystemHypothetical extends SimulatedResponse {
     private static final Logger logger = LoggerFactory.getLogger(SimulatedResponseGetBuyPower.class);

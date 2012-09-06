@@ -6,21 +6,22 @@
  */
 package com.collective2.signalEntry.implementation;
 
-import static com.collective2.signalEntry.C2Element.ElementStatus;
+import com.collective2.signalEntry.C2Element;
+import com.collective2.signalEntry.C2ElementVisitor;
+import com.collective2.signalEntry.C2ServiceException;
+import com.collective2.signalEntry.Response;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import javax.xml.stream.XMLEventReader;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.events.XMLEvent;
 import java.math.BigDecimal;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.concurrent.Callable;
 
-import javax.xml.stream.XMLEventReader;
-import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.events.XMLEvent;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.collective2.signalEntry.*;
+import static com.collective2.signalEntry.C2Element.ElementStatus;
 
 public class ImplResponse implements Response {
 

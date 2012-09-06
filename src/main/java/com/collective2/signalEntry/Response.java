@@ -6,9 +6,8 @@
  */
 package com.collective2.signalEntry;
 
-import java.math.BigDecimal;
-
 import javax.xml.stream.XMLEventReader;
+import java.math.BigDecimal;
 
 public interface Response {
     

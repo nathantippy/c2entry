@@ -2,7 +2,6 @@ package com.collective2.signalEntry.adapter.dynamicSimulator;
 
 import com.collective2.signalEntry.*;
 import com.collective2.signalEntry.adapter.DynamicSimulationAdapter;
-import com.collective2.signalEntry.adapter.dynamicSimulator.DynamicSimulationMockDataProvider;
 import com.collective2.signalEntry.adapter.dynamicSimulator.portfolio.Portfolio;
 import com.collective2.signalEntry.adapter.dynamicSimulator.portfolio.SimplePortfolio;
 import org.junit.Test;
