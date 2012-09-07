@@ -6,11 +6,24 @@
  */
 package com.collective2.signalEntry;
 
+import org.junit.Before;
 import org.junit.Test;
+
+import java.util.logging.Handler;
+import java.util.logging.Logger;
 
 import static org.junit.Assert.*;
 
 public class ParameterTest {
+
+    @Before
+    public void dumpLog() {
+        //remove loggers to speed up test
+        //same events are captured by looking at the exceptions
+        for(Handler h: Logger.getLogger("").getHandlers()) {
+            Logger.getLogger("").removeHandler(h);
+        }
+    }
 
     @Test
     public void badValuesTest() {

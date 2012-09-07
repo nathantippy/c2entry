@@ -34,7 +34,7 @@ public class SimpleGainListenerTest {
         Portfolio portfolio = new SimplePortfolio(new BigDecimal("10000"));
         BigDecimal commission = new BigDecimal("10.00");
         Integer systemId = simulationAdapter.createSystem("first system",password,portfolio,commission);
-        simulationAdapter.subscribe(eMail,systemId);
+        simulationAdapter.subscribe(eMail,systemId,password);
         C2ServiceFactory factory = new C2ServiceFactory(simulationAdapter);
         C2EntryService sentryService = factory.signalEntryService(password, systemId, eMail);
 
