@@ -22,7 +22,7 @@ import static org.junit.Assert.*;
 public class DynamicSimulationLongTest {
 
     private final double DELTA=.00000001d;
-         //TODO: add new test for password checking
+
     @Test
     public void longBuySellTest() {
 
@@ -34,7 +34,7 @@ public class DynamicSimulationLongTest {
         Portfolio portfolio = new SimplePortfolio(new BigDecimal("10000"));
         BigDecimal commission = new BigDecimal("10.00");
         Integer systemId = simulationAdapter.createSystem("first system",password,portfolio,commission);
-        simulationAdapter.subscribe(eMail,systemId);
+        simulationAdapter.subscribe(eMail,systemId,password);
         C2ServiceFactory factory = new C2ServiceFactory(simulationAdapter);
         C2EntryService sentryService = factory.signalEntryService(password, systemId, eMail);
 
@@ -281,7 +281,7 @@ public class DynamicSimulationLongTest {
         Portfolio portfolio = new SimplePortfolio(new BigDecimal("10000"));
         BigDecimal commission = new BigDecimal("10.00");
         Integer systemId = simulationAdapter.createSystem("first system",password,portfolio,commission);
-        simulationAdapter.subscribe(eMail,systemId);
+        simulationAdapter.subscribe(eMail,systemId,password);
         C2ServiceFactory factory = new C2ServiceFactory(simulationAdapter);
         C2EntryService sentryService = factory.signalEntryService(password, systemId, eMail);
 
@@ -398,7 +398,7 @@ public class DynamicSimulationLongTest {
         Portfolio portfolio = new SimplePortfolio(new BigDecimal("10000"));
         BigDecimal commission = new BigDecimal("10.00");
         Integer systemId = simulationAdapter.createSystem("first system",password,portfolio,commission);
-        simulationAdapter.subscribe(eMail,systemId);
+        simulationAdapter.subscribe(eMail,systemId,password);
         C2ServiceFactory factory = new C2ServiceFactory(simulationAdapter);
         C2EntryService sentryService = factory.signalEntryService(password, systemId, eMail);
 

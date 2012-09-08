@@ -46,45 +46,82 @@ public class DynamicSimulationRelativeTest {
         return pendingSignalIdSet;
     }
 
-
-    //TODO: duplcate these with false and test stops
     @Test
-    public void  testOpenPosition() {
+    public void  testLimitOpenPosition() {
         //limit was above open so stop should be open-5
-        runTest(true, BasePrice.PositionOpenPlus,new BigDecimal("82"),new BigDecimal("75.43"));
+        runTest(true, BasePrice.PositionOpenPlus,new BigDecimal("82"),new BigDecimal("75.43"),1);
     }
 
     @Test
-    public void  testLimitPosition() {
+    public void  testLimitTriggerPosition() {
         //limit was below open so stop should be limit-5
-        runTest(true, BasePrice.PositionOpenPlus,new BigDecimal("79.99"),new BigDecimal("74.99"));
+        runTest(true, BasePrice.PositionOpenPlus,new BigDecimal("79.99"),new BigDecimal("74.99"),1);
     }
 
     @Test
-    public void  testOpenSession() {
+    public void  testLimitOpenSession() {
         //limit was above open so stop should be open-5
-        runTest(true, BasePrice.SessionOpenPlus,new BigDecimal("82"),new BigDecimal("75.43"));
+        runTest(true, BasePrice.SessionOpenPlus,new BigDecimal("82"),new BigDecimal("75.43"),1);
     }
 
     @Test
-    public void  testLimitSession() {
+    public void  testLimitTriggerSession() {
         //limit was below open but stop should be open-5
-        runTest(true, BasePrice.SessionOpenPlus,new BigDecimal("79.99"),new BigDecimal("75.43"));
+        runTest(true, BasePrice.SessionOpenPlus,new BigDecimal("79.99"),new BigDecimal("75.43"),1);
     }
 
     @Test
-    public void  testOpenRT() {
+    public void  testLimitOpenRT() {
         //limit was above open so stop should be open-5
-        runTest(true, BasePrice.RTQuotePlus,new BigDecimal("82"),new BigDecimal("75.43"));
+        runTest(true, BasePrice.RTQuotePlus,new BigDecimal("82"),new BigDecimal("75.43"),1);
     }
 
     @Test
-    public void  testLimitRT() {
+    public void  testLimitTriggerRT() {
         //limit was below open but stop should be open-5
-        runTest(true, BasePrice.RTQuotePlus,new BigDecimal("79.99"),new BigDecimal("75.43"));
+        runTest(true, BasePrice.RTQuotePlus,new BigDecimal("79.99"),new BigDecimal("75.43"),1);
     }
 
-    public void runTest(boolean isLimit, BasePrice base, BigDecimal triggerPrice, BigDecimal expectedStop) {
+    //TODO: review the following test
+
+    @Test
+    public void  testStopOpenPosition() {
+        //
+        runTest(false, BasePrice.PositionOpenPlus,new BigDecimal("82"),new BigDecimal("82"),2);
+    }
+
+    @Test
+    public void  testStopTriggerPosition() {
+        //
+        runTest(false, BasePrice.PositionOpenPlus,new BigDecimal("79.99"),new BigDecimal("75.43"),1);
+    }
+
+    @Test
+    public void  testStopOpenSession() {
+        //
+        runTest(false, BasePrice.SessionOpenPlus,new BigDecimal("82"),new BigDecimal("82"),2);
+    }
+
+    @Test
+    public void  testStopTriggerSession() {
+        //
+        runTest(false, BasePrice.SessionOpenPlus,new BigDecimal("79.99"),new BigDecimal("75.43"),1);
+    }
+
+    @Test
+    public void  testStopOpenRT() {
+        //
+        runTest(false, BasePrice.RTQuotePlus,new BigDecimal("82"),new BigDecimal("82"),2);
+    }
+
+    @Test
+    public void  testStopTriggerRT() {
+        //
+        runTest(false, BasePrice.RTQuotePlus,new BigDecimal("79.99"),new BigDecimal("75.43"),1);
+    }
+
+
+    public void runTest(boolean isLimit, BasePrice base, BigDecimal triggerPrice, BigDecimal expectedStop, int expectedPendingCount) {
 
 
         // validates commands and returns hard coded (canned) responses
@@ -122,7 +159,7 @@ public class DynamicSimulationRelativeTest {
 
         Set<Integer> pending = pendingSignalIds(sentryService);
 
-        assertEquals(1,pending.size());
+        assertEquals(expectedPendingCount,pending.size());
         Integer id = pending.iterator().next();
 
         BigDecimal stop = sentryService.sendSignalStatusRequest(id,true).getBigDecimal(C2Element.ElementStop);

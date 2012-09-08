@@ -283,8 +283,7 @@ public class DynamicSimulationAdapter implements C2EntryServiceAdapter {
                     //TODO: what should the response be if a non-subscriber is passed in?
 
                     String subscriberPassword = (String)request.get(Parameter.Password);
-                    //TODO: this is wrong method and is checking the system not subscriber
-                    boolean isSystemPassword = systemForSignal.isPassword(subscriberPassword);
+                    boolean isSystemPassword = systemForSignal.isPassword(signalSubscriberEmail,subscriberPassword);
 
                     Order order = systemForSignal.lookupOrder(signalIdInput);
 
@@ -416,8 +415,8 @@ public class DynamicSimulationAdapter implements C2EntryServiceAdapter {
         return systemId;
     }
 
-    public void subscribe(String eMail, Integer systemId) {
+    public void subscribe(String eMail, Integer systemId, String userPassword) {
         SystemManager system = systems.get(systemId);
-        system.subscribe(eMail);
+        system.subscribe(eMail, userPassword);
     }
 }
