@@ -48,7 +48,7 @@ public class SystemManager {
     private final SortedSet<Order> scheduled;//waiting for the right time
     private final List<Order> archive;//all signals listed here by index
     private final Map<Integer, List<Order>> ocaMap;
-    private final Set<String> subscribers;
+    private final Map<String, String> subscribersMap; //email, password
 
     //Tick:
     //     1. check all active against new market conditions
@@ -75,7 +75,7 @@ public class SystemManager {
         this.quantityFactory = new QuantityFactory();
         this.ocaMap = new HashMap<Integer,List<Order>>();
         this.commission = commission;
-        this.subscribers = new HashSet<String>(); //email
+        this.subscribersMap = new HashMap<String,String>(); //email, password
     }
 
     public Integer id() {
@@ -478,16 +478,20 @@ public class SystemManager {
         return name()+" "+portfolio().statusMessage();
     }
 
-    public void subscribe(String eMail) {
-        subscribers.add(eMail);
+    public void subscribe(String eMail, String password) {
+        subscribersMap.put(eMail,password);
     }
 
     public boolean isSubscribed(String eMail) {
-        return subscribers.contains(eMail);
+        return subscribersMap.keySet().contains(eMail);
     }
 
     public void unSubscribe(String eMail) {
-        subscribers.remove(eMail);
+        subscribersMap.remove(eMail);
+    }
+
+    public boolean isPassword(String eMail, String password) {
+        return password.equals(subscribersMap.get(eMail));
     }
 
     public List<Order> allSignalsConditionalUpon(Integer signalIdInput) {
