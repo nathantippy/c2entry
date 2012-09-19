@@ -1,6 +1,5 @@
 package com.collective2.signalEntry.adapter.dynamicSimulator.order;
 
-import com.collective2.signalEntry.C2ServiceException;
 import com.collective2.signalEntry.adapter.dynamicSimulator.DataProvider;
 import com.collective2.signalEntry.adapter.dynamicSimulator.portfolio.Portfolio;
 import com.collective2.signalEntry.adapter.dynamicSimulator.quantity.QuantityComputable;
@@ -63,7 +62,8 @@ public class OrderProcessorMarket implements OrderProcessor {
             } else {
                 myOpenPrice = dataProvider.openingPrice(symbol);
                 if (BigDecimal.ZERO.compareTo(myOpenPrice)>=0) {
-                    logger.warn("missing opening price for "+symbol()+" on "+new Date(dataProvider.startingTime())+" "+dataProvider.startingTime());
+                    logger.trace("missing opening price for "+symbol()+" on "+new Date(dataProvider.startingTime())+" "+dataProvider.startingTime());
+                    order.cancelOrder(dataProvider.startingTime());
                     return true;
                 }
             }
@@ -80,7 +80,8 @@ public class OrderProcessorMarket implements OrderProcessor {
             switch(action) {
                 case BTC:
                     if (order.conditionalUpon()==null && portfolio.position(symbol).quantity().intValue()==0) {
-                        throw new C2ServiceException("BuyToClose requires conditional open order",false);
+                        order.cancelOrder(dataProvider.startingTime());
+                        return true;
                     }
                     //close order but make sure its not already been closed
                     if (order.conditionalUpon()!=null){
@@ -98,7 +99,8 @@ public class OrderProcessorMarket implements OrderProcessor {
                     break;
                 case STC:
                     if (order.conditionalUpon()==null && portfolio.position(symbol).quantity().intValue()==0) {
-                        throw new C2ServiceException("ShortToClose requires conditional open order",false);
+                        order.cancelOrder(dataProvider.startingTime());
+                        return true;
                     }
                     //close order but make sure its not already been closed
                     if (order.conditionalUpon()!=null) {

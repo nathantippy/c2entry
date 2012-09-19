@@ -57,8 +57,7 @@ public class OrderProcessorStop implements OrderProcessor {
 
             absoluteStop = RelativeNumberHelper.toAbsolutePrice(symbol, relativeStop, dataProvider, portfolio, dayOpenData);
             if (BigDecimal.ZERO.compareTo(absoluteStop)>=0) {
-                logger.warn("unable to build stop cond upon:"+order.conditionalUpon()+" condProc:"+order.isConditionProcessed());
-                return true;
+                logger.warn("absolute stop value was "+absoluteStop+" from "+relativeStop);
             }
 
             BigDecimal myOpenPrice;
@@ -72,7 +71,8 @@ public class OrderProcessorStop implements OrderProcessor {
             } else {
                 myOpenPrice = dataProvider.openingPrice(symbol);
                 if (BigDecimal.ZERO.compareTo(myOpenPrice)>=0) {
-                    logger.warn("missing opening price for "+symbol()+" on "+new Date(dataProvider.startingTime())+" "+dataProvider.startingTime());
+                    logger.trace("missing opening price for "+symbol()+" on "+new Date(dataProvider.startingTime())+" "+dataProvider.startingTime());
+                    order.cancelOrder(dataProvider.startingTime());
                     return true;
                 }
             }

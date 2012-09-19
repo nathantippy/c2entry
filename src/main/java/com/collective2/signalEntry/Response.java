@@ -6,7 +6,9 @@
  */
 package com.collective2.signalEntry;
 
-import javax.xml.stream.XMLEventReader;
+import com.collective2.signalEntry.adapter.IterableXMLEventReader;
+import com.collective2.signalEntry.implementation.Command;
+
 import java.math.BigDecimal;
 
 public interface Response {
@@ -21,13 +23,13 @@ public interface Response {
 
     Double getDouble(C2Element element);
 
-    XMLEventReader getXMLEventReader();
+    IterableXMLEventReader getXMLEventReader();
 
     Boolean isOk();
 
-    Response rewind();
-    
     String getXML();
+
+    Command command();
 
     void visitC2Elements(C2ElementVisitor c2ElementVisitor, C2Element ... expected);
 }

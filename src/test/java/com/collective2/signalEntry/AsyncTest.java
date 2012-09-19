@@ -7,6 +7,7 @@
 package com.collective2.signalEntry;
 
 import com.collective2.signalEntry.adapter.C2EntryServiceAdapter;
+import com.collective2.signalEntry.adapter.IterableXMLEventReader;
 import com.collective2.signalEntry.adapter.StaticSimulationAdapter;
 import com.collective2.signalEntry.implementation.ImplResponse;
 import com.collective2.signalEntry.implementation.Request;
@@ -14,7 +15,7 @@ import com.collective2.signalEntry.journal.C2EntryServiceJournal;
 import com.collective2.signalEntry.journal.C2EntryServiceMemoryJournal;
 import org.junit.Test;
 
-import javax.xml.stream.XMLEventReader;
+import javax.xml.stream.XMLStreamException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -31,13 +32,18 @@ public class AsyncTest {
             String lastValue = "";
 
             @Override
-            public XMLEventReader transmit(Request request) {
+            public IterableXMLEventReader transmit(Request request) {
                 //each symbol must be greater than the last to ensure the right order
                 assertTrue(((String)request.get(Parameter.Symbol)).compareTo(lastValue)>0);
                 //setup for next test
                 lastValue = (String)request.get(Parameter.Symbol);
 
-                return super.transmit(request);
+                try {
+                    return new IterableXMLEventReader(super.transmit(request));
+                } catch (XMLStreamException e) {
+                    fail(e.getMessage());
+                    throw new C2ServiceException(e,false);
+                }
             }
         };
         C2ServiceFactory factory = new C2ServiceFactory(simulationAdapter);
@@ -76,7 +82,7 @@ public class AsyncTest {
             String lastValue = "";
 
             @Override
-            public XMLEventReader transmit(Request request) {
+            public IterableXMLEventReader transmit(Request request) {
                 //do not allow transmit until we confirm everything got saved
                // lock.lock();
                 if (lock.tryLock()) {

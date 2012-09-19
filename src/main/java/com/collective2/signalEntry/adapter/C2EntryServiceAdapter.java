@@ -8,10 +8,8 @@ package com.collective2.signalEntry.adapter;
 
 import com.collective2.signalEntry.implementation.Request;
 
-import javax.xml.stream.XMLEventReader;
-
 public interface C2EntryServiceAdapter {
 
-    public XMLEventReader transmit(Request request);
+    public IterableXMLEventReader transmit(Request request);
 
 }
