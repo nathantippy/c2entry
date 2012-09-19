@@ -8,7 +8,6 @@ package com.collective2.signalEntry.adapter;
 
 import com.collective2.signalEntry.implementation.Request;
 
-import javax.xml.stream.XMLEventReader;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
@@ -31,7 +30,7 @@ public class TestAdapter extends StaticSimulationAdapter {
     }
 
     @Override
-    public XMLEventReader transmit(Request request) {
+    public IterableXMLEventReader transmit(Request request) {
 
         //ensure the URL is not too long
         URL url = request.buildURL();

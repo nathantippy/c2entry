@@ -15,6 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.xml.stream.XMLEventReader;
+import javax.xml.stream.XMLStreamException;
 import java.math.BigDecimal;
 import java.util.*;
 
@@ -35,41 +36,51 @@ public class StaticSimulationAdapter implements C2EntryServiceAdapter {
     private static final Logger logger = LoggerFactory.getLogger(StaticSimulationAdapter.class);
 
     @Override
-    public XMLEventReader transmit(Request request) {
+    public IterableXMLEventReader transmit(Request request) {
+
+        XMLEventReader xmlEventReader;
 
         switch (request.command()) {
             case Signal:
                 // return fixed values a real simulator could do better here
                 // but, this is good enough for the unit tests
-                return new SimulatedResponseSignal(10344682, "Order 10344682 accepted for immediate processing.");
+                xmlEventReader = new SimulatedResponseSignal(10344682, "Order 10344682 accepted for immediate processing.");
+                break;
             case GetBuyPower:
                 // return fixed values a real simulator could do better here
                 // but, this is good enough for the unit tests
-                return new SimulatedResponseGetBuyPower("OK", 1136058468l, 68300.00d);
+                xmlEventReader = new SimulatedResponseGetBuyPower("OK", 1136058468l, 68300.00d);
+                break;
             case AddToOCAGroup:
                 // return fixed values a real simulator could do better here
                 // but, this is good enough for the unit tests
-                return new SimulatedResponseAddToOCAGroup("OK", "Order 12345 now added to ocagroup 9876");
+                xmlEventReader = new SimulatedResponseAddToOCAGroup("OK", "Order 12345 now added to ocagroup 9876");
+                break;
             case AllSystems:
                 // return fixed values a real simulator could do better here
                 // but, this is good enough for the unit tests
-                return new SimulatedResponseAllSystems("OK", "", 123, 456);
+                xmlEventReader = new SimulatedResponseAllSystems("OK", "", 123, 456);
+                break;
             case Cancel:
                 // return fixed values a real simulator could do better here
                 // but, this is good enough for the unit tests
-                return new SimulatedResponseCancel("OK");
+                xmlEventReader =  new SimulatedResponseCancel("OK");
+                break;
             case CancelAllPending:
                 // return fixed values a real simulator could do better here
                 // but, this is good enough for the unit tests
-                return new SimulatedResponseCancelAllPending("OK");
+                xmlEventReader = new SimulatedResponseCancelAllPending("OK");
+                break;
             case CloseAllPositions:
                 // return fixed values a real simulator could do better here
                 // but, this is good enough for the unit tests
-                return new SimulatedResponseCloseAllPositions("OK");
+                xmlEventReader = new SimulatedResponseCloseAllPositions("OK");
+                break;
             case FlushPendingSignals:
                 // return fixed values a real simulator could do better here
                 // but, this is good enough for the unit tests
-                return new SimulatedResponseFlushPendingSignals("OK");
+                xmlEventReader = new SimulatedResponseFlushPendingSignals("OK");
+                break;
             case AllSignals:
                 // return fixed values a real simulator could do better here
                 // but, this is good enough for the unit tests
@@ -78,11 +89,13 @@ public class StaticSimulationAdapter implements C2EntryServiceAdapter {
                 pendingSignalList.add(1);
                 pendingSignalList.add(2);
                 allPendingSignals.put(1235, pendingSignalList);
-                return new SimulatedResponseGetAllSignals("OK", allPendingSignals);
+                xmlEventReader = new SimulatedResponseGetAllSignals("OK", allPendingSignals);
+                break;
             case GetSystemEquity:
                 // return fixed values a real simulator could do better here
                 // but, this is good enough for the unit tests
-                return new SimulatedResponseGetSystemEquity("OK", 1342299909l, 8755.68d);
+                xmlEventReader = new SimulatedResponseGetSystemEquity("OK", 1342299909l, 8755.68d);
+                break;
             case GetSystemHypothetical:
                 // return fixed values a real simulator could do better here
                 // but, this is good enough for the unit tests
@@ -102,38 +115,53 @@ public class StaticSimulationAdapter implements C2EntryServiceAdapter {
                     
                     data.add(map);
                 }
-                return new SimulatedResponseGetSystemHypothetical(data);
+                xmlEventReader = new SimulatedResponseGetSystemHypothetical(data);
+                break;
             case NewComment:
                 // return fixed values a real simulator could do better here
                 // but, this is good enough for the unit tests
-                return new SimulatedResponseNewComment("OK: Order  29148580 comment created", 29148580, "");
+                xmlEventReader = new SimulatedResponseNewComment("OK: Order  29148580 comment created", 29148580, "");
+                break;
             case PositionStatus:
                 // return fixed values a real simulator could do better here
                 // but, this is good enough for the unit tests
-                return new SimulatedResponsePositionStatus("OK", System.currentTimeMillis(), "EURUSD", 4);
+                xmlEventReader = new SimulatedResponsePositionStatus("OK", System.currentTimeMillis(), "EURUSD", 4);
+                break;
             case RequestOCAId:
                 // return fixed values a real simulator could do better here
                 // but, this is good enough for the unit tests
-                return new SimulatedResponseRequestOCAId(17195788, "You may use the ocaid above when adding new signals.");
+                xmlEventReader = new SimulatedResponseRequestOCAId(17195788, "You may use the ocaid above when adding new signals.");
+                break;
             case Reverse:
                 // return fixed values a real simulator could do better here
                 // but, this is good enough for the unit tests
-                return new SimulatedResponseReverse("OK");
+                xmlEventReader = new SimulatedResponseReverse("OK");
+                break;
             case SendSubscriberBroadcast:
                 // return fixed values a real simulator could do better here
                 // but, this is good enough for the unit tests
-                return new SimulatedResponseSendSubscriberBroadcast("OK");
+                xmlEventReader = new SimulatedResponseSendSubscriberBroadcast("OK");
+                break;
             case SetMinBuyPower:
                 // return fixed values a real simulator could do better here
                 // but, this is good enough for the unit tests
-                return new SimulatedResponseSetMinBuyPower("OK");
+                xmlEventReader = new SimulatedResponseSetMinBuyPower("OK");
+                break;
             case SignalStatus:
                 // return fixed values a real simulator could do better here
                 // but, this is good enough for the unit tests
-                return new SimulatedResponseSignalStatus((Integer)request.get(Parameter.SignalId), "Velocity Forex System", "2006-05-19 15:34:50:000", "2006-05-19 15:45:28:000", "0", "2006-05-19 22:08:53:000", new BigDecimal("20.87"));
-        }
-        throw new C2ServiceException("Unspported command :" + request, false);
+                xmlEventReader = new SimulatedResponseSignalStatus((Integer)request.get(Parameter.SignalId), "Velocity Forex System", "2006-05-19 15:34:50:000", "2006-05-19 15:45:28:000", "0", "2006-05-19 22:08:53:000", new BigDecimal("20.87"));
+                break;
+            default:
+                throw new C2ServiceException("Unsupported command :" + request, false);
 
+        }
+        try {
+            return new IterableXMLEventReader(xmlEventReader);
+        } catch (XMLStreamException e) {
+            logger.warn("Bad XML produced by simulator, should never happen.", e);
+            throw new C2ServiceException(e,false);
+        }
     }
 
 }

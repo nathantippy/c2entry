@@ -10,6 +10,7 @@ import com.collective2.signalEntry.C2ServiceException;
 import com.collective2.signalEntry.Parameter;
 import com.collective2.signalEntry.Response;
 import com.collective2.signalEntry.adapter.C2EntryServiceAdapter;
+import com.collective2.signalEntry.adapter.IterableXMLEventReader;
 import com.collective2.signalEntry.journal.C2EntryServiceJournal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -109,7 +110,7 @@ public class ResponseManager {
 
     }
 
-    public XMLEventReader xmlEventReader(final ImplResponse response) {
+    public IterableXMLEventReader xmlEventReader(final ImplResponse response) {
         try {
             return executor.submit(response.callable()).get();//block until eventReader has been populated.
         } catch (InterruptedException e) {
@@ -124,7 +125,7 @@ public class ResponseManager {
         }
     }
 
-    public XMLEventReader transmit(Request request) {
+    public IterableXMLEventReader transmit(Request request) {
         //all down stream requests must see the same halting exception until its reset.
         if (haltingException != null ) {
             throw haltingException;
@@ -137,7 +138,7 @@ public class ResponseManager {
                 //exceptions thrown here are because
                 // * the network is down and we should try later
                 // * the response was not readable - must stop all
-                XMLEventReader eventReader = adapter.transmit(request);
+                IterableXMLEventReader eventReader = adapter.transmit(request);
                 synchronized (this) {
                     //exceptions thrown here are because
                     // * database was unable to change flag on request to sent - must stop all

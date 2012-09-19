@@ -21,6 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.xml.stream.XMLEventReader;
+import javax.xml.stream.XMLStreamException;
 import java.math.BigDecimal;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -130,7 +131,16 @@ public class DynamicSimulationAdapter implements C2EntryServiceAdapter {
     }
 
     @Override
-    public XMLEventReader transmit(Request request) {
+    public IterableXMLEventReader transmit(Request request) {
+        try {
+            return new IterableXMLEventReader(simpleTransmit(request));
+        } catch (XMLStreamException e) {
+            logger.warn("Simulator did not produce valid XML, should not happen.", e);
+            throw new C2ServiceException(e,false);
+        }
+    };
+
+    private XMLEventReader simpleTransmit(Request request) {
 
         logger.trace("transmit "+request.toString());
 
@@ -139,10 +149,12 @@ public class DynamicSimulationAdapter implements C2EntryServiceAdapter {
             if (request.containsKey(Parameter.SystemId)) {
                 system = lookupSystem(request);
                 if (system==null) {
+
                     return new SimulatedResponseCancel(ERROR);//TODO: make bad password/system response, test server
                 }
             }
 
+            XMLEventReader xmlEventReader;
             Command command = request.command();
             switch (command) {
                 case Signal:

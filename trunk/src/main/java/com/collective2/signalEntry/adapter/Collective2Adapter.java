@@ -11,10 +11,7 @@ import com.collective2.signalEntry.implementation.Request;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.xml.stream.XMLEventReader;
-import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -24,18 +21,17 @@ public class Collective2Adapter implements C2EntryServiceAdapter {
 
     private static final Logger   logger = LoggerFactory.getLogger(Collective2Adapter.class);
 
-    private final XMLInputFactory factory;
     private final static int timeoutInMs = 1000;//one second
     private final static int bufferSize =   320;//do not set any smaller, if needed do set bigger
 
     //must be static lock because there is only one collective2
     private final Object lock = new Object();
 
-    public Collective2Adapter() {
-        factory = XMLInputFactory.newInstance();
+
+    public Collective2Adapter() {;
     }
 
-    public XMLEventReader transmit(Request request) {
+    public IterableXMLEventReader transmit(Request request) {
 
                 //ensure that no commands to collective2 are ever sent in parallel
                 //finish fully reading previous command and close its connection
@@ -84,7 +80,7 @@ public class Collective2Adapter implements C2EntryServiceAdapter {
                                 buffer = newBuffer; //new buffer of the larger size
                             }
                         }
-                        return factory.createXMLEventReader(new ByteArrayInputStream(buffer,0,readOff));
+                        return new IterableXMLEventReader(new String(buffer,0,readOff));
 
                     } catch (XMLStreamException e) {
                         String msg = "Unable to parse XML response from Collective2. Sent:"+request+" Received:"+new String(buffer,0,readOff+count);

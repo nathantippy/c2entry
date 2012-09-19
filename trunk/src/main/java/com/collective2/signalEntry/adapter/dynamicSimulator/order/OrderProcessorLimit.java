@@ -72,7 +72,8 @@ public class OrderProcessorLimit implements OrderProcessor {
             } else {
                 myOpenPrice = dataProvider.openingPrice(symbol);
                 if (BigDecimal.ZERO.compareTo(myOpenPrice)>=0) {
-                    logger.warn("missing opening price for "+symbol()+" on "+new Date(dataProvider.startingTime())+" "+dataProvider.startingTime());
+                    logger.trace("missing opening price for "+symbol()+" on "+new Date(dataProvider.startingTime())+" "+dataProvider.startingTime());
+                    order.cancelOrder(dataProvider.startingTime());
                     return true;
                 }
             }
