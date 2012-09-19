@@ -49,7 +49,7 @@ public class Collective2AdapterTest {
         };
 
         try{
-            XMLEventReader xml = adapter.transmit(mockRequest);
+            IterableXMLEventReader xml = adapter.transmit(mockRequest);
             fail();//bad url should have timed out
         } catch (C2ServiceException e) {
             //if timeout is not set then ConnectException is returned.
@@ -73,7 +73,7 @@ public class Collective2AdapterTest {
             };
         };
 
-        XMLEventReader xml = adapter.transmit(mockRequest);
+        IterableXMLEventReader xml = adapter.transmit(mockRequest);
         assertNotNull(xml);
     }
 
