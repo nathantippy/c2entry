@@ -20,7 +20,8 @@ import javax.xml.stream.events.XMLEvent;
 import java.math.BigDecimal;
 import java.util.ArrayDeque;
 import java.util.Deque;
-import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 
 import static com.collective2.signalEntry.C2Element.ElementStatus;
 
@@ -28,27 +29,21 @@ public class ImplResponse implements Response {
 
     private final static Logger  logger = LoggerFactory.getLogger(ImplResponse.class);
 
-    //lazy init
-    private IterableXMLEventReader          eventReader;
+    private final Future<IterableXMLEventReader>    futureEventReader;
+    private final Request                           request;
+    private final ResponseManager                   manager;
 
-    private final Request                   request;
-    private final ResponseManager           manager;
-    private C2ServiceException              optionalStackTrace;
 
     //only created by ResponseManager
-    ImplResponse(ResponseManager manager, Request request) {
+    ImplResponse(ResponseManager manager, Request request, Future<IterableXMLEventReader> futureEventReader) {
         //fast fail check
         request.validate();
-        assert(keepStack());//stack trace only needed when diagnosing problems requiring knowledge of where request was made.
+
         this.manager = manager;
         this.request = request;
+        this.futureEventReader = futureEventReader;
 
-    }
-
-    private boolean keepStack() {
-        //when assertions are on keep a stack of where this request was created so a full stack trace can be provided
-        optionalStackTrace = new C2ServiceException("Originating Call Stack",false);
-        return true;
+        assert(secureRequest().validate());
     }
 
     public Request secureRequest() {
@@ -59,49 +54,16 @@ public class ImplResponse implements Response {
         return request.command();
     }
 
-    public boolean hasData() {
-        return eventReader!=null;
-    }
-
-    Callable<IterableXMLEventReader> callable() {
-        return new Callable<IterableXMLEventReader>() {
-
-            @Override
-            public IterableXMLEventReader call() throws Exception {
-                try {
-                    //was validated upon construction but assert it was not changed in the meantime
-                    assert(request.validate());
-
-                    //get the data and set it
-                    if (eventReader==null) {
-                        //only halt exceptions are thrown from in here
-                        eventReader = manager.transmit(request);
-                        //now that we have the reader use it to make a quick copy
-
-                        //String xml = captureXMLText(eventReader);
-                        //perhaps it would be easer to capture them as they stream
-
-
-                        //retry is forever, only interrupt can stop it
-                    }
-                } catch (RuntimeException e) {
-                    if (optionalStackTrace!=null) {
-                        optionalStackTrace.overrideCause(e);
-                        throw optionalStackTrace;
-                    } else {
-                        throw e;
-                    }
-                }
-                return eventReader;
-            }
-
-        };
-    }
-
-
     //do call this method, it loops back to the above call
     public IterableXMLEventReader getXMLEventReader() {
-        return manager.xmlEventReader(this);
+        try {
+            return futureEventReader.get();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new C2ServiceException(e,false);
+        } catch (ExecutionException e) {
+            throw new C2ServiceException(e,false);
+        }
     }
 
 

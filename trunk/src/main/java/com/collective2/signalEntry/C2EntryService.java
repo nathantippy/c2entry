@@ -9,6 +9,7 @@ package com.collective2.signalEntry;
 import com.collective2.signalEntry.implementation.*;
 
 import java.math.BigDecimal;
+import java.util.concurrent.TimeoutException;
 
 import static com.collective2.signalEntry.C2Element.ElementOCAId;
 import static com.collective2.signalEntry.Instrument.*;
@@ -324,8 +325,28 @@ public class C2EntryService {
 
     //////////////////////////////////////////////////////////////
 
+    /**
+     * returns true if there are no longer any pending signals after
+     * the given seconds.
+     *
+     * @param seconds
+     * @return
+     */
+    public boolean awaitPending(long seconds) {
+        try {
+            responseManager.awaitPending(seconds);
+        } catch (TimeoutException e) {
+            return false;
+        }
+        return true;
+    }
+
     public void awaitPending() {
-        responseManager.awaitPending();
+            responseManager.awaitPending();
+    }
+
+    public Request[] dropPending() {
+        return responseManager.dropPending();
     }
 
 }

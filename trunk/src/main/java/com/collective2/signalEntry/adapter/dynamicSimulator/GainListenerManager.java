@@ -1,3 +1,9 @@
+/**
+ * This notice shall not be removed.
+ * See the "LICENSE.txt" file found in the root folder
+ * for the full license governing this code.
+ * Nathan Tippy  8/3/12
+ */
 package com.collective2.signalEntry.adapter.dynamicSimulator;
 
 import java.math.BigDecimal;
@@ -5,13 +11,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
-
-/**
- * This notice shall not be removed.
- * See the "LICENSE.txt" file found in the root folder
- * for the full license governing this code.
- * Nathan Tippy  8/3/12
- */
 
 public class GainListenerManager {
 
@@ -43,8 +42,9 @@ public class GainListenerManager {
         //establish start time
         if (firstTime == Long.MIN_VALUE) {
             firstTime = dataProvider.startingTime();
+            lastTime = dataProvider.startingTime();
         }
-        lastTime = dataProvider.startingTime();
+
         assert(now>=0);
 
         if (isTimeToSend(now)) {
@@ -57,6 +57,7 @@ public class GainListenerManager {
                 nameList.add(system.statusMessage());//name with details
 
             }
+            final long nowStart = dataProvider.startingTime();
 
             //must have old values and same number of systems
             if (firstTotalEquityList!=null && totalEquityList.size()==lastTotalEquityList.size()) {
@@ -106,6 +107,7 @@ public class GainListenerManager {
 
                             //store these equity values for next time
                             lastTotalEquityList = totalEquityList;
+                            lastTime = nowStart;
                     }
 
                     /*

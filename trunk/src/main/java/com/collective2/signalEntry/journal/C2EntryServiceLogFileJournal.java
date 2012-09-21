@@ -18,13 +18,15 @@ import java.util.*;
 
 public class C2EntryServiceLogFileJournal implements C2EntryServiceJournal {
 
-    private final static byte STATE_PENDING   = 'P';
-    private final static byte STATE_SENT      = 'S';
-    private final static byte STATE_DROPPED   = 'D';
+    private final static byte STATE_PENDING   = 'P'; //NEW REQUESTS
+    private final static byte STATE_SENT      = 'S'; //SENT TO C2
+    private final static byte STATE_DROPPED   = 'D'; //BULK DROPPED
+    private final static byte STATE_REJECTED  = 'R'; //HUMAN REJECTED
 
     private final ByteBuffer BYTE_BUFFER_SENT;
     private final ByteBuffer BYTE_BUFFER_DROPPED;
     private final ByteBuffer BYTE_BUFFER_PENDING_PADDED;
+    private final ByteBuffer BYTE_BUFFER_REJECTED;
     private final ByteBuffer BYTE_BUFFER_BLANK_DATETIME_PADDED;
     private final ByteBuffer BYTE_BUFFER_NEWLINE;
 
@@ -51,6 +53,7 @@ public class C2EntryServiceLogFileJournal implements C2EntryServiceJournal {
     P - pending
     S - sent
     D - dropped
+    R - rejected
 
     */
 
@@ -61,6 +64,15 @@ public class C2EntryServiceLogFileJournal implements C2EntryServiceJournal {
         BYTE_BUFFER_SENT = ByteBuffer.allocate(1);
         BYTE_BUFFER_SENT.put(STATE_SENT);
         BYTE_BUFFER_SENT.rewind();
+
+        BYTE_BUFFER_DROPPED = ByteBuffer.allocate(1);
+        BYTE_BUFFER_DROPPED.put(STATE_DROPPED);
+        BYTE_BUFFER_DROPPED.rewind();
+
+        BYTE_BUFFER_REJECTED = ByteBuffer.allocate(1);
+        BYTE_BUFFER_REJECTED.put(STATE_REJECTED);
+        BYTE_BUFFER_REJECTED.rewind();
+
 
         //has one space of padding on the right
         BYTE_BUFFER_PENDING_PADDED = ByteBuffer.allocate(2);
@@ -79,11 +91,6 @@ public class C2EntryServiceLogFileJournal implements C2EntryServiceJournal {
         BYTE_BUFFER_NEWLINE = ByteBuffer.allocate(1);
         BYTE_BUFFER_NEWLINE.put((byte)'\n');
         BYTE_BUFFER_NEWLINE.rewind();
-
-        BYTE_BUFFER_DROPPED = ByteBuffer.allocate(1);
-        BYTE_BUFFER_DROPPED.put(STATE_DROPPED);
-        BYTE_BUFFER_DROPPED.rewind();
-
 
         try {
             logFile = file;
@@ -227,7 +234,21 @@ public class C2EntryServiceLogFileJournal implements C2EntryServiceJournal {
     }
 
     @Override
+    public void markRejected(Request request) {
+        mark(request,BYTE_BUFFER_REJECTED);
+    }
+
+    @Override
     public void markSent(Request request) {
+        mark(request,BYTE_BUFFER_SENT);
+    }
+
+    /**
+     * Set the mark byte on this row and set the time
+     * @param request
+     * @param mark
+     */
+    private void mark(Request request, ByteBuffer mark) {
 
         //remove from in memory list
         Request oldPending = requests.remove(0);
@@ -237,8 +258,8 @@ public class C2EntryServiceLogFileJournal implements C2EntryServiceJournal {
         long pendingPosition = positions.remove(0);
         try {
             //mark oldest pending as sent with a timestamp of now
-            randomChannel.write(BYTE_BUFFER_SENT, pendingPosition);
-            BYTE_BUFFER_SENT.rewind();
+            randomChannel.write(mark, pendingPosition);
+            mark.rewind();
             randomChannel.write(isoDateTime(Calendar.getInstance()), pendingPosition+ DONE_DATETIME_OFFSET);
 
         } catch (IOException e) {
@@ -304,10 +325,14 @@ public class C2EntryServiceLogFileJournal implements C2EntryServiceJournal {
     }
 
     @Override
-    public void dropPending() {
+    public Request[] dropPending() {
+
+        Request[] dropped = new Request[requests.size()];
+        int d = 0;
+
         //write update for each of these
         while (!requests.isEmpty()) {
-            requests.remove(0);
+            dropped[d++] = requests.remove(0).secureClone();
             long pendingPosition = positions.remove(0);
             try {
                 randomChannel.write(BYTE_BUFFER_DROPPED, pendingPosition);
@@ -317,11 +342,8 @@ public class C2EntryServiceLogFileJournal implements C2EntryServiceJournal {
                 throwError("Unable to drop all pending requests.",e,false);
             }
         }
-    }
 
-    @Override
-    public void awaitApproval(Request request) {
-        //NOTE: this feature not implemented here
+        return dropped;
     }
 
     void close() {
