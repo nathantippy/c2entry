@@ -15,7 +15,6 @@ public interface C2EntryServiceJournal {
     Iterator<Request> pending();
     void append(Request request);
     void markSent(Request request);
-    void dropPending();
-
-    void awaitApproval(Request request);
+    void markRejected(Request request);
+    Request[] dropPending();
 }

@@ -21,6 +21,7 @@ public class IterableXMLEventReader implements XMLEventReader, Iterable<XMLEvent
     private static final Logger logger = LoggerFactory.getLogger(IterableXMLEventReader.class);
 
     private static final XMLInputFactory factory = XMLInputFactory.newInstance();
+
     private final String            rawXML;
     private final XMLEventReader    xmlEventReader;
 

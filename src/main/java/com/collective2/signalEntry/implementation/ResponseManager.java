@@ -11,16 +11,13 @@ import com.collective2.signalEntry.Parameter;
 import com.collective2.signalEntry.Response;
 import com.collective2.signalEntry.adapter.C2EntryServiceAdapter;
 import com.collective2.signalEntry.adapter.IterableXMLEventReader;
+import com.collective2.signalEntry.approval.C2EntryHumanApproval;
 import com.collective2.signalEntry.journal.C2EntryServiceJournal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.xml.stream.XMLEventReader;
 import java.util.Iterator;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.*;
 
 public class ResponseManager {
     private static final Logger         logger = LoggerFactory.getLogger(ResponseManager.class);
@@ -29,7 +26,9 @@ public class ResponseManager {
     private final C2EntryServiceJournal journal;
     private C2ServiceException          haltingException;
     private final long                  networkDownRetryDelay;
-    private boolean isClean;//is false when out of sync with journal
+    private boolean                     isClean;//is false when out of sync with journal
+    private final boolean               showDeepStacks = true;
+    private final C2EntryHumanApproval approvalRequestable;
 
 
     private static final String        threadName = "C2EntryServiceResponseManager";
@@ -52,9 +51,14 @@ public class ResponseManager {
         }
     };
 
-    public ResponseManager(C2EntryServiceAdapter adapter, C2EntryServiceJournal journal, long networkDownRetryDelay) {
+    public ResponseManager(C2EntryServiceAdapter    adapter,
+                           C2EntryServiceJournal    journal,
+                           C2EntryHumanApproval approvalRequestable,
+                           long                     networkDownRetryDelay
+                           ) {
         this.adapter                = adapter;
         this.journal                = journal;
+        this.approvalRequestable    = approvalRequestable;
         this.networkDownRetryDelay  = networkDownRetryDelay;
     }
 
@@ -62,41 +66,16 @@ public class ResponseManager {
         return haltingException;
     }
 
-    public synchronized void reloadPendingRequests(String password) {
-        if (!isClean) {
-            //reload old pending requests
-            Iterator<Request> iterator = this.journal.pending();
-            if (iterator.hasNext()) {
-                //never modify object passed in or this may leak the password out!
-                Request request = iterator.next().secureClone();
-                if (request.containsKey(Parameter.Password)) {
-                    request.put(Parameter.Password, password);
-                }
-                executor.submit(new ImplResponse(this, request).callable()); //Note: may want to add a recovery listener here
-            }
-            while(iterator.hasNext()) {
-                //never modify object passed in or this may leak the password out!
-                Request request = iterator.next().secureClone();
-                if (request.containsKey(Parameter.Password)) {
-                    request.put(Parameter.Password, password);
-                }
-                executor.submit(new ImplResponse(this, request).callable()); //Note: may want to add a recovery listener here
-            }
-            isClean=true;
+    public void awaitPending(long seconds) throws TimeoutException {
+        try {
+            //if executor has gotten down to this one then everything else is done
+            executor.submit(placeHolder).get(seconds,TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        } catch (ExecutionException e) {
+            throw new C2ServiceException("awaitPending",e.getCause(),false);
         }
     }
-
-    public Response fetchResponse(Request request) {
-        ImplResponse newResponse = new ImplResponse(this, request);
-        synchronized (this) {
-            journal.append(request.secureClone());
-            assert(request.validate());
-            assert(newResponse.secureRequest().validate());
-            executor.submit(newResponse.callable());
-        }
-        return newResponse;
-    }
-
 
     public void awaitPending() {
         try {
@@ -107,63 +86,125 @@ public class ResponseManager {
         } catch (ExecutionException e) {
             throw new C2ServiceException("awaitPending",e.getCause(),false);
         }
-
     }
 
-    public IterableXMLEventReader xmlEventReader(final ImplResponse response) {
-        try {
-            return executor.submit(response.callable()).get();//block until eventReader has been populated.
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new C2ServiceException("xmlEventReader",e,!response.hasData());
-        } catch (ExecutionException e) {
-            if (e.getCause() instanceof C2ServiceException) {
-                throw (C2ServiceException)e.getCause();
-            } else {
-                throw new C2ServiceException("xmlEventReader",e.getCause(),!response.hasData());
-            }
-        }
+    public Request[] dropPending() {
+        return journal.dropPending();
     }
 
-    public IterableXMLEventReader transmit(Request request) {
-        //all down stream requests must see the same halting exception until its reset.
-        if (haltingException != null ) {
-            throw haltingException;
-        }
-
-        boolean  tryAgain = false;
-        do {
-            try {
-                journal.awaitApproval(request.secureClone());
-                //exceptions thrown here are because
-                // * the network is down and we should try later
-                // * the response was not readable - must stop all
-                IterableXMLEventReader eventReader = adapter.transmit(request);
-                synchronized (this) {
-                    //exceptions thrown here are because
-                    // * database was unable to change flag on request to sent - must stop all
-                    journal.markSent(request.secureClone());
+    public synchronized void reloadPendingRequests(String password) {
+        if (!isClean) {
+            //reload old pending requests
+            Iterator<Request> iterator = this.journal.pending();
+            if (iterator.hasNext()) {
+                //never modify object passed in or this may leak the password out!
+                Request journalInstance = iterator.next();
+                Request request = journalInstance.secureClone();
+                if (request.containsKey(Parameter.Password)) {
+                    request.put(Parameter.Password, password);
                 }
-                return eventReader;
+                Response r = new ImplResponse(this, request, executor.submit(callable(request, journalInstance)));
+                 //Note: may want to add a recovery listener here
+            }
+            while(iterator.hasNext()) {
+                //never modify object passed in or this may leak the password out!
+                Request journalInstance = iterator.next();
+                Request request = journalInstance.secureClone();
+                if (request.containsKey(Parameter.Password)) {
+                    request.put(Parameter.Password, password);
+                }
+                Response r = new ImplResponse(this, request, executor.submit(callable(request, journalInstance)));
+                 //Note: may want to add a recovery listener here
+            }
+            isClean=true;
+        }
+    }
 
-            } catch (C2ServiceException e) {
-                tryAgain = e.tryAgain();//if true wait for configured delay and try again.
-                if (tryAgain) {
-                    try {
-                        Thread.sleep(networkDownRetryDelay);
-                    } catch (InterruptedException ie) {
-                        throw e; //this is not a halting exception
+    public Response fetchResponse(Request request) {
+        assert(request.validate());
+
+        synchronized (this) {
+            Request journalInstance = request.secureClone();//use the same instance for all journal work
+            journal.append(journalInstance); //must add to journal before submit to executor
+            approvalRequestable.oneMoreRequest(journalInstance);
+            return new ImplResponse(this, request, executor.submit(callable(request,journalInstance)));
+        }
+    }
+
+    private Callable<IterableXMLEventReader> callable(final Request request, final Request journalInstance) {
+
+        return new Callable<IterableXMLEventReader>() {
+
+            C2ServiceException optionalStackTrace = showDeepStacks ?
+                                                    new C2ServiceException("Originating Call Stack",false) :
+                                                    null;
+
+            @Override
+            public IterableXMLEventReader call() throws Exception {
+
+                try {
+                    if (!journalInstance.isApprovalKnown()) {
+                        //must get approval for these!
+                        approvalRequestable.waitForApproval(journal.pending());
                     }
-                } else {
-                    haltingException = e;
-                    throw haltingException;
-                }
-            } catch (Exception ex) {
-                haltingException = new C2ServiceException(request.toString(),ex,false);
-                throw haltingException;
-            }
-        } while (tryAgain);
-        throw new C2ServiceException("Unable to execute.",true);
 
+                    if (!journalInstance.isApproved()) {
+                       journal.markRejected(journalInstance);
+                       return new IterableXMLEventReader("<rejected>not approved</rejected>");
+                    };
+
+                    //was validated upon construction but assert it was not changed in the meantime
+                    assert(request.validate());
+                    //all down stream requests must see the same halting exception until its reset.
+                    if (haltingException != null ) {
+                        throw haltingException;
+                    }
+
+                    boolean  tryAgain = false;
+                    do {
+                        try {
+                            //exceptions thrown here are because
+                            // * the network is down and we should try later
+                            // * the response was not readable - must stop all
+                            IterableXMLEventReader eventReader = adapter.transmit(request);
+                            synchronized (ResponseManager.this) {
+                                //exceptions thrown here are because
+                                // * database was unable to change flag on request to sent - must stop all
+                                journal.markSent(journalInstance);
+                            }
+                            return eventReader;
+
+                        } catch (C2ServiceException e) {
+                            tryAgain = e.tryAgain();//if true wait for configured delay and try again.
+                            if (tryAgain) {
+                                try {
+                                    Thread.sleep(networkDownRetryDelay);
+                                } catch (InterruptedException ie) {
+                                    throw e; //this is not a halting exception
+                                }
+                            } else {
+                                haltingException = e;
+                                throw haltingException;
+                            }
+                        } catch (Exception ex) {
+                            haltingException = new C2ServiceException(request.toString(),ex,false);
+                            throw haltingException;
+                        }
+                    } while (tryAgain);
+                    throw new C2ServiceException("Unable to execute.",true);
+
+                } catch (RuntimeException e) {
+                    if (optionalStackTrace!=null) {
+                        optionalStackTrace.overrideCause(e);
+                        throw optionalStackTrace;
+                    } else {
+                        throw e;
+                    }
+                }
+            }
+
+        };
     }
+
+
 }

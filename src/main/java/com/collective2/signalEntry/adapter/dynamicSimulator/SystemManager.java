@@ -371,7 +371,10 @@ public class SystemManager {
 
     public BigDecimal totalMargin() {
 
+        //TODO: margin is computed differenctly for each instrument
+        //return portfolio.equity(lastDataProvider);
 
+        //keep this and make it optional?
         //based on each positions instrument
         return BigDecimal.ZERO;//TODO: margin not used in first release, not implemented yet
 

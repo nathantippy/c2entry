@@ -20,8 +20,7 @@ import java.util.List;
 public class C2EntryServiceMemoryJournal implements C2EntryServiceJournal {
 
     private final static Logger logger = LoggerFactory.getLogger(C2EntryServiceMemoryJournal.class);
-
-    List < Request > list = new ArrayList<Request>();
+    private final List < Request > list = new ArrayList<Request>();
 
     @Override
     public Iterator<Request> pending() {
@@ -34,6 +33,14 @@ public class C2EntryServiceMemoryJournal implements C2EntryServiceJournal {
     }
 
     @Override
+    public void markRejected(Request request) {
+        Request oldPending = list.remove(0);
+        if (!request.equals(oldPending)) {
+            throw new C2ServiceException("Expected to finish "+oldPending+" but instead was rejected "+request,false);
+        }
+    }
+
+    @Override
     public void markSent(Request request) {
         Request oldPending = list.remove(0);
         if (!request.equals(oldPending)) {
@@ -42,13 +49,16 @@ public class C2EntryServiceMemoryJournal implements C2EntryServiceJournal {
     }
 
     @Override
-    public void dropPending() {
+    public Request[] dropPending() {
+        Request[] dropped = new Request[list.size()];
+        int d = 0;
+        while (d<list.size()) {
+            dropped[d] = list.get(d++).secureClone();
+        }
+
         logger.warn("dropped pending requests");
         list.clear();
+        return dropped;
     }
 
-    @Override
-    public void awaitApproval(Request request) {
-        //NOTE: this feature not implemented here
-    }
 }

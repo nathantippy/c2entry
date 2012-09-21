@@ -27,6 +27,13 @@ public class Request extends EnumMap<Parameter, Object> {
     private static final String  urlHost     = "www.collective2.com";
     private static final String  urlFile     = "/cgi-perl/signal.mpl";
 
+    //Any existing pending request must be approved again.  Once its sent in the journal it will be either
+    //marked as rejected or sent.  Until then approval will need to be given again if the servers are down
+    //and the sender has saved the requests and sender has restarted.  In this case due to the stale nature of
+    //the signals it is likely the human will want to cancel all the requests so it was decided to ask again
+    //rather than persist the approvals.
+    private transient Boolean approved;//tri-state null is 'unknown' and will require user input
+
     public Request(Command command) {
         super((Parameter.class));
         super.put(Parameter.SignalEntryCommand, command);
@@ -34,6 +41,19 @@ public class Request extends EnumMap<Parameter, Object> {
 
     public Command command() {
         return (Command) get(Parameter.SignalEntryCommand);
+    }
+
+    public void setApproved(boolean approved) {
+        assert(this.approved == null) : "Should not set approval once it is already set, this is not a good idea.";
+        this.approved = approved;
+    }
+
+    public boolean isApprovalKnown() {
+        return null != approved;
+    }
+
+    public Boolean isApproved() {
+        return approved;
     }
 
     @Override
@@ -56,6 +76,7 @@ public class Request extends EnumMap<Parameter, Object> {
         if (clone.containsKey(Parameter.Password)) {
             clone.put(Parameter.Password,"*****");
         }
+        clone.approved = this.approved;
         return clone;
     }
 
@@ -78,7 +99,7 @@ public class Request extends EnumMap<Parameter, Object> {
                 base.put(p,obj);
            }
        }
-
+       base.approved = this.approved;
        return base;
     }
 

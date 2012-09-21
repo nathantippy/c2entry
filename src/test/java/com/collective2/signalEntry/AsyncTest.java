@@ -122,8 +122,8 @@ public class AsyncTest {
             }
 
             @Override
-            public void dropPending() {
-                super.dropPending();
+            public Request[] dropPending() {
+                return super.dropPending();
             }
         };
 

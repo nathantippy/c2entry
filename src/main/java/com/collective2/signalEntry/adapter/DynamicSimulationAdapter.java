@@ -75,7 +75,7 @@ public class DynamicSimulationAdapter implements C2EntryServiceAdapter {
     private final ExecutorService gainExecutor = Executors.newSingleThreadExecutor(threadFactory);
 
     public DynamicSimulationAdapter(long startTime) {
-        this.time = startTime;
+       // this.time = startTime;
     }
 
     public void tick(DataProvider dataProvider, C2EntryService entryService) {
