@@ -238,15 +238,18 @@ public class SystemManager {
 
             Integer ocaId = null;
 
+            RelativeNumber stopLoss = (RelativeNumber)request.get(Parameter.RelativeStopLoss);
+            RelativeNumber profitTarget = (RelativeNumber)request.get(RelativeProfitTarget);
+
             Integer forceNoOCA = (Integer)request.get(ForceNoOCA);
-            if (forceNoOCA==null || forceNoOCA.intValue()!=1) {
+            if ((forceNoOCA==null || forceNoOCA.intValue()!=1) && (null!=stopLoss) && (null!=profitTarget)) {
                 ocaId = generateNewOCAId();
             }
             int stopLossSignalId = NO_ID;
             int profitTargetSignalId = NO_ID;
 
             //generate and schedule requests for all-in-one
-            RelativeNumber stopLoss = (RelativeNumber)request.get(Parameter.RelativeStopLoss);
+
             if (stopLoss!=null) {
                 Request stopRequest = request.baseConditional();
 
@@ -280,7 +283,7 @@ public class SystemManager {
             }
 
             //generate and schedule requests for all-in-one
-            RelativeNumber profitTarget = (RelativeNumber)request.get(RelativeProfitTarget);
+
             if (profitTarget!=null) {
                 Request profitTargetRequest = request.baseConditional();
 

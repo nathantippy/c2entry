@@ -7,6 +7,7 @@
 package com.collective2.signalEntry.adapter;
 
 import com.collective2.signalEntry.implementation.Request;
+import org.junit.Test;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -27,6 +28,11 @@ public class TestAdapter extends StaticSimulationAdapter {
 
     public String getLastURLString() {
         return lastURLString;
+    }
+
+    @Test
+    public void emptyTest() {
+        assertTrue(true);
     }
 
     @Override

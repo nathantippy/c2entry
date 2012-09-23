@@ -1,5 +1,6 @@
 package com.collective2.signalEntry.adapter.dynamicSimulator.order;
 
+import com.collective2.signalEntry.BasePrice;
 import com.collective2.signalEntry.adapter.dynamicSimulator.DataProvider;
 import com.collective2.signalEntry.adapter.dynamicSimulator.portfolio.Portfolio;
 import com.collective2.signalEntry.adapter.dynamicSimulator.quantity.QuantityComputable;
@@ -165,6 +166,12 @@ public class OrderProcessorStop implements OrderProcessor {
 
     @Override
     public BigDecimal triggerPrice() {
+        //this IS known before processing but only if its absolute, TODO: needs refactoring.
+        if (absoluteStop.compareTo(BigDecimal.ZERO) ==0 ) {
+            if(relativeStop.prefix()== BasePrice.Absolute.prefix()) {
+                absoluteStop = relativeStop.value();
+            }
+        }
         return absoluteStop;
     }
 }

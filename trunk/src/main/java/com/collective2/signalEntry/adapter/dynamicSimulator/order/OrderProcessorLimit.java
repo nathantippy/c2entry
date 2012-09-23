@@ -7,6 +7,7 @@
 
 package com.collective2.signalEntry.adapter.dynamicSimulator.order;
 
+import com.collective2.signalEntry.BasePrice;
 import com.collective2.signalEntry.adapter.dynamicSimulator.DataProvider;
 import com.collective2.signalEntry.adapter.dynamicSimulator.portfolio.Portfolio;
 import com.collective2.signalEntry.adapter.dynamicSimulator.quantity.QuantityComputable;
@@ -172,6 +173,12 @@ public class OrderProcessorLimit implements OrderProcessor {
 
     @Override
     public BigDecimal triggerPrice() {
+        //this IS known before processing but only if its absolute, TODO: needs refactoring.
+        if (absoluteLimit.compareTo(BigDecimal.ZERO) ==0 ) {
+            if(relativeLimit.prefix()== BasePrice.Absolute.prefix()) {
+                absoluteLimit = relativeLimit.value();
+            }
+        }
         return absoluteLimit;
     }
 
