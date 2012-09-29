@@ -66,7 +66,7 @@ public class StaticSimulationAdapter implements C2EntryServiceAdapter {
             case Cancel:
                 // return fixed values a real simulator could do better here
                 // but, this is good enough for the unit tests
-                xmlEventReader =  new SimulatedResponseSimple("OK");
+                xmlEventReader =  new SimulatedResponseCancel("OK");
                 break;
             case CancelAllPending:
                 // return fixed values a real simulator could do better here
