@@ -27,8 +27,6 @@ public class GainListenerManager {
     GainListener     listener;
     boolean          isFinal;
 
-    //TODO: does not compute unit gain correctly
-
     public GainListenerManager(long start, long period, GainListener listener) {
         this.start = start;
         this.period = period;

@@ -20,7 +20,7 @@ import static com.collective2.signalEntry.Parameter.*;
 
 public enum Command {
 
-    Signal("signal") {
+    Signal(true, "signal") {
 
         protected EnumSet<Parameter> paraRequired() {
             return EnumSet.of(SystemId, Password, Instrument, Symbol, TimeInForce);
@@ -47,7 +47,7 @@ public enum Command {
             return EnumSet.of(ElementSignalId,ElementStatus,ElementComments,ElementProfitTaretSignalId,ElementStopLossSignalId);
         }
     },
-    RequestOCAId("requestocaid") {
+    RequestOCAId(false, "requestocaid") {
         protected EnumSet<Parameter> paraRequired() {
             return EnumSet.of(SystemId, Password);
         }
@@ -55,7 +55,7 @@ public enum Command {
             return EnumSet.of(ElementStatus,ElementOCAId);
         }
     },
-    Cancel("cancel") {
+    Cancel(true, "cancel") {
         protected EnumSet<Parameter> paraRequired() {
             return EnumSet.of(SystemId, Password, SignalId);
         }
@@ -63,7 +63,7 @@ public enum Command {
             return EnumSet.of(ElementStatus);
         }
     },
-    CloseAllPositions("closeallpositions") {
+    CloseAllPositions(true, "closeallpositions") {
         protected EnumSet<Parameter> paraRequired() {
             return EnumSet.of(SystemId, Password, SignalId);
         }
@@ -71,7 +71,7 @@ public enum Command {
             return EnumSet.of(ElementStatus);
         }
     },
-    CancelAllPending("cancelallpending") {
+    CancelAllPending(true, "cancelallpending") {
         protected EnumSet<Parameter> paraRequired() {
             return EnumSet.of(SystemId, Password);
         }
@@ -79,7 +79,7 @@ public enum Command {
             return EnumSet.of(ElementStatus);
         }
     },
-    FlushPendingSignals("flushpendingsignals") {
+    FlushPendingSignals(true, "flushpendingsignals") {
         protected EnumSet<Parameter> paraRequired() {
             return EnumSet.of(SystemId, Password);
         }
@@ -87,7 +87,7 @@ public enum Command {
             return EnumSet.of(ElementStatus);
         }
     },
-    GetBuyPower("getbuypower") {
+    GetBuyPower(false, "getbuypower") {
         protected EnumSet<Parameter> paraRequired() {
             return EnumSet.of(SystemId, Password);
         }
@@ -95,7 +95,7 @@ public enum Command {
             return EnumSet.of(ElementStatus,ElementCalcTime,ElementBuyPower);
         }
     },
-    SignalStatus("signalstatus") {
+    SignalStatus(false, "signalstatus") {
         protected EnumSet<Parameter> paraRequired() {
             return EnumSet.of(EMail, Password, SignalId);
         }
@@ -111,7 +111,7 @@ public enum Command {
                               ElementTimeInForce,ElementOCAGroupIdDetail);
         }
     },
-    PositionStatus("positionstatus") {
+    PositionStatus(false, "positionstatus") {
         protected EnumSet<Parameter> paraRequired() {
             return EnumSet.of(SystemId, Password, Symbol);
         }
@@ -119,7 +119,7 @@ public enum Command {
             return EnumSet.of(ElementStatus,ElementCalcTime,ElementSymbol,ElementPosition);
         }
     },
-    AllSystems("allsystems") {
+    AllSystems(false, "allsystems") {
         protected EnumSet<Parameter> paraRequired() {
             return EnumSet.of(EMail, Password);
         }
@@ -127,7 +127,7 @@ public enum Command {
             return EnumSet.of(ElementStatus,ElementErrorType,ElementComment);
         }
     },
-    AllSignals("getallsignals") {
+    AllSignals(false, "getallsignals") {
         protected EnumSet<Parameter> paraRequired() {
             return EnumSet.of(EMail, Password);
         }
@@ -135,7 +135,7 @@ public enum Command {
             return EnumSet.of(ElementStatus,ElementSystemId,ElementSignalId);
         }
     },
-    GetSystemHypothetical("getsystemhypothetical") {
+    GetSystemHypothetical(false, "getsystemhypothetical") {
         protected EnumSet<Parameter> paraRequired() {
             return EnumSet.of(Systems, Password, EMail);
         }
@@ -143,7 +143,7 @@ public enum Command {
             return EnumSet.of(ElementSystemId,ElementSystemName,ElementTotalEquityAvail,ElementCash,ElementEquity,ElementMarginUsed);
         }
     },
-    AddToOCAGroup("addtoocagroup") {
+    AddToOCAGroup(true, "addtoocagroup") {
         protected EnumSet<Parameter> paraRequired() {
             return EnumSet.of(SignalId, Password, EMail, OCAGroupIdToGrow);
         }
@@ -151,7 +151,7 @@ public enum Command {
             return EnumSet.of(ElementStatus,ElementDetails);
         }
     },
-    NewComment("newcomment") {
+    NewComment(true, "newcomment") {
         protected EnumSet<Parameter> paraRequired() {
             return EnumSet.of(SystemId, Password, Commentary, SignalId);
         }
@@ -159,7 +159,7 @@ public enum Command {
             return EnumSet.of(ElementStatus,ElementSignalId,ElementPreviousComment);
         }
     },
-    SetMinBuyPower("setminbuypower") {
+    SetMinBuyPower(true, "setminbuypower") {
         protected EnumSet<Parameter> paraRequired() {
             return EnumSet.of(SystemId, Password, BuyPower);
         }
@@ -167,7 +167,7 @@ public enum Command {
             return EnumSet.of(ElementStatus);
         }
     },
-    SendSubscriberBroadcast("sendSubscriberBroadcast") {
+    SendSubscriberBroadcast(true, "sendSubscriberBroadcast") {
         protected EnumSet<Parameter> paraRequired() {
             return EnumSet.of(SystemId, Password, EMail, Message);
         }
@@ -175,7 +175,7 @@ public enum Command {
             return EnumSet.of(ElementStatus);
         }
     },
-    GetSystemEquity("getsystemequity") {
+    GetSystemEquity(false, "getsystemequity") {
         protected EnumSet<Parameter> paraRequired() {
             return EnumSet.of(SystemId, Password);
         }
@@ -183,7 +183,7 @@ public enum Command {
             return EnumSet.of(ElementStatus,ElementCalcTime,ElementSystemEquity);
         }
     },
-    Reverse("reverse")  {
+    Reverse(true, "reverse")  {
         protected EnumSet<Parameter> paraRequired() {
             return EnumSet.of(SystemId, Password, Symbol);
         }
@@ -202,8 +202,10 @@ public enum Command {
     private final EnumSet<Parameter>[] optionalExclusiveGroups;
     private final EnumSet<C2Element> possibleResult;
     private final String URLToken;
+    private final boolean approvalRequired;
 
-    private Command(String URLToken) {
+    private Command(boolean approvalRequired, String URLToken) {
+        this.approvalRequired        = approvalRequired;
         this.URLToken                = URLToken;
 
         this.required                = paraRequired();
@@ -211,6 +213,10 @@ public enum Command {
         this.optional                = paraOptional();
         this.optionalExclusiveGroups = paraOptionalExclusiveSets();
         this.possibleResult          = possibleResult();
+    }
+
+    public boolean approvalRequired() {
+        return approvalRequired;
     }
 
     protected abstract EnumSet<C2Element> possibleResult();

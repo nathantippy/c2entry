@@ -59,14 +59,15 @@ public class OrderProcessorMarket implements OrderProcessor {
             if (null != order.conditionalUpon() && order.conditionalUpon().isTradedThisSession(dataProvider)) {
                 myOpenPrice = order.conditionalUpon().tradePrice();
                 assert(myOpenPrice.compareTo(BigDecimal.ZERO)>0);
-            } else {
+            }
+                //do not allow new open position if the price has dropped to zero
                 myOpenPrice = dataProvider.openingPrice(symbol);
-                if (BigDecimal.ZERO.compareTo(myOpenPrice)>=0) {
+                if (BigDecimal.ZERO.compareTo(myOpenPrice)>=0 && (SignalAction.BTO == action || SignalAction.STO == action) ) {
                     logger.trace("missing opening price for "+symbol()+" on "+new Date(dataProvider.startingTime())+" "+dataProvider.startingTime());
                     order.cancelOrder(dataProvider.startingTime());
                     return true;
                 }
-            }
+
 
             Integer quantity = quantityComputable.quantity(myOpenPrice,dataProvider);
             if (quantity.intValue()==0){

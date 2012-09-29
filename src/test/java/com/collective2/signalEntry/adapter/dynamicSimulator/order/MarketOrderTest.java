@@ -51,7 +51,7 @@ public class MarketOrderTest {
         long cancelAtMs = Long.MAX_VALUE;
         Duration timeInForce = Duration.GoodTilCancel;
         OrderProcessorMarket processor = new OrderProcessorMarket(time, symbol);
-        Order order = new Order(id,instrument,symbol,action,quantityComputable,cancelAtMs,timeInForce,processor, null);
+        Order order = new Order(null, id,instrument,symbol,action,quantityComputable,cancelAtMs,timeInForce,processor, null);
 
         //test only the processor and do it outside the order
         boolean processed = processor.process(dataProvider, portfolio, commission, order, action, quantityComputable, null);
@@ -64,7 +64,7 @@ public class MarketOrderTest {
         //sell to close this open position.
 
         action = SignalAction.STC;
-        order = new Order(id,instrument,symbol,action,quantityComputable,cancelAtMs,timeInForce,processor, null);
+        order = new Order(null, id,instrument,symbol,action,quantityComputable,cancelAtMs,timeInForce,processor, null);
 
         //test only the processor and do it outside the order
         processed = processor.process(dataProvider, portfolio, commission, order, action, quantityComputable, null);
@@ -100,7 +100,7 @@ public class MarketOrderTest {
         long cancelAtMs = Long.MAX_VALUE;
         Duration timeInForce = Duration.GoodTilCancel;
         OrderProcessorMarket processor = new OrderProcessorMarket(time, symbol);
-        Order order = new Order(id,instrument,symbol,sellAction,quantityComputable,cancelAtMs,timeInForce,processor, null);
+        Order order = new Order(null, id,instrument,symbol,sellAction,quantityComputable,cancelAtMs,timeInForce,processor, null);
 
         //test only the processor and do it outside the order
         boolean processed = processor.process(dataProvider, portfolio, commission, order, sellAction, quantityComputable, null);
@@ -113,7 +113,7 @@ public class MarketOrderTest {
         //Buy to cover this short position
 
         SignalAction action = SignalAction.BTC;
-        order = new Order(id,instrument,symbol,action,quantityComputable,cancelAtMs,timeInForce,processor, null);
+        order = new Order(null, id,instrument,symbol,action,quantityComputable,cancelAtMs,timeInForce,processor, null);
 
         processed = processor.process(dataProvider, portfolio, commission, order, action, quantityComputable, null);
 

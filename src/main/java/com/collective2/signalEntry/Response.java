@@ -10,6 +10,7 @@ import com.collective2.signalEntry.adapter.IterableXMLEventReader;
 import com.collective2.signalEntry.implementation.Command;
 
 import java.math.BigDecimal;
+import java.util.Collection;
 
 public interface Response {
     
@@ -32,4 +33,7 @@ public interface Response {
     Command command();
 
     void visitC2Elements(C2ElementVisitor c2ElementVisitor, C2Element ... expected);
+
+    <Integer> Collection<Integer> collectIntegers(Collection<Integer> target,C2Element element);
+
 }

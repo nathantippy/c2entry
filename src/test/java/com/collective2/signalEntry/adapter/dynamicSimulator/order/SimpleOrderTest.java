@@ -52,7 +52,7 @@ public class SimpleOrderTest {
         long cancelAtMs = Long.MAX_VALUE;
         Duration timeInForce = Duration.GoodTilCancel;
         OrderProcessorMarket processor = new OrderProcessorMarket(time, symbol);
-        Order buyOrder = new Order(id,instrument,symbol,action,quantityComputable,cancelAtMs,timeInForce,processor, null);
+        Order buyOrder = new Order(null, id,instrument,symbol,action,quantityComputable,cancelAtMs,timeInForce,processor, null);
 
         //final quantity is not known until this order is processed
         //this however has the quantity because QuantityComputableFixed is used above
@@ -60,7 +60,7 @@ public class SimpleOrderTest {
 
         action = SignalAction.STC;
         quantityComputable = new QuantityComputableEntry(buyOrder);
-        Order sellOrder = new Order(id,instrument,symbol,action,quantityComputable,cancelAtMs,timeInForce,processor, buyOrder);
+        Order sellOrder = new Order(null, id,instrument,symbol,action,quantityComputable,cancelAtMs,timeInForce,processor, buyOrder);
 
         //final quantity is not known until this order is processed
         //this however has the quantity because QuantityComputableFixed is used above

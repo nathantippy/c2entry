@@ -7,6 +7,8 @@
 package com.collective2.signalEntry.adapter.simulationXML;
 
 import com.collective2.signalEntry.Duration;
+import com.collective2.signalEntry.Related;
+import com.collective2.signalEntry.adapter.dynamicSimulator.order.Order;
 import com.collective2.signalEntry.implementation.SignalAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,31 +23,20 @@ public class SimulatedResponseSignalStatus extends SimulatedResponse {
 
     private static final Logger logger = LoggerFactory.getLogger(SimulatedResponseSignalStatus.class);
 
-    public SimulatedResponseSignalStatus(Integer signalId, String systemname, String postedwhen,
-                                         String emailedwhen, String killedwhen,
-                                         String tradedwhen, BigDecimal tradeprice) {
-        super(buildEvents(signalId,systemname,postedwhen,emailedwhen,killedwhen,tradedwhen,tradeprice,
-                        false,null,0,null,null,null,null,null,null));
+    public SimulatedResponseSignalStatus(String systemname, boolean detail, Related showRelated, Order order) {
+        super(buildEvents(systemname,detail, showRelated, order, true).iterator());
     }
 
-    public SimulatedResponseSignalStatus(Integer signalId, String systemname, String postedwhen,
-                                         String emailedwhen, String killedwhen,
-                                         String tradedwhen, BigDecimal tradeprice,
-                                         SignalAction action, int quantity, String symbol, BigDecimal limit,
-                                         BigDecimal stop, BigDecimal market,
-                                         Duration duration, Integer ocaGroupId) {
-        super(buildEvents(signalId,systemname,postedwhen,emailedwhen,killedwhen,tradedwhen,tradeprice,
-                true,action,quantity,symbol,limit,stop,market,duration,ocaGroupId));
-    }
+    private static List<XMLEvent> buildEvents(String systemname, boolean showDetails,
+                                              Related showRelated, Order order, boolean outside) {
 
-    private static Iterator<XMLEvent> buildEvents(Integer signalId, String systemname, String postedwhen, String emailedwhen, String killedwhen,
-                                                  String tradedwhen,
-                                                  BigDecimal tradeprice, //trade price is zero until filled, real price and may not match desired limit or open
-                                                  boolean showDetails, SignalAction action, int quantity, String symbol,
-                                                  BigDecimal limit, //original signal value unless its relative in which case its not available
-                                                  BigDecimal stop,  //original signal value unless its relative in which case its not available
-                                                  BigDecimal market,
-                                                  Duration duration, Integer ocaGroupId) {
+        String postedwhen = order.postedWhen();
+        String emailedWhen = order.eMailedWhen();
+        String killedWhen = order.killedWhen();
+        String tradedWhen = order.tradedWhen();
+        BigDecimal tradePrice = order.tradePrice();
+
+        Integer signalId = order.id();
 
         /*
          * <collective2> <signal> <signalid>20919494</signalid>
@@ -57,7 +48,9 @@ public class SimulatedResponseSignalStatus extends SimulatedResponse {
          */
         List<XMLEvent> queue = new ArrayList<XMLEvent>();
             queue.add(eventFactory.createStartDocument());
-            queue.add(eventFactory.createStartElement("", "", "collective2"));
+            if (outside) {
+                queue.add(eventFactory.createStartElement("", "", "collective2"));
+            }
 
             queue.add(eventFactory.createStartElement("", "", "signal"));
 
@@ -74,19 +67,19 @@ public class SimulatedResponseSignalStatus extends SimulatedResponse {
             queue.add(eventFactory.createEndElement("", "", "postedwhen"));
 
             queue.add(eventFactory.createStartElement("", "", "emailedwhen"));
-            queue.add(eventFactory.createCharacters(emailedwhen));
+            queue.add(eventFactory.createCharacters(emailedWhen));
             queue.add(eventFactory.createEndElement("", "", "emailedwhen"));
 
             queue.add(eventFactory.createStartElement("", "", "killedwhen"));
-            queue.add(eventFactory.createCharacters(killedwhen));
+            queue.add(eventFactory.createCharacters(killedWhen));
             queue.add(eventFactory.createEndElement("", "", "killedwhen"));
 
             queue.add(eventFactory.createStartElement("", "", "tradedwhen"));
-            queue.add(eventFactory.createCharacters(tradedwhen));
+            queue.add(eventFactory.createCharacters(tradedWhen));
             queue.add(eventFactory.createEndElement("", "", "tradedwhen"));
 
             queue.add(eventFactory.createStartElement("", "", "tradeprice"));
-            queue.add(eventFactory.createCharacters(tradeprice.toString()));
+            queue.add(eventFactory.createCharacters(tradePrice.toString()));
             queue.add(eventFactory.createEndElement("", "", "tradeprice"));
 
             /*
@@ -100,6 +93,15 @@ public class SimulatedResponseSignalStatus extends SimulatedResponse {
               <ocagroupid></ocagroupid>
             */
             if (showDetails) {
+                SignalAction action = order.action();
+                int quantity = order.quantity();
+                String symbol = order.symbol();
+                BigDecimal limit = order.limit(); //original signal value unless its relative in which case its not available
+                BigDecimal stop = order.stop();  //original signal value unless its relative in which case its not available
+                BigDecimal market = order.market();
+                Duration duration = order.timeInForce();
+                Integer ocaGroupId = order.oneCancelsAnother();
+
                 queue.add(eventFactory.createStartElement("", "", "action"));
                 queue.add(eventFactory.createCharacters(action.toString()));
                 queue.add(eventFactory.createEndElement("", "", "action"));
@@ -134,14 +136,34 @@ public class SimulatedResponseSignalStatus extends SimulatedResponse {
 
             }
 
-            //TODO: add parent and child relationship support
+            if (showRelated!=null) {
+                switch (showRelated) {
+                    case Children:
+                        for(Order child: order.uponThis()) {
+                            queue.add(eventFactory.createStartElement("", "", "child"));
+                            queue.addAll(buildEvents(systemname,showDetails,showRelated,child, false));
 
+                            queue.add(eventFactory.createEndElement("", "", "child"));
+                        }
+                        break;
+                    case Parent:
+                        queue.add(eventFactory.createStartElement("", "", "parent"));
+                        Order parent = order.conditionalUpon();
+                        queue.addAll(buildEvents(systemname,showDetails,showRelated,parent, false));
+
+                        queue.add(eventFactory.createEndElement("", "", "parent"));
+                        break;
+                }
+            }
 
             queue.add(eventFactory.createEndElement("", "", "signal"));
 
-            queue.add(eventFactory.createEndElement("", "", "collective2"));
+            if (outside) {
+                queue.add(eventFactory.createEndElement("", "", "collective2"));
+            }
+
             queue.add(eventFactory.createEndDocument());
-        return queue.iterator();
+        return queue;
 
     }
 

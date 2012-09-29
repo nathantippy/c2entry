@@ -27,7 +27,7 @@ public class DynamicSimulationLongXReplaceTest {
     public void longBuySellTest() {
 
         // validates commands and returns hard coded (canned) responses
-        DynamicSimulationAdapter simulationAdapter = new DynamicSimulationAdapter(0l);
+        DynamicSimulationAdapter simulationAdapter = new DynamicSimulationAdapter(false);
 
         String password = "P455w0rd";
         String eMail = "someone@somewhere.com";
@@ -274,7 +274,7 @@ public class DynamicSimulationLongXReplaceTest {
     private void allInOneBuySellTestStoppedOut(boolean noOCA, Duration timeInForce) {
 
         // validates commands and returns hard coded (canned) responses
-        DynamicSimulationAdapter simulationAdapter = new DynamicSimulationAdapter(0l);
+        DynamicSimulationAdapter simulationAdapter = new DynamicSimulationAdapter(false);
 
         String password = "P455w0rd";
         String eMail = "someone@somewhere.com";
@@ -449,7 +449,7 @@ public class DynamicSimulationLongXReplaceTest {
     private void allInOneBuySellTestProfitTargetHit(boolean noOCA, Duration timeInForce) {
 
         // validates commands and returns hard coded (canned) responses
-        DynamicSimulationAdapter simulationAdapter = new DynamicSimulationAdapter(0l);
+        DynamicSimulationAdapter simulationAdapter = new DynamicSimulationAdapter(false);
 
         String password = "P455w0rd";
         String eMail = "someone@somewhere.com";
@@ -525,7 +525,7 @@ public class DynamicSimulationLongXReplaceTest {
         //confirm that the target can be adjusted
         BigDecimal newTarget = new BigDecimal("160");
         Response adjClose = sentryService.stockSignal(ActionForStock.SellToClose)
-                .limitOrder(newTarget).quantity(10).symbol("msft")   //TODO: is quantity optional wth xReplace?
+                .limitOrder(newTarget).quantity(10).symbol("msft")
                 .duration(Duration.GoodTilCancel)
                 .xReplace(profitTargetSignalId.intValue()).send();
 
