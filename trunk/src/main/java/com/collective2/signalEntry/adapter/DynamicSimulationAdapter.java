@@ -151,7 +151,7 @@ public class DynamicSimulationAdapter implements C2EntryServiceAdapter {
             if (request.containsKey(Parameter.SystemId)) {
                 system = lookupSystem(request);
                 if (system==null) {
-                    return new SimulatedResponseSimple(ERROR);
+                    return new SimulatedResponseError(ERROR,"no system","");
                 }
             }
 
@@ -179,7 +179,7 @@ public class DynamicSimulationAdapter implements C2EntryServiceAdapter {
 
                     Integer id = (Integer)request.get(Parameter.SignalId);
                     system.cancelSignal(id,time);
-                    return new SimulatedResponseSimple(OK);
+                    return new SimulatedResponseCancel(OK);
 
                 case CancelAllPending:
 
@@ -293,15 +293,15 @@ public class DynamicSimulationAdapter implements C2EntryServiceAdapter {
 
                     String signalSubscriberEmail = (String)request.get(Parameter.EMail);
                     boolean isSubscribed = systemForSignal.isSubscribed(signalSubscriberEmail);
-                    if (!isSubscribed) {
-                        return new SimulatedResponseSimple(ERROR);
-                    }
+//                    if (!isSubscribed) {
+//                        return new SimulatedResponseError(ERROR,"email not subscribed",signalSubscriberEmail);
+//                    }
 
                     String subscriberPassword = (String)request.get(Parameter.Password);
                     boolean isSystemPassword = systemForSignal.isPassword(signalSubscriberEmail,subscriberPassword);
-                    if (!isSystemPassword) {
-                        return new SimulatedResponseSimple(ERROR);
-                    }
+//                    if (!isSystemPassword) {
+//                        return new SimulatedResponseError(ERROR,"not system password","");
+//                    }
 
                     Order order = systemForSignal.lookupOrder(signalIdInput);
 

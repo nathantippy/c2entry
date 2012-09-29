@@ -14,10 +14,10 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-public class SimulatedResponseSimple extends SimulatedResponse {
-    private static final Logger logger = LoggerFactory.getLogger(SimulatedResponseSimple.class);
+public class SimulatedResponseCancel extends SimulatedResponse {
+    private static final Logger logger = LoggerFactory.getLogger(SimulatedResponseCancel.class);
 
-    public SimulatedResponseSimple(String status) {
+    public SimulatedResponseCancel(String status) {
         super(buildEvents(status));
     }
 
