@@ -24,4 +24,5 @@ public interface Portfolio {
     BigDecimal equity(DataProvider dataProvider);
 
     String statusMessage();
+
 }

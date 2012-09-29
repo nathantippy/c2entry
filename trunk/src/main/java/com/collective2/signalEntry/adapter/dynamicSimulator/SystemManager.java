@@ -49,6 +49,7 @@ public class SystemManager {
     private final List<Order> archive;//all signals listed here by index
     private final Map<Integer, List<Order>> ocaMap;
     private final Map<String, String> subscribersMap; //email, password
+    private final boolean useMargin;
 
     //Tick:
     //     1. check all active against new market conditions
@@ -61,7 +62,7 @@ public class SystemManager {
     private Number minBuyPower = BigDecimal.ZERO; //margin call when this is hit.
     public static final int NO_ID = Integer.MIN_VALUE;
 
-    public SystemManager(Portfolio portfolio, Integer systemId, String systemName, String password, BigDecimal commission) {
+    public SystemManager(Portfolio portfolio, Integer systemId, String systemName, String password, BigDecimal commission, boolean marginAccount) {
         this.portfolio = portfolio;
         this.systemId = systemId;
         if (systemId>=(1<<BITS_FOR_SYSTEM_ID)) {
@@ -76,6 +77,7 @@ public class SystemManager {
         this.ocaMap = new HashMap<Integer,List<Order>>();
         this.commission = commission;
         this.subscribersMap = new HashMap<String,String>(); //email, password
+        this.useMargin = marginAccount;
     }
 
     public Integer id() {
@@ -210,16 +212,16 @@ public class SystemManager {
                 RelativeNumber limit = (RelativeNumber)request.get(Parameter.RelativeLimitOrder);
                 if (limit != null) {
                     OrderProcessor limitProcessor = new OrderProcessorLimit(timeToExecute, symbol,limit);
-                    signal = new Order(id, instrument, symbol, action, quantityComputable, cancelAtMs, timeInForce,limitProcessor,conditionalUponOrder);
+                    signal = new Order(this, id, instrument, symbol, action, quantityComputable, cancelAtMs, timeInForce,limitProcessor,conditionalUponOrder);
                 }  else {
                     RelativeNumber stop = (RelativeNumber)request.get(Parameter.RelativeStopOrder);
                     if (stop != null) {
                         OrderProcessor stopProcessor = new OrderProcessorStop(timeToExecute, symbol,stop);
-                        signal = new Order(id, instrument, symbol, action, quantityComputable, cancelAtMs, timeInForce, stopProcessor,conditionalUponOrder);
+                        signal = new Order(this, id, instrument, symbol, action, quantityComputable, cancelAtMs, timeInForce, stopProcessor,conditionalUponOrder);
                     } else {
                         //market
                         OrderProcessor marketProcessor = new OrderProcessorMarket(timeToExecute, symbol);
-                        signal = new Order(id, instrument, symbol, action, quantityComputable, cancelAtMs, timeInForce, marketProcessor,conditionalUponOrder);
+                        signal = new Order(this, id, instrument, symbol, action, quantityComputable, cancelAtMs, timeInForce, marketProcessor,conditionalUponOrder);
                     }
                 }
 
@@ -373,14 +375,12 @@ public class SystemManager {
     }
 
     public BigDecimal totalMargin() {
-
-        //TODO: margin is computed differenctly for each instrument
-        //return portfolio.equity(lastDataProvider);
-
-        //keep this and make it optional?
-        //based on each positions instrument
-        return BigDecimal.ZERO;//TODO: margin not used in first release, not implemented yet
-
+        if (useMargin) {
+             //very basic margin implementation, could be improved if needed
+             return portfolio.equity(lastDataProvider).add(portfolio.cash());
+        } else {
+            return BigDecimal.ZERO;
+        }
     }
 
     public boolean isPassword(String text) {

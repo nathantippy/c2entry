@@ -10,12 +10,14 @@ import com.collective2.signalEntry.C2ServiceException;
 import com.collective2.signalEntry.Duration;
 import com.collective2.signalEntry.Instrument;
 import com.collective2.signalEntry.adapter.dynamicSimulator.DataProvider;
+import com.collective2.signalEntry.adapter.dynamicSimulator.SystemManager;
 import com.collective2.signalEntry.adapter.dynamicSimulator.portfolio.Portfolio;
 import com.collective2.signalEntry.adapter.dynamicSimulator.quantity.QuantityComputable;
 import com.collective2.signalEntry.implementation.SignalAction;
 
 import java.math.BigDecimal;
 import java.util.Date;
+import java.util.List;
 
 public class Order implements Comparable<Order> {
     //private final Request request;
@@ -25,8 +27,7 @@ public class Order implements Comparable<Order> {
     protected boolean closed;
     protected boolean processed;
     protected final Order conditionalUpon;
-
- //   private int entryQuantity;
+    private final SystemManager manager;
 
     private final Duration timeInForce;
     private final long expireAtMs;
@@ -47,11 +48,12 @@ public class Order implements Comparable<Order> {
         return id+" "+processor.toString()+" transactionPrice:"+processor.transactionPrice()+" quantity:"+tradeQuantity();
     }
 
-    public Order(int id, Instrument instrument, String symbol,
+    public Order(SystemManager manager, int id, Instrument instrument, String symbol,
                  SignalAction action, QuantityComputable quantityComputable,
                  long cancelAtMs, Duration timeInForce,
                  OrderProcessor processor,
                  Order conditionalUpon) {
+        this.manager = manager;
         this.id = id;
         this.expireAtMs = cancelAtMs;
         this.timeInForce = timeInForce;
@@ -75,6 +77,10 @@ public class Order implements Comparable<Order> {
 
     public long time() {
         return processor.time();
+    }
+
+    public List<Order> uponThis() {
+        return manager.allSignalsConditionalUpon(id());
     }
 
     public Order conditionalUpon() {

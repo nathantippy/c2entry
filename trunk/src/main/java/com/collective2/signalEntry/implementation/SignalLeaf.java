@@ -16,14 +16,7 @@ public class SignalLeaf extends ImplSignal {
     private final Object     value;
 
     SignalLeaf(ImplSignal base, Parameter parameter, Object value) {
-
-        if (value instanceof Response) {
-            //check command that it returns what we need for the value
-            //TODO: rewindable response to make this work.
-
-        } else {
-            parameter.validateValue(value);
-        }
+        parameter.validateValue(value);
 
         this.base = base;
         this.parameter = parameter;

@@ -59,6 +59,7 @@ public class DynamicSimulationAdapter implements C2EntryServiceAdapter {
     private final List<SystemManager> systems = new ArrayList<SystemManager>();
     private final Object lock = new Object();
     private DataProvider lastTickDataProvider;
+    private final boolean marginAccount;
 
     private final List<GainListenerManager> gainListeners = new ArrayList<GainListenerManager>();
     private final static ThreadFactory threadFactory = new ThreadFactory() {
@@ -74,8 +75,9 @@ public class DynamicSimulationAdapter implements C2EntryServiceAdapter {
     };
     private final ExecutorService gainExecutor = Executors.newSingleThreadExecutor(threadFactory);
 
-    public DynamicSimulationAdapter(long startTime) {
-       // this.time = startTime;
+    //C2 always uses margin but simulator can also be run without margin.
+    public DynamicSimulationAdapter(boolean marginAccount) {
+       this.marginAccount = marginAccount;
     }
 
     public void tick(DataProvider dataProvider, C2EntryService entryService) {
@@ -149,8 +151,7 @@ public class DynamicSimulationAdapter implements C2EntryServiceAdapter {
             if (request.containsKey(Parameter.SystemId)) {
                 system = lookupSystem(request);
                 if (system==null) {
-
-                    return new SimulatedResponseCancel(ERROR);//TODO: make bad password/system response, test server
+                    return new SimulatedResponseSimple(ERROR);
                 }
             }
 
@@ -178,7 +179,7 @@ public class DynamicSimulationAdapter implements C2EntryServiceAdapter {
 
                     Integer id = (Integer)request.get(Parameter.SignalId);
                     system.cancelSignal(id,time);
-                    return new SimulatedResponseCancel(OK);
+                    return new SimulatedResponseSimple(OK);
 
                 case CancelAllPending:
 
@@ -292,10 +293,15 @@ public class DynamicSimulationAdapter implements C2EntryServiceAdapter {
 
                     String signalSubscriberEmail = (String)request.get(Parameter.EMail);
                     boolean isSubscribed = systemForSignal.isSubscribed(signalSubscriberEmail);
-                    //TODO: what should the response be if a non-subscriber is passed in?
+                    if (!isSubscribed) {
+                        return new SimulatedResponseSimple(ERROR);
+                    }
 
                     String subscriberPassword = (String)request.get(Parameter.Password);
                     boolean isSystemPassword = systemForSignal.isPassword(signalSubscriberEmail,subscriberPassword);
+                    if (!isSystemPassword) {
+                        return new SimulatedResponseSimple(ERROR);
+                    }
 
                     Order order = systemForSignal.lookupOrder(signalIdInput);
 
@@ -308,60 +314,14 @@ public class DynamicSimulationAdapter implements C2EntryServiceAdapter {
 
                     SimulatedResponseSignalStatus response;
 
+
+                    Related showRelated = (Related)request.get(Parameter.ShowRelated);
                     Integer showDetails = (Integer)request.get(Parameter.ShowDetails);
-                    if (showDetails!=null && 1==showDetails.intValue()) {
-
-                        response =
-                                new SimulatedResponseSignalStatus(signalIdInput,
-                                        systemName,
-                                        postedwhen,
-                                        emailedWhen,
-                                        killedWhen,
-                                        tradedWhen,
-                                        tradePrice,
-                                        order.action(),
-                                        order.quantity(),
-                                        order.symbol(),
-                                        order.limit(),
-                                        order.stop(),
-                                        order.market(),
-                                        order.timeInForce(),
-                                        order.oneCancelsAnother());
-
-                    } else {
-                        response =
-                                new SimulatedResponseSignalStatus(signalIdInput,
-                                        systemName,
-                                        postedwhen,
-                                        emailedWhen,
-                                        killedWhen,
-                                        tradedWhen,
-                                        tradePrice
-                                );
-
-                    }
-
-
-                     Related showRelated = (Related)request.get(Parameter.ShowRelated);
-                     if (showRelated!=null) {
-                         switch (showRelated) {
-                             case Children:
-                                 //what orders are conditional upon this one?
-                                 List<Order> childOrders = systemForSignal.allSignalsConditionalUpon(signalIdInput);
-
-                                 //TODO: response.showChildren()
-
-                                 break;
-                             case Parent:
-
-                                 Order parentOrder = order.conditionalUpon();
-
-                                 //TODO: response.showParent();
-
-
-                                 break;
-                         }
-                     }
+                    response = new SimulatedResponseSignalStatus(
+                                                                systemName,
+                                                                (showDetails!=null && 1==showDetails.intValue()),
+                                                                showRelated,
+                                                                order);
 
                      return response;
 
@@ -420,7 +380,7 @@ public class DynamicSimulationAdapter implements C2EntryServiceAdapter {
 
         Integer systemId = systems.size();
 
-        SystemManager system = new SystemManager(portfolio, systemId, name, password, commission);
+        SystemManager system = new SystemManager(portfolio, systemId, name, password, commission, marginAccount);
 
         systems.add(system);
 

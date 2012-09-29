@@ -6,17 +6,19 @@
  */
 package com.collective2.signalEntry.adapter;
 
-import com.collective2.signalEntry.C2Element;
-import com.collective2.signalEntry.C2ServiceException;
-import com.collective2.signalEntry.Parameter;
+import com.collective2.signalEntry.*;
+import com.collective2.signalEntry.adapter.dynamicSimulator.order.Order;
+import com.collective2.signalEntry.adapter.dynamicSimulator.order.OrderProcessor;
+import com.collective2.signalEntry.adapter.dynamicSimulator.order.OrderProcessorMarket;
+import com.collective2.signalEntry.adapter.dynamicSimulator.quantity.QuantityComputable;
 import com.collective2.signalEntry.adapter.simulationXML.*;
 import com.collective2.signalEntry.implementation.Request;
+import com.collective2.signalEntry.implementation.SignalAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.xml.stream.XMLEventReader;
 import javax.xml.stream.XMLStreamException;
-import java.math.BigDecimal;
 import java.util.*;
 
 import static com.collective2.signalEntry.C2Element.*;
@@ -64,7 +66,7 @@ public class StaticSimulationAdapter implements C2EntryServiceAdapter {
             case Cancel:
                 // return fixed values a real simulator could do better here
                 // but, this is good enough for the unit tests
-                xmlEventReader =  new SimulatedResponseCancel("OK");
+                xmlEventReader =  new SimulatedResponseSimple("OK");
                 break;
             case CancelAllPending:
                 // return fixed values a real simulator could do better here
@@ -150,7 +152,17 @@ public class StaticSimulationAdapter implements C2EntryServiceAdapter {
             case SignalStatus:
                 // return fixed values a real simulator could do better here
                 // but, this is good enough for the unit tests
-                xmlEventReader = new SimulatedResponseSignalStatus((Integer)request.get(Parameter.SignalId), "Velocity Forex System", "2006-05-19 15:34:50:000", "2006-05-19 15:45:28:000", "0", "2006-05-19 22:08:53:000", new BigDecimal("20.87"));
+                SignalAction action = null;
+                QuantityComputable quantityComputable = null;
+                long cancelAtMs = Long.MAX_VALUE;
+                Duration timeInForce = null;
+                long time = System.currentTimeMillis();
+                OrderProcessor processor = new OrderProcessorMarket(time,"WWW");
+                Order conditionalUpon = null;
+                Order order = new Order(null, (Integer)request.get(Parameter.SignalId), Instrument.Stock, "WWW", action, quantityComputable, cancelAtMs, timeInForce, processor, conditionalUpon);
+                Related showRelated = null;
+                String systemName ="Velocity Forex System";
+                xmlEventReader = new SimulatedResponseSignalStatus(systemName, false, showRelated, order);
                 break;
             default:
                 throw new C2ServiceException("Unsupported command :" + request, false);

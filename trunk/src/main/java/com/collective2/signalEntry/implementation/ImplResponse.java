@@ -19,6 +19,7 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.events.XMLEvent;
 import java.math.BigDecimal;
 import java.util.ArrayDeque;
+import java.util.Collection;
 import java.util.Deque;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -187,7 +188,6 @@ public class ImplResponse implements Response {
                     if (element != null) {
                         c2ElementVisitor.visit(element, data);
                     }
-
                 }
             }
         } catch (XMLStreamException e) {
@@ -200,6 +200,24 @@ public class ImplResponse implements Response {
             }
         }
 
+    }
+
+    @Override
+    public <Integer> Collection<Integer> collectIntegers(final Collection<Integer> target, C2Element element) {
+
+
+
+        visitC2Elements(new C2ElementVisitor() {
+            @Override
+            public void visit(C2Element element, String data) {
+                if (C2Element.ElementSignalId==element) {
+                   // target.add(java.lang.Integer.parseInt(data));   //TODO: target.add()
+
+                }
+            }
+        },C2Element.ElementSignalId);
+
+        return target;
     }
 
 }

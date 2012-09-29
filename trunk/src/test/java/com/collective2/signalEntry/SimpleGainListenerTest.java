@@ -27,7 +27,7 @@ public class SimpleGainListenerTest {
     public void simpleGainListenerTest() {
 
         // validates commands and returns hard coded (canned) responses
-        DynamicSimulationAdapter simulationAdapter = new DynamicSimulationAdapter(0l);
+        DynamicSimulationAdapter simulationAdapter = new DynamicSimulationAdapter(false);
 
         String password = "P455w0rd";
         String eMail = "someone@somewhere.com";

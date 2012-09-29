@@ -9,6 +9,7 @@ import com.collective2.signalEntry.implementation.SignalAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.swing.plaf.basic.BasicToggleButtonUI;
 import java.math.BigDecimal;
 import java.util.Date;
 
@@ -69,14 +70,15 @@ public class OrderProcessorStop implements OrderProcessor {
             if (null != order.conditionalUpon() && order.conditionalUpon().isTradedThisSession(dataProvider)) {
                 myOpenPrice = order.conditionalUpon().tradePrice();
                 assert(myOpenPrice.compareTo(BigDecimal.ZERO)>0);
-            } else {
+            }
+                //can not allow position open if the price as dropped to zero
                 myOpenPrice = dataProvider.openingPrice(symbol);
-                if (BigDecimal.ZERO.compareTo(myOpenPrice)>=0) {
+                if (BigDecimal.ZERO.compareTo(myOpenPrice)>=0 && (SignalAction.BTO == action || SignalAction.STO == action) ) {
                     logger.trace("missing opening price for "+symbol()+" on "+new Date(dataProvider.startingTime())+" "+dataProvider.startingTime());
                     order.cancelOrder(dataProvider.startingTime());
                     return true;
                 }
-            }
+
 
             switch(action) {
                 case BTC:
@@ -166,11 +168,9 @@ public class OrderProcessorStop implements OrderProcessor {
 
     @Override
     public BigDecimal triggerPrice() {
-        //this IS known before processing but only if its absolute, TODO: needs refactoring.
-        if (absoluteStop.compareTo(BigDecimal.ZERO) ==0 ) {
-            if(relativeStop.prefix()== BasePrice.Absolute.prefix()) {
-                absoluteStop = relativeStop.value();
-            }
+        //if we still have the default value and the value can be resolved do so.
+        if (BigDecimal.ZERO == absoluteStop && BasePrice.Absolute.prefix() == relativeStop.prefix()) {
+            absoluteStop = relativeStop.value();
         }
         return absoluteStop;
     }

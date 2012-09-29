@@ -37,6 +37,9 @@ public class Request extends EnumMap<Parameter, Object> {
     public Request(Command command) {
         super((Parameter.class));
         super.put(Parameter.SignalEntryCommand, command);
+        if (!command.approvalRequired()) {
+            approved = true;
+        }
     }
 
     public Command command() {
@@ -105,6 +108,20 @@ public class Request extends EnumMap<Parameter, Object> {
 
     public String toString() {
         return buildURL(this, true).toString();
+    }
+
+    public String humanString() {
+        StringBuilder builder = new StringBuilder();
+
+        builder.append(command().name());
+
+        for(Entry<Parameter,Object> entry:entrySet()) {
+            //do not print command that one has already been done
+            if (entry.getKey() != Parameter.SignalEntryCommand) {
+                builder.append(' ').append(entry.getKey().name()).append(':').append(entry.getValue().toString());
+            }
+        }
+        return builder.toString();
     }
 
     public static Request parseURL(String url) {

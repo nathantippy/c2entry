@@ -70,14 +70,15 @@ public class OrderProcessorLimit implements OrderProcessor {
             if (null != order.conditionalUpon() && order.conditionalUpon().isTradedThisSession(dataProvider)) {
                 myOpenPrice = order.conditionalUpon().tradePrice();
                 assert(myOpenPrice.compareTo(BigDecimal.ZERO)>0);
-            } else {
+            }
+                //do not allow open position if the price has dropped to zero
                 myOpenPrice = dataProvider.openingPrice(symbol);
-                if (BigDecimal.ZERO.compareTo(myOpenPrice)>=0) {
+                if (BigDecimal.ZERO.compareTo(myOpenPrice)>=0 && (SignalAction.BTO == action || SignalAction.STO == action) ) {
                     logger.trace("missing opening price for "+symbol()+" on "+new Date(dataProvider.startingTime())+" "+dataProvider.startingTime());
                     order.cancelOrder(dataProvider.startingTime());
                     return true;
                 }
-            }
+
 
             switch(action) {
                 case BTC:
@@ -173,11 +174,9 @@ public class OrderProcessorLimit implements OrderProcessor {
 
     @Override
     public BigDecimal triggerPrice() {
-        //this IS known before processing but only if its absolute, TODO: needs refactoring.
-        if (absoluteLimit.compareTo(BigDecimal.ZERO) ==0 ) {
-            if(relativeLimit.prefix()== BasePrice.Absolute.prefix()) {
-                absoluteLimit = relativeLimit.value();
-            }
+        //if we still have the default value and the value can be resolved do so.
+        if (BigDecimal.ZERO == absoluteLimit && BasePrice.Absolute.prefix() == relativeLimit.prefix()) {
+            absoluteLimit = relativeLimit.value();
         }
         return absoluteLimit;
     }

@@ -24,11 +24,11 @@ public class ResponseManager {
 
     private final C2EntryServiceAdapter adapter;
     private final C2EntryServiceJournal journal;
-    private C2ServiceException          haltingException;
     private final long                  networkDownRetryDelay;
-    private boolean                     isClean;//is false when out of sync with journal
     private final boolean               showDeepStacks = true;
-    private final C2EntryHumanApproval approvalRequestable;
+    private final C2EntryHumanApproval  approvalRequestable;
+    private boolean                     isClean;//is false when out of sync with journal
+    private C2ServiceException          haltingException;
 
 
     private static final String        threadName = "C2EntryServiceResponseManager";
@@ -53,7 +53,7 @@ public class ResponseManager {
 
     public ResponseManager(C2EntryServiceAdapter    adapter,
                            C2EntryServiceJournal    journal,
-                           C2EntryHumanApproval approvalRequestable,
+                           C2EntryHumanApproval     approvalRequestable,
                            long                     networkDownRetryDelay
                            ) {
         this.adapter                = adapter;
@@ -126,7 +126,9 @@ public class ResponseManager {
         synchronized (this) {
             Request journalInstance = request.secureClone();//use the same instance for all journal work
             journal.append(journalInstance); //must add to journal before submit to executor
-            approvalRequestable.oneMoreRequest(journalInstance);
+            if (!journalInstance.isApprovalKnown() && journalInstance.command().approvalRequired()) {
+                approvalRequestable.oneMoreRequest(journalInstance);
+            }
             return new ImplResponse(this, request, executor.submit(callable(request,journalInstance)));
         }
     }
@@ -143,8 +145,9 @@ public class ResponseManager {
             public IterableXMLEventReader call() throws Exception {
 
                 try {
-                    if (!journalInstance.isApprovalKnown()) {
+                    if (!journalInstance.isApprovalKnown() && journalInstance.command().approvalRequired()) {
                         //must get approval for these!
+                        assert(journal.pending().next().equals(journalInstance));
                         approvalRequestable.waitForApproval(journal.pending());
                     }
 

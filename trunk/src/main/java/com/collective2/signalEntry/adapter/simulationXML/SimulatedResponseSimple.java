@@ -14,10 +14,10 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-public class SimulatedResponseCancel extends SimulatedResponse {
-    private static final Logger logger = LoggerFactory.getLogger(SimulatedResponseCancel.class);
+public class SimulatedResponseSimple extends SimulatedResponse {
+    private static final Logger logger = LoggerFactory.getLogger(SimulatedResponseSimple.class);
 
-    public SimulatedResponseCancel(String status) {
+    public SimulatedResponseSimple(String status) {
         super(buildEvents(status));
     }
 
@@ -33,6 +33,7 @@ public class SimulatedResponseCancel extends SimulatedResponse {
 
         queue.add(eventFactory.createEndElement("", "", "collective2"));
         queue.add(eventFactory.createEndDocument());
+
         return queue.iterator();
 
     }

@@ -9,6 +9,7 @@ package com.collective2.signalEntry.approval;
 
 import com.collective2.signalEntry.implementation.Request;
 
+import java.util.Date;
 import java.util.Iterator;
 
 public interface C2EntryHumanApproval {
