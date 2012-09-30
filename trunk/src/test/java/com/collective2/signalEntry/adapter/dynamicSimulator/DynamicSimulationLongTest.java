@@ -501,7 +501,4 @@ public class DynamicSimulationLongTest {
                 C2Element.ElementEquity,
                 C2Element.ElementMarginUsed);
     }
-
-    //TODO: copy this class for shorts test.
-
 }
