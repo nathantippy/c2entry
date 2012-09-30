@@ -199,20 +199,17 @@ public class ImplResponse implements Response {
                 logger.warn("Unable to close xml stream", e);
             }
         }
-
     }
 
     @Override
-    public <Integer> Collection<Integer> collectIntegers(final Collection<Integer> target, C2Element element) {
-
-
+    public <C extends Collection<Integer>> C collectIntegers(final C target, C2Element element) {
+    //public Collection<Integer> collectIntegers(final Collection<Integer> target, C2Element element) {
 
         visitC2Elements(new C2ElementVisitor() {
             @Override
             public void visit(C2Element element, String data) {
                 if (C2Element.ElementSignalId==element) {
-                   // target.add(java.lang.Integer.parseInt(data));   //TODO: target.add()
-
+                    target.add(Integer.parseInt(data));
                 }
             }
         },C2Element.ElementSignalId);

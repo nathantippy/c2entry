@@ -7,6 +7,7 @@ import com.collective2.signalEntry.adapter.dynamicSimulator.portfolio.SimplePort
 import org.junit.Test;
 
 import java.math.BigDecimal;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -28,23 +29,6 @@ public class DynamicSimulationRelativeTest {
     private final BigDecimal openData = new BigDecimal("80.43");
     private final BigDecimal lowData = new BigDecimal("79.50");
     private final DynamicSimulationMockDataProvider dataProvider = new DynamicSimulationMockDataProvider(time,openData,openData,lowData,openData,time+timeStep);
-
-
-    //relative price testing
-
-    //TODO: this is called so often it must be integrated into the response as   collectIntegerSet(ElementSignalId)
-    private Set<Integer> pendingSignalIds(C2EntryService sentryService) {
-        final Set<Integer> pendingSignalIdSet = new HashSet<Integer>();
-        sentryService.sendAllSignalsRequest().visitC2Elements(new C2ElementVisitor() {
-            @Override
-            public void visit(C2Element element, String data) {
-                if (C2Element.ElementSignalId==element) {
-                    pendingSignalIdSet.add(Integer.parseInt(data));
-                }
-            }
-        },C2Element.ElementSignalId);
-        return pendingSignalIdSet;
-    }
 
     @Test
     public void  testLimitOpenPosition() {
@@ -157,9 +141,11 @@ public class DynamicSimulationRelativeTest {
 
         simulationAdapter.tick(dataProvider,sentryService);
 
-        Set<Integer> pending = pendingSignalIds(sentryService);
+        HashSet<Integer> pending = sentryService.sendAllSignalsRequest()
+                                                   .collectIntegers(new HashSet<Integer>(),
+                                                                    C2Element.ElementSignalId);
 
-        assertEquals(expectedPendingCount,pending.size());
+        assertEquals(expectedPendingCount, pending.size());
         Integer id = pending.iterator().next();
 
         BigDecimal stop = sentryService.sendSignalStatusRequest(id,true).getBigDecimal(C2Element.ElementStop);

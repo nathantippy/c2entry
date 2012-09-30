@@ -34,6 +34,6 @@ public interface Response {
 
     void visitC2Elements(C2ElementVisitor c2ElementVisitor, C2Element ... expected);
 
-    <Integer> Collection<Integer> collectIntegers(Collection<Integer> target,C2Element element);
+    <C extends Collection<Integer>> C collectIntegers(C target, C2Element element);
 
 }
