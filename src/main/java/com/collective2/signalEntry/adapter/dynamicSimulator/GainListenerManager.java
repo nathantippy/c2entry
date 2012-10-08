@@ -6,6 +6,9 @@
  */
 package com.collective2.signalEntry.adapter.dynamicSimulator;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
@@ -16,7 +19,9 @@ public class GainListenerManager {
 
     public final static long ONE_YEAR_MS = 31558464000l;
 
-    List<BigDecimal> lastTotalEquityList;
+    private static final Logger logger = LoggerFactory.getLogger(GainListenerManager.class);
+
+    List < BigDecimal > lastTotalEquityList;
 
     long             firstTime = Long.MIN_VALUE;
     List<BigDecimal> firstTotalEquityList;
@@ -38,8 +43,8 @@ public class GainListenerManager {
     public void send(Executor gainExecutor, DataProvider dataProvider, SystemManager ... systems) {
         final long now = dataProvider.endingTime();
 
-        //establish start time
-        if (firstTime == Long.MIN_VALUE) {
+        //establish start time, may get set after first round because simulators frequently start with zero startingTime
+        if (firstTime<=0) {
             firstTime = dataProvider.startingTime();
         }
 
@@ -77,17 +82,11 @@ public class GainListenerManager {
                                 double unitCAGR;
                                 double fullCAGR;
 
-                                //System.err.println("unit years "+unitYears);
-
-                               // if (unitYears<1) {
-                                    if (unitYears==0) {
-                                        unitCAGR = Double.NaN;
-                                    } else {
-                                        unitCAGR = ((totalEquityList.get(i).doubleValue()/lastTotalEquityList.get(i).doubleValue())-1d);///unitYears;
-                                    }
-                               // } else {
-                               //     unitCAGR = computeDiscountRate(lastTotalEquityList.get(i).doubleValue(),totalEquityList.get(i).doubleValue(),unitYears);
-                               // }
+                                if (unitYears==0) {
+                                    unitCAGR = Double.NaN;
+                                } else {
+                                    unitCAGR = ((totalEquityList.get(i).doubleValue()/lastTotalEquityList.get(i).doubleValue())-1d);
+                                }
                                 unitCAGRList.add(unitCAGR);
 
                                 if (fullYears<1) {
@@ -116,7 +115,9 @@ public class GainListenerManager {
                     */
                     public double computeDiscountRate(double pV, double fV, double years) {
                         assert(years>0);
-                        return Math.pow(fV/pV, (1d/years))-1d;
+                        double result = Math.pow(fV/pV, (1d/years))-1d;
+                        logger.trace("compute discount rate from pv:{} fv:{} years:{} result:{}",new Object[]{pV, fV, years, result});
+                        return result;
                     }
                 });
             }

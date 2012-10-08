@@ -7,6 +7,7 @@
 package com.collective2.signalEntry.journal;
 
 import com.collective2.signalEntry.C2ServiceException;
+import com.collective2.signalEntry.Parameter;
 import com.collective2.signalEntry.implementation.Request;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -142,6 +143,15 @@ public class C2EntryServiceLogFileJournal implements C2EntryServiceJournal {
                                 //save last row we are on to the next one
                                 Request request = Request.parseURL(builder.toString());
                                 builder.setLength(0);
+
+                                //when loading pending requests if any are time dependent must throw failure
+                                //can not be done upon write because this is used as a journal and if its never used
+                                //as a source of recovery then there is no failure.
+                                if (null != request.get(Parameter.CancelsAtRelative)) {
+                                    //cant try again or delay because the request is time dependent relative to submission time
+                                    throw new C2ServiceException("Can not retry request which makes use of CancelsAtRelative feature", false);
+                                }
+
                                 requests.add(request);
                             }
                         }

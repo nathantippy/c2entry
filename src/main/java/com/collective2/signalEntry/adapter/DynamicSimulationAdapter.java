@@ -293,15 +293,15 @@ public class DynamicSimulationAdapter implements C2EntryServiceAdapter {
 
                     String signalSubscriberEmail = (String)request.get(Parameter.EMail);
                     boolean isSubscribed = systemForSignal.isSubscribed(signalSubscriberEmail);
-//TODO:                    if (!isSubscribed) {
-//                        return new SimulatedResponseError(ERROR,"email not subscribed",signalSubscriberEmail);
-//                    }
+                    if (!isSubscribed) {
+                        return new SimulatedResponseError(ERROR,"email not subscribed",signalSubscriberEmail);
+                    }
 
                     String subscriberPassword = (String)request.get(Parameter.Password);
                     boolean isSystemPassword = systemForSignal.isPassword(signalSubscriberEmail,subscriberPassword);
-//TODO:                    if (!isSystemPassword) {
-//                        return new SimulatedResponseError(ERROR,"not system password","");
-//                    }
+                    if (!isSystemPassword) {
+                        return new SimulatedResponseError(ERROR,"not system password",signalSubscriberEmail);
+                    }
 
                     Order order = systemForSignal.lookupOrder(signalIdInput);
 
