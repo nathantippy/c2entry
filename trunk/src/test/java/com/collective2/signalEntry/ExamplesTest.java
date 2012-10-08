@@ -141,7 +141,8 @@ public class ExamplesTest {
         C2EntryService sentryService = factory.signalEntryService(password, systemId, eMail);
 
         List<Response> responseList = new ArrayList<Response>();
-                                                                                 //TODO: must  update examples on the site
+                                    //TODO: must  update examples on the site
+
         responseList.add(sentryService.stockSignal(ActionForStock.BuyToOpen)
                                       .marketOrder().quantity(10).symbol("msft")
                                       .duration(Duration.GoodTilCancel).send());
