@@ -169,6 +169,8 @@ public class ResponseManager {
                             //exceptions thrown here are because
                             // * the network is down and we should try later
                             // * the response was not readable - must stop all
+
+                            //transmit to the adapter
                             IterableXMLEventReader eventReader = adapter.transmit(request);
                             synchronized (ResponseManager.this) {
                                 //exceptions thrown here are because
@@ -180,6 +182,13 @@ public class ResponseManager {
                         } catch (C2ServiceException e) {
                             tryAgain = e.tryAgain();//if true wait for configured delay and try again.
                             if (tryAgain) {
+
+                                if (null != request.get(Parameter.CancelsAtRelative)) {
+                                    //cant try again or delay because the request is time dependent relative to submission time
+                                    haltingException = new C2ServiceException("Can not retry request which makes use of CancelsAtRelative feature",false);
+                                    throw haltingException;
+                                }
+
                                 try {
                                     Thread.sleep(networkDownRetryDelay);
                                 } catch (InterruptedException ie) {

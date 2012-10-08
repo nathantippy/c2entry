@@ -93,6 +93,30 @@ public class SystemManager {
         return signalId - ((signalId >>> BITS_FOR_SYSTEM_ID) << BITS_FOR_SYSTEM_ID);
     }
 
+
+    private Request buildBaseRequest(Request source,Integer existingQuantity,String symbol) {
+
+        Parameter[] toCopy = new Parameter[]{
+                Instrument,
+                Symbol,
+                Password,
+                SystemId
+        };
+        Request base = new Request(Command.Signal);
+
+        for(Parameter p:toCopy) {
+            Object obj = source.get(p);
+            if (obj!=null) {
+                base.put(p,obj);
+            }
+        }
+        base.put(TimeInForce, Duration.GoodTilCancel);
+        base.put(Parameter.Quantity,existingQuantity);
+        base.put(Parameter.MarketOrder,true);
+        base.put(Parameter.Symbol,symbol);
+        return base;
+    }
+
     public int[] scheduleSignal(long timeToExecute, Request request) {
 
         synchronized(archive) {
@@ -110,64 +134,40 @@ public class SystemManager {
             String symbol = (String)request.get(Parameter.Symbol);
             SignalAction action = null;
             Order order = null;
-            if (request.command()== Command.Reverse) {
 
-                Duration timeInForce = (Duration)request.get(TimeInForce);
-                if (timeInForce!=null) {
-                    //default
-                    timeInForce = Duration.GoodTilCancel;
-                }
+            //reverse works like a macro. it does not do the processing but rather builds two
+            //signal requests to reverse the order and calls schedule signal on each.
+            if (request.command()== Command.Reverse) {
 
                 Integer existingQuantity = portfolio.position(symbol).quantity();
 
-                //buy or sell to make quantity revert to zero
-                int closeId;
-                Request requestToClose = request.baseConditional();
-                requestToClose.put(Parameter.Quantity,existingQuantity);
-                requestToClose.put(Parameter.MarketOrder,true);
-                requestToClose.put(Parameter.Symbol,symbol);
+                Request requestToClose = buildBaseRequest(request,existingQuantity,symbol);
 
                 if (existingQuantity>0)  {
                     //STC
-
-                    //requestToClose.put(Parameter.StockAction, ActionForStockType.SellToClose);
-
-
-                    // schedule signal
+                    requestToClose.put(Parameter.Action, SignalAction.STC);
                 }  else {
                     //BTC
-                    //TODO: finish reverse implementation
-                    //requestToClose.put(Parameter.StockAction, ActionForStockType.SellToClose);
-
+                    requestToClose.put(Parameter.Action, SignalAction.BTC);
                 }
 
+                //schedule the closing request
                 int[] parentId = scheduleSignal(timeToExecute,requestToClose);
 
-                Request requestToOpen = request.baseConditional();
-                //requestToOpen.put(Parameter.StockAction, ActionForStoack)
+                //previous closed now reverse
+                //only fields needed for building all-in-one dependent signals
+                Request requestToOpen = buildBaseRequest(request,existingQuantity,symbol);
 
+                if (existingQuantity>0)  {
+                    //STO
+                    requestToClose.put(Parameter.Action, SignalAction.STO);
+                }  else {
+                    //BTO
+                    requestToClose.put(Parameter.Action, SignalAction.BTO);
+                }
 
-
-
-                //
-                // conditioned upon that one do the same but open a position.
-
-
-
-                throw new UnsupportedOperationException("Full reverse no yet implmented");
-                //ReverseOrder reverseOrder =  new ReverseOrder(id,timeToExecute,symbol,timeInForce);
-
-//                BigDecimal price = (BigDecimal)request.get(TriggerPrice);
-//                if (price!=null) {
-//                    reverseOrder.triggerPrice(price);
-//                }
-//
-//                Integer quantity = (Integer)request.get(Quantity);
-//                if (quantity!=null) {
-//                    reverseOrder.quantity(quantity);
-//                }
-//
-//                order = reverseOrder;
+                //schedule the opening request
+                return scheduleSignal(timeToExecute,requestToClose);
             } else {
 
                 //use to compute quantity
@@ -186,8 +186,6 @@ public class SystemManager {
                 if (cancelAtRelative != null) {
                     cancelAtMs = timeToExecute + (1000l * cancelAtRelative.intValue());
                 }
-
-                //TODO: these must be watched by async submit   CancelsAt  (seconds time), CancelsAtRelative (seconds after submit)
 
                 assert(request.command() == Command.Signal);
 

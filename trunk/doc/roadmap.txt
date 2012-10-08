@@ -6,3 +6,5 @@ Desired but unscheduled features:
     Passing Response as argument to build up async chains that can be persisted.
     Copy DynamicSimulationLongTest for short tests.
     Copy DynamicSimulationLongXReplaceTest for short tests.
+    Add unit tests for margin amounts.
+

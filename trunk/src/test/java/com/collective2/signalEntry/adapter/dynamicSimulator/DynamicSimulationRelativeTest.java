@@ -66,41 +66,44 @@ public class DynamicSimulationRelativeTest {
         runTest(true, BasePrice.RTQuotePlus,new BigDecimal("79.99"),new BigDecimal("75.43"),1);
     }
 
-    //TODO: review the following test
-
     @Test
-    public void  testStopOpenPosition() {
-        //
-        runTest(false, BasePrice.PositionOpenPlus,new BigDecimal("82"),new BigDecimal("82"),2);
+    public void  testStopOpenPosition() {  //will never trigger and have 2 pending orders
+        // isLimit:false, base:posOpen+, triggerPrice:82, expectedStop:82, expectedPendingCount:2
+        //       open:80.43       low:79.50   high:80.43  close:80.43       stopSize:-5    stopOrder (trigger) buy at this price or better
+        runTest(false, BasePrice.PositionOpenPlus, new BigDecimal("82"), new BigDecimal("82"), 2);
     }
 
     @Test
     public void  testStopTriggerPosition() {
-        //
+        // isLimit:false, base:posOpen+, triggerPrice:79.99, expectedStop:75.43, expectedPendingCount:2
+        //       open:80.43       low:79.50   high:80.43  close:80.43       stopSize:-5    stopOrder (trigger) buy at this price or better
+        // triggers when we hit open of  80.43 because its > 79.99 so only the stop is pending (1 pending)
+        // the stop will be 5 under the open price or 75.43
         runTest(false, BasePrice.PositionOpenPlus,new BigDecimal("79.99"),new BigDecimal("75.43"),1);
     }
 
     @Test
     public void  testStopOpenSession() {
-        //
+        //will never trigger and have 2 pending orders
         runTest(false, BasePrice.SessionOpenPlus,new BigDecimal("82"),new BigDecimal("82"),2);
     }
 
     @Test
     public void  testStopTriggerSession() {
-        //
+        //because sessionopen and position open are the same this will have same results as the test
+        //testStopTriggerPosition above
         runTest(false, BasePrice.SessionOpenPlus,new BigDecimal("79.99"),new BigDecimal("75.43"),1);
     }
 
     @Test
     public void  testStopOpenRT() {
-        //
+        //will never trigger and have 2 pending orders
         runTest(false, BasePrice.RTQuotePlus,new BigDecimal("82"),new BigDecimal("82"),2);
     }
 
     @Test
     public void  testStopTriggerRT() {
-        //
+        //the last time is the same as the open time so this will have the same stop as pending as testStopTriggerSession
         runTest(false, BasePrice.RTQuotePlus,new BigDecimal("79.99"),new BigDecimal("75.43"),1);
     }
 
