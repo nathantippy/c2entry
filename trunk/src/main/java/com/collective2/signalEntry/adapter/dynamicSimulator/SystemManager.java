@@ -420,21 +420,23 @@ public class SystemManager {
                    if (signal.isExpired(nowTime)) {
                        signal.cancelOrder(nowTime);
                    }
+                   //only attempt to processes the signal if the 'volume' is there
+                   if (dataProvider.hasVolume(signal.symbol())) {
+                       if (signal.process(dataProvider,portfolio,commission,dayMarketOpenData)) {
+                           logger.trace("processed, signal " + signal);
+                           scheduled.remove(signal);
 
-                   if (signal.process(dataProvider,portfolio,commission,dayMarketOpenData)) {
-                       logger.trace("processed, signal " + signal);
-                       scheduled.remove(signal);
-
-                       if (signal.oneCancelsAnother()!=null) {
-                           //this processed so cancel all the others in this same group before moving to next
-                           List<Order> ocaList = ocaMap.get(signal.oneCancelsAnother());
-                           for (Order order:ocaList) {
-                               if (order!=signal) {
-                                   order.cancelOrder(dataProvider.startingTime());
+                           if (signal.oneCancelsAnother()!=null) {
+                               //this processed so cancel all the others in this same group before moving to next
+                               List<Order> ocaList = ocaMap.get(signal.oneCancelsAnother());
+                               for (Order order:ocaList) {
+                                   if (order!=signal) {
+                                       order.cancelOrder(dataProvider.startingTime());
+                                   }
                                }
+                               //oca triggered now remove so its not triggered again.
+                               ocaList.clear();
                            }
-                           //oca triggered now remove so its not triggered again.
-                           ocaList.clear();
                        }
                    }
 
@@ -443,6 +445,20 @@ public class SystemManager {
                }
            }
        }
+
+       //if this is market close check and apply the splits
+       if (dataProvider.isEndingTimeMarketClose()) {
+           //apply split to all holdings in the portfolio
+           for(String symbol: portfolio.positions()) {
+               Number split = dataProvider.splitAfterMarketClose(symbol);
+               if (split!=null && split.intValue()!=1) {
+                portfolio.position(symbol).applySplit(split);
+               }
+           }
+       }
+
+
+
     }
 
     private void recordMarketOpenClose(DataProvider dataProvider) {

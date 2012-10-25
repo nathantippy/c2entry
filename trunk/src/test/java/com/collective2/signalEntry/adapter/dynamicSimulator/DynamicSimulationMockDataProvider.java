@@ -16,6 +16,7 @@ public class DynamicSimulationMockDataProvider implements DataProvider {
     private final BigDecimal low;
     private final BigDecimal close;
     private final long endingTime;
+    private final double noSplit = 1d;
 
     //only used when testing single symbols so that field is never checked
     public DynamicSimulationMockDataProvider(long openingTime, BigDecimal open, BigDecimal high, BigDecimal low, BigDecimal close, long endingTime) {
@@ -31,6 +32,7 @@ public class DynamicSimulationMockDataProvider implements DataProvider {
         this.low = low;
         this.close = close;
         this.endingTime = endingTime;
+
     }
 
     public DynamicSimulationMockDataProvider incTime(long step) {
@@ -78,6 +80,16 @@ public class DynamicSimulationMockDataProvider implements DataProvider {
 
     @Override
     public boolean isEndingTimeMarketClose() {
+        return true;
+    }
+
+    @Override
+    public Number splitAfterMarketClose(String symbol) {
+        return noSplit;
+    }
+
+    @Override
+    public boolean hasVolume(String symbol) {
         return true;
     }
 }
