@@ -64,8 +64,10 @@ public class LiveTest {
     @Test
     public void getAllSystemsTest() {
         if (sentryService != null) {
-            String status = sentryService.sendAllSystemsRequest().getString(ElementStatus);
-            assertTrue(status.toLowerCase().startsWith("ok"));
+            Response response = sentryService.sendAllSystemsRequest();
+            String status = response.getString(ElementStatus);
+
+            assertTrue(response.getXMLEventReader().rawXML(),status.toLowerCase().startsWith("ok"));
 
             boolean foundSystemId = false;
 

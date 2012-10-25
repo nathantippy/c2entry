@@ -35,6 +35,12 @@ public class SimplePosition implements Position {
     }
 
     @Override
+    public void applySplit(Number split) {
+        //good enough for simulations but if one implements a real portfolio one should think twice about doing this.
+        totalQuantity = (int)Math.rint(split.doubleValue()*totalQuantity.doubleValue());
+    }
+
+    @Override
     public void addTransaction(Integer quantity, long time, BigDecimal price, BigDecimal commission, boolean isClosing) {
 
         if (isClosing) {

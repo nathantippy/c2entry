@@ -24,9 +24,14 @@ public interface DataProvider {
     BigDecimal highPrice(String symbol);
     BigDecimal lowPrice(String symbol);
 
+    Number splitAfterMarketClose(String symbol); //should return 1d in most cases
+
+    boolean hasVolume(String symbol);
+
     long startingTime();
     boolean isStartingTimeMarketOpen();
 
     long endingTime();
     boolean isEndingTimeMarketClose();
+
 }

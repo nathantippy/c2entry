@@ -13,6 +13,8 @@ public interface Position {
 
     Integer quantity();
 
+    void applySplit(Number split);
+
     void addTransaction(Integer quantity, long time, BigDecimal price, BigDecimal commission, boolean isClosing);
 
     BigDecimal openPrice();
