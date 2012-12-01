@@ -25,7 +25,8 @@ public class QuantityComputableDollars implements QuantityComputable {
     @Override
     public Integer quantity(BigDecimal price, DataProvider dataProvider) {
         if (null == price || price.compareTo(BigDecimal.ZERO)<=0) {
-            logger.warn("Unable to compute quantity by dollars, price:"+price);
+            //normal case if the order was never executed
+            logger.trace("Unable to compute quantity by dollars, price:{}",price);
             return 0;
         }
         return  (int)(dollars.doubleValue()/price.doubleValue());

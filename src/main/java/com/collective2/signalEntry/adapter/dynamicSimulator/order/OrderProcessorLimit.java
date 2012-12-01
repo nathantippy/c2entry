@@ -43,6 +43,10 @@ public class OrderProcessorLimit implements OrderProcessor {
         return time;
     }
 
+    public String toString() {
+        return "LimitOrder transactionPrice:"+transactionPrice+" absoluteLimit:"+absoluteLimit+" relativeLimit:"+relativeLimit+" transactionQuanity:"+transactionQuantity;
+    }
+
     public BigDecimal transactionPrice() {
         return transactionPrice;
     }

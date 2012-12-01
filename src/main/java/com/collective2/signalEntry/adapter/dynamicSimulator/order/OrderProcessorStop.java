@@ -40,6 +40,10 @@ public class OrderProcessorStop implements OrderProcessor {
         return symbol;
     }
 
+    public String toString() {
+        return "LimitOrder transactionPrice:"+transactionPrice+" absoluteStop:"+absoluteStop+" relativeStop:"+relativeStop+" transactionQuanity:"+transactionQuantity;
+    }
+
     public long time() {
         return time;
     }
