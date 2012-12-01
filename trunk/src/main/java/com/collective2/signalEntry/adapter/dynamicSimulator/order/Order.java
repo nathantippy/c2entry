@@ -45,7 +45,7 @@ public class Order implements Comparable<Order> {
     private long tradedWhen;
 
     public String toString() {
-        return id+" "+processor.toString()+" transactionPrice:"+processor.transactionPrice()+" quantity:"+tradeQuantity();
+        return id+" "+processor.toString();
     }
 
     public Order(SystemManager manager, int id, Instrument instrument, String symbol,
@@ -185,9 +185,9 @@ public class Order implements Comparable<Order> {
         Integer result = processor.transactionQuantity();
         if (result==0) {
             //signal status request with quantity value can only work if the values are known
-            BigDecimal price = null;
+            BigDecimal price = processor.transactionPrice();
             DataProvider dataProvider = null;
-            return  this.quantityComputable.quantity(price,dataProvider);
+            return this.quantityComputable.quantity(price,dataProvider);
 
         }
         return result;
@@ -223,7 +223,11 @@ public class Order implements Comparable<Order> {
     }
 
     public int quantity() {
-        return (conditionalUpon==null ? tradeQuantity() : conditionalUpon.tradeQuantity());
+        if (null==conditionalUpon) {
+            return tradeQuantity();
+        } else {
+            return conditionalUpon.tradeQuantity();
+        }
     }
 
     public String symbol() {

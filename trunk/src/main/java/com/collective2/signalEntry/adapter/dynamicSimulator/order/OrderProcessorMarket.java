@@ -34,6 +34,10 @@ public class OrderProcessorMarket implements OrderProcessor {
         return symbol;
     }
 
+    public String toString() {
+        return "MarketOrder transactionPrice:"+transactionPrice+" transactionQuanity:"+transactionQuantity;
+    }
+
     public long time() {
         return time;
     }
