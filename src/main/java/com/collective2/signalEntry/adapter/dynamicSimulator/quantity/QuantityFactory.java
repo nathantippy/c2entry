@@ -36,7 +36,7 @@ public class QuantityFactory {
             return new QuantityComputableEntry(systemManager.lookupOrder(condUpon));
         }
 
-        throw new C2ServiceException("Unable to determine how to calculate quantity.",false);
+        throw new C2ServiceException("Unable to determine how to calculate quantity. "+request,false);
 
     }
 

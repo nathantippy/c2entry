@@ -19,4 +19,6 @@ public interface Position {
 
     BigDecimal openPrice();
 
+    Long openTime();
+
 }

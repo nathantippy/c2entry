@@ -6,12 +6,11 @@
  */
 package com.collective2.signalEntry.approval;
 
-import com.collective2.signalEntry.implementation.Request;
-
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+
+import com.collective2.signalEntry.implementation.Request;
 
 public class ApprovalRequestableConsole implements C2EntryHumanApproval {
 

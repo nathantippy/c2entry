@@ -25,6 +25,7 @@ public enum Command {
         protected EnumSet<Parameter> paraRequired() {
             return EnumSet.of(SystemId, Password, Instrument, Symbol, TimeInForce);
         }
+        @SuppressWarnings("unchecked")
         protected EnumSet<Parameter>[] paraRequiredExclusiveSets() {
             return new EnumSet[] {
                     EnumSet.of(Action),
@@ -35,6 +36,7 @@ public enum Command {
         protected EnumSet<Parameter> paraOptional() {
             return EnumSet.of(OCAId, ForceNoOCA, Delay, XReplace, ConditionalUpon);
         }
+        @SuppressWarnings("unchecked")
         protected EnumSet<Parameter>[] paraOptionalExclusiveSets() {
             return new EnumSet[] {
                     EnumSet.of(CancelsAt, CancelsAtRelative),
@@ -221,12 +223,14 @@ public enum Command {
 
     protected abstract EnumSet<C2Element> possibleResult();
     protected abstract EnumSet<Parameter> paraRequired();
+    @SuppressWarnings("unchecked")
     protected EnumSet<Parameter>[] paraRequiredExclusiveSets() {
         return new EnumSet[] {};
     }
     protected EnumSet<Parameter> paraOptional() {
         return EnumSet.noneOf(Parameter.class);
     }
+    @SuppressWarnings("unchecked")
     protected EnumSet<Parameter>[] paraOptionalExclusiveSets() {
         return new EnumSet[] {};
     }

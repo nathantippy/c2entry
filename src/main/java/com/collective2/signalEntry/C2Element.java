@@ -6,9 +6,6 @@
  */
 package com.collective2.signalEntry;
 
-import java.io.Serializable;
-import java.util.Arrays;
-import java.util.Comparator;
 
 public enum C2Element {
 
@@ -48,7 +45,8 @@ public enum C2Element {
     ElementTimeInForce("tif"),
     ElementTotalEquityAvail("totalequityavail"),
     ElementTradedWhen("tradedwhen"),
-    ElementTradePrice("tradeprice");
+    ElementTradePrice("tradeprice"),
+    None("N/A");
 
     final private String localElementName;
 
@@ -64,33 +62,4 @@ public enum C2Element {
         return localElementName;
     }
 
-    public static C2Element binaryLookup(String localName) {
-        assert(inOrder(values()));
-
-        int index = Arrays.binarySearch(values(), localName, new Comparator<Serializable>() {
-            @Override
-            public int compare(Serializable o1, Serializable o2) {
-                String s1 = o1.toString();
-                String s2 = o2.toString();
-                return s1.compareTo(s2);
-            }
-        });
-        if (index<0) {
-            return null;
-        } else {
-            return values()[index];
-        }
-    }
-
-    private static boolean inOrder(C2Element[] values) {
-        String last = "";
-        for(C2Element c2e:values) {
-            if (last.compareTo(c2e.localElementName())>=0) {
-                return false;
-            } else {
-                last = c2e.localElementName();
-            }
-        }
-        return true;
-    }
 }

@@ -59,7 +59,7 @@ public class SimpleGainListener implements GainListener {
         if (!Double.isNaN(lastCAGR)) {
             row.append(" last:").append(def.format(lastCAGR*100d)).append('%');
         }
-        row.append(" equity:").append(equity);
+        row.append(" equity:").append(equity.intValue());
 
     }
 

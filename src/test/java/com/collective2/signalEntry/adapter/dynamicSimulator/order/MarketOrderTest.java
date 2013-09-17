@@ -6,6 +6,7 @@ import com.collective2.signalEntry.adapter.dynamicSimulator.DataProvider;
 import com.collective2.signalEntry.adapter.dynamicSimulator.DynamicSimulationMockDataProvider;
 import com.collective2.signalEntry.adapter.dynamicSimulator.portfolio.Portfolio;
 import com.collective2.signalEntry.adapter.dynamicSimulator.portfolio.SimplePortfolio;
+import com.collective2.signalEntry.adapter.dynamicSimulator.portfolio.SimplePortfolioFactory;
 import com.collective2.signalEntry.adapter.dynamicSimulator.quantity.QuantityComputable;
 import com.collective2.signalEntry.adapter.dynamicSimulator.quantity.QuantityComputableFixed;
 import com.collective2.signalEntry.implementation.SignalAction;
@@ -39,7 +40,7 @@ public class MarketOrderTest {
     @Test
     public void  marketBTOTest() {
 
-        Portfolio portfolio = new SimplePortfolio(new BigDecimal("1000.00"));
+        Portfolio portfolio = new SimplePortfolioFactory().createPortfolio(new BigDecimal("1000.00"));
 
         int id = 42;
         long time = stop;
@@ -89,7 +90,7 @@ public class MarketOrderTest {
 
     private void  marketShortTest(SignalAction sellAction) {
 
-        Portfolio portfolio = new SimplePortfolio(new BigDecimal("1000.00"));
+        Portfolio portfolio = new SimplePortfolioFactory().createPortfolio(new BigDecimal("1000.00"));
 
         int id = 42;
         long time = stop;

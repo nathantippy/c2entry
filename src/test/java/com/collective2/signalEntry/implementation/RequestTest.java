@@ -46,14 +46,15 @@ public class RequestTest {
 
     @Test
     public void urlUnsupportedEncodingTest() {
-        Request request = new Request(Command.FlushPendingSignals) {
+        Request request = new Request(Command.GetSystemHypothetical) {
             @Override
             protected String encode(Object value) throws UnsupportedEncodingException {
                 throw new UnsupportedEncodingException("Martian OS does not support UTF-8");
             }
         };
-        request.put(Parameter.SystemId, 1234);
+        request.put(Parameter.Systems, new DotString<String>("1234.321"));
         request.put(Parameter.Password, "PA55");
+        request.put(Parameter.EMail, "me@here.com");
         try{
             String stringURL = request.buildURL().toString();
             fail();

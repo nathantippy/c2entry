@@ -1,17 +1,24 @@
 package com.collective2.signalEntry.adapter.dynamicSimulator;
 
-import com.collective2.signalEntry.*;
+import static org.junit.Assert.assertEquals;
+
+import java.math.BigDecimal;
+import java.util.HashSet;
+
+import org.junit.Test;
+
+import com.collective2.signalEntry.ActionForStock;
+import com.collective2.signalEntry.BasePrice;
+import com.collective2.signalEntry.C2Element;
+import com.collective2.signalEntry.C2EntryService;
+import com.collective2.signalEntry.C2ServiceFactory;
+import com.collective2.signalEntry.Duration;
+import com.collective2.signalEntry.Response;
+import com.collective2.signalEntry.Signal;
 import com.collective2.signalEntry.adapter.DynamicSimulationAdapter;
 import com.collective2.signalEntry.adapter.dynamicSimulator.portfolio.Portfolio;
 import com.collective2.signalEntry.adapter.dynamicSimulator.portfolio.SimplePortfolio;
-import org.junit.Test;
-
-import java.math.BigDecimal;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
-
-import static org.junit.Assert.assertEquals;
+import com.collective2.signalEntry.adapter.dynamicSimulator.portfolio.SimplePortfolioFactory;
 
 /**
  * This notice shall not be removed.
@@ -116,7 +123,7 @@ public class DynamicSimulationRelativeTest {
 
         String password = "P455w0rd";
         String eMail = "someone@somewhere.com";
-        Portfolio portfolio = new SimplePortfolio(new BigDecimal("10000"));
+        Portfolio portfolio = new SimplePortfolioFactory().createPortfolio(new BigDecimal("10000"));
         BigDecimal commission = new BigDecimal("10.00");
         Integer systemId = simulationAdapter.createSystem("first system",password,portfolio,commission);
         simulationAdapter.subscribe(eMail,systemId,password);

@@ -10,6 +10,8 @@ import com.collective2.signalEntry.*;
 import com.collective2.signalEntry.adapter.DynamicSimulationAdapter;
 import com.collective2.signalEntry.adapter.dynamicSimulator.portfolio.Portfolio;
 import com.collective2.signalEntry.adapter.dynamicSimulator.portfolio.SimplePortfolio;
+import com.collective2.signalEntry.adapter.dynamicSimulator.portfolio.SimplePortfolioFactory;
+
 import org.junit.Test;
 
 import java.math.BigDecimal;
@@ -31,7 +33,7 @@ public class DynamicSimulationLongTest {
 
         String password = "P455w0rd";
         String eMail = "someone@somewhere.com";
-        Portfolio portfolio = new SimplePortfolio(new BigDecimal("10000"));
+        Portfolio portfolio = new SimplePortfolioFactory().createPortfolio(new BigDecimal("10000"));
         BigDecimal commission = new BigDecimal("10.00");
         Integer systemId = simulationAdapter.createSystem("first system",password,portfolio,commission);
         simulationAdapter.subscribe(eMail,systemId,password);
@@ -85,12 +87,14 @@ public class DynamicSimulationLongTest {
                         checkedElements.add(element);
                         assertEquals(0d, Double.parseDouble(data), DELTA);
                         break;
+                    default:
+                        //nothing
                 }
             }
         },C2Element.ElementTotalEquityAvail,
-                C2Element.ElementCash,
-                C2Element.ElementEquity,
-                C2Element.ElementMarginUsed);
+          C2Element.ElementCash,
+          C2Element.ElementEquity,
+          C2Element.ElementMarginUsed);
         assertEquals("expected to check 4 elements",4,checkedElements.size());
         assertEquals(10, portfolio.position("msft").quantity().intValue());
 
@@ -278,7 +282,7 @@ public class DynamicSimulationLongTest {
 
         String password = "P455w0rd";
         String eMail = "someone@somewhere.com";
-        Portfolio portfolio = new SimplePortfolio(new BigDecimal("10000"));
+        Portfolio portfolio = new SimplePortfolioFactory().createPortfolio(new BigDecimal("10000"));
         BigDecimal commission = new BigDecimal("10.00");
         Integer systemId = simulationAdapter.createSystem("first system",password,portfolio,commission);
         simulationAdapter.subscribe(eMail,systemId,password);
@@ -320,6 +324,8 @@ public class DynamicSimulationLongTest {
                     case ElementStopLossSignalId:
                         stopLossSignalId.set(Integer.valueOf(data));
                         break;
+                    default:
+                        //nothing
                 }
             }
         }, C2Element.ElementSignalId, C2Element.ElementStopLossSignalId, C2Element.ElementProfitTaretSignalId );
@@ -395,7 +401,7 @@ public class DynamicSimulationLongTest {
 
         String password = "P455w0rd";
         String eMail = "someone@somewhere.com";
-        Portfolio portfolio = new SimplePortfolio(new BigDecimal("10000"));
+        Portfolio portfolio = new SimplePortfolioFactory().createPortfolio(new BigDecimal("10000"));
         BigDecimal commission = new BigDecimal("10.00");
         Integer systemId = simulationAdapter.createSystem("first system",password,portfolio,commission);
         simulationAdapter.subscribe(eMail,systemId,password);
@@ -431,6 +437,8 @@ public class DynamicSimulationLongTest {
                     case ElementStopLossSignalId:
                         stopLossSignalId.set(Integer.valueOf(data));
                         break;
+                    default:
+                        //nothing
                 }
             }
         }, C2Element.ElementSignalId, C2Element.ElementStopLossSignalId, C2Element.ElementProfitTaretSignalId );
@@ -493,6 +501,8 @@ public class DynamicSimulationLongTest {
                     case ElementMarginUsed:
                         assertEquals(0d,Double.parseDouble(data),DELTA);
                         break;
+                    default:
+                        //nothing
                 }
 
             }

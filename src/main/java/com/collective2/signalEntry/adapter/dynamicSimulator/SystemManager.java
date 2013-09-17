@@ -50,7 +50,7 @@ public class SystemManager {
     private final Map<Integer, List<Order>> ocaMap;
     private final Map<String, String> subscribersMap; //email, password
     private final boolean useMargin;
-
+    
     //Tick:
     //     1. check all active against new market conditions
     //     2. run all scheduled for this time (only remove those that execute)
@@ -252,9 +252,6 @@ public class SystemManager {
 
             if (stopLoss!=null) {
                 Request stopRequest = request.baseConditional();
-
-                Instrument instrument = (Instrument)request.get(Parameter.Instrument);
-
                 //all in one stopLoss, this is sell to close on buy and buy to close on sell.
 
                 if (action == SignalAction.BTO) {
@@ -276,7 +273,6 @@ public class SystemManager {
                     stopRequest.put(Parameter.OCAId,ocaId);
                 }
 
-
                 stopLossSignalId = scheduleSignal(timeToExecute, stopRequest)[0];
                 //must return <stoplosssignalid>35584025</stoplosssignalid>
 
@@ -286,8 +282,6 @@ public class SystemManager {
 
             if (profitTarget!=null) {
                 Request profitTargetRequest = request.baseConditional();
-
-                Instrument instrument = (Instrument)request.get(Parameter.Instrument);
 
                 if (action == SignalAction.BTO) {
                     profitTargetRequest.put(Parameter.Action, SignalAction.STC);
@@ -318,8 +312,9 @@ public class SystemManager {
     }
 
     public void cancelSignal(Integer id, long time) {
-        Order order = archive.get(id>>BITS_FOR_SYSTEM_ID);
+        Order order = lookupOrder(id);
         order.cancelOrder(time);
+       // scheduled.remove(order);//TODO: cancelled orders should not come back in query?
     }
 
     public void cancelAllPending(long time) {
@@ -328,9 +323,8 @@ public class SystemManager {
         }
     }
 
-    public Order lookupOrder(Integer signalId) {
-        Order order = archive.get(signalId>>BITS_FOR_SYSTEM_ID);
-        return order;
+    public final Order lookupOrder(Integer signalId) {
+        return archive.get(signalId>>BITS_FOR_SYSTEM_ID);
     }
 
     public Portfolio portfolio() {
@@ -408,7 +402,8 @@ public class SystemManager {
 
                if (signal.time()>time) {
                     //these are future orders not to be processed (parked) until this time is reached
-                    return;//do not process any more, sorted list so all orders after this point will also be parked
+                   assert(allInFuture(orderIterator,time)); 
+                   return;//do not process any more, sorted list so all orders after this point will also be parked
                }
 
                if (signal.isConditionProcessed()) {
@@ -420,9 +415,22 @@ public class SystemManager {
                    if (signal.isExpired(nowTime)) {
                        signal.cancelOrder(nowTime);
                    }
+                   
+                   //these orders have not expired, are still in force and are not dependent on anything
+                   
+                   Order co = signal.conditionalUpon();
+                   boolean skip = false;
+                   if (co!=null) {
+                       skip = co.isExpired(time) || co.isCancel();
+                   }
+
                    //only attempt to processes the signal if the 'volume' is there
                    if (dataProvider.hasVolume(signal.symbol())) {
                        if (signal.process(dataProvider,portfolio,commission,dayMarketOpenData)) {
+                           if (skip && !signal.isCancel()) {
+                               System.err.println("skip "+signal+" cond upon "+signal.conditionalUpon());
+                           }
+                           
                            logger.trace("processed, signal " + signal);
                            scheduled.remove(signal);
 
@@ -457,8 +465,16 @@ public class SystemManager {
            }
        }
 
+    }
 
+    private boolean allInFuture(Iterator<Order> orderIterator, long time) {
+        while (orderIterator.hasNext()) {
+            if (orderIterator.next().time()<time) {
+                return false;
+            }
+        }
 
+        return true;
     }
 
     private void recordMarketOpenClose(DataProvider dataProvider) {

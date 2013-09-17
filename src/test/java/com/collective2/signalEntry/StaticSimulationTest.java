@@ -136,6 +136,8 @@ public class StaticSimulationTest {
                     baseOrder = base.stopOrder(BasePrice.SessionOpenPlus, testNumber);
                     reqOrderURL = durationURL + "&stop=O%2B" + testNumber;
                     break;
+                default:
+                    //nothing
             }
 
             // for each root
@@ -162,6 +164,8 @@ public class StaticSimulationTest {
                         allReq = baseOrder.accountPercent(testNumber);
                         allReqURL = reqOrderURL + "&accountpercent=" + testNumber;
                         break;
+                    default:
+                        //nothing
                 }
                 try {
                     allReq.send().getInteger(ElementSignalId);// must not
