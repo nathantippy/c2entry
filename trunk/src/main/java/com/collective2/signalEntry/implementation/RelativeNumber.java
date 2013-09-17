@@ -44,6 +44,9 @@ public class RelativeNumber implements Serializable {
             default:
                 prefix = ' ';
                 number = new BigDecimal(stringValue);
+                if (BigDecimal.ZERO.compareTo(number)>0) {
+                    throw new C2ServiceException("Absolute limit values must not be negative.",false);
+                }
         }
 
     }

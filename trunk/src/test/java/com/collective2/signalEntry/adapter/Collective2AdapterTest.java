@@ -6,18 +6,24 @@
  */
 package com.collective2.signalEntry.adapter;
 
-import com.collective2.signalEntry.C2ServiceException;
-import com.collective2.signalEntry.implementation.Command;
-import com.collective2.signalEntry.implementation.Request;
-import org.junit.Before;
-import org.junit.Test;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
-import javax.xml.stream.XMLEventReader;
-import java.net.*;
+import java.net.ConnectException;
+import java.net.MalformedURLException;
+import java.net.SocketTimeoutException;
+import java.net.URL;
+import java.net.UnknownHostException;
 import java.util.logging.Handler;
 import java.util.logging.Logger;
 
-import static org.junit.Assert.*;
+import org.junit.Before;
+import org.junit.Test;
+
+import com.collective2.signalEntry.C2ServiceException;
+import com.collective2.signalEntry.implementation.Command;
+import com.collective2.signalEntry.implementation.Request;
 
 public class Collective2AdapterTest {
 

@@ -6,6 +6,7 @@ import com.collective2.signalEntry.adapter.dynamicSimulator.DataProvider;
 import com.collective2.signalEntry.adapter.dynamicSimulator.DynamicSimulationMockDataProvider;
 import com.collective2.signalEntry.adapter.dynamicSimulator.portfolio.Portfolio;
 import com.collective2.signalEntry.adapter.dynamicSimulator.portfolio.SimplePortfolio;
+import com.collective2.signalEntry.adapter.dynamicSimulator.portfolio.SimplePortfolioFactory;
 import com.collective2.signalEntry.adapter.dynamicSimulator.quantity.QuantityComputable;
 import com.collective2.signalEntry.adapter.dynamicSimulator.quantity.QuantityComputableFixed;
 import com.collective2.signalEntry.implementation.RelativeNumber;
@@ -72,7 +73,7 @@ public class LimitOrderTest {
     private void limitBTOTest(RelativeNumber buyBelow, RelativeNumber sellAbove, BigDecimal expectedBuy, BigDecimal expectedSell) {
 
         BigDecimal startingCash = new BigDecimal("1000.00");
-        Portfolio portfolio = new SimplePortfolio(startingCash);
+        Portfolio portfolio = new SimplePortfolioFactory().createPortfolio(startingCash);
 
         int id = 42;
         long time = stop;
@@ -147,7 +148,7 @@ public class LimitOrderTest {
     private void  limitShortTest(SignalAction sellAction, RelativeNumber sellAbove, RelativeNumber buyBelow, BigDecimal expectedSell, BigDecimal expectedBuy) {
 
         BigDecimal startingCash = new BigDecimal("1000.00");
-        Portfolio portfolio = new SimplePortfolio(startingCash);
+        Portfolio portfolio = new SimplePortfolioFactory().createPortfolio(startingCash);
 
         int id = 42;
         long time = stop;

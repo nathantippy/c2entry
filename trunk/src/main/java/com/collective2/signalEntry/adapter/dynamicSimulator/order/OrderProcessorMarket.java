@@ -62,7 +62,7 @@ public class OrderProcessorMarket implements OrderProcessor {
             //the transaction price of our conditional upon order
             if (null != order.conditionalUpon() && order.conditionalUpon().isTradedThisSession(dataProvider)) {
                 myOpenPrice = order.conditionalUpon().tradePrice();
-                assert(myOpenPrice.compareTo(BigDecimal.ZERO)>0);
+                assert(myOpenPrice.compareTo(BigDecimal.ZERO)>0) : "Data error: open price must not be negative.";
             }
                 //do not allow new open position if the price has dropped to zero
                 myOpenPrice = dataProvider.openingPrice(symbol);

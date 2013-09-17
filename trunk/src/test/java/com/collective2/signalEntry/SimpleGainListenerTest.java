@@ -6,6 +6,8 @@ import com.collective2.signalEntry.adapter.dynamicSimulator.GainListener;
 import com.collective2.signalEntry.adapter.dynamicSimulator.SimpleGainListener;
 import com.collective2.signalEntry.adapter.dynamicSimulator.portfolio.Portfolio;
 import com.collective2.signalEntry.adapter.dynamicSimulator.portfolio.SimplePortfolio;
+import com.collective2.signalEntry.adapter.dynamicSimulator.portfolio.SimplePortfolioFactory;
+
 import org.junit.Test;
 
 import java.io.ByteArrayOutputStream;
@@ -31,7 +33,7 @@ public class SimpleGainListenerTest {
 
         String password = "P455w0rd";
         String eMail = "someone@somewhere.com";
-        Portfolio portfolio = new SimplePortfolio(new BigDecimal("10000"));
+        Portfolio portfolio = new SimplePortfolioFactory().createPortfolio(new BigDecimal("10000"));
         BigDecimal commission = new BigDecimal("10.00");
         Integer systemId = simulationAdapter.createSystem("first system",password,portfolio,commission);
         simulationAdapter.subscribe(eMail,systemId,password);

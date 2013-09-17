@@ -32,13 +32,13 @@ public class RelativeNumberHelper {
 
             case 'T'://T fill price of the open buy/sell  portfolio.position(symbol).openPrice();
                 Position pos = portfolio.position(symbol);
+                if (null == pos) {
+                    throw new C2ServiceException("No position found for symbol "+symbol,false);
+                }
                 if (pos.quantity()==0) {
                     return BigDecimal.ZERO;
                 }
 
-                if (null == pos) {
-                    throw new C2ServiceException("No position found for symbol "+symbol,false);
-                }
                 if (null == pos.openPrice()) {
                     throw new C2ServiceException("No open price found for position "+symbol,false);
                 }

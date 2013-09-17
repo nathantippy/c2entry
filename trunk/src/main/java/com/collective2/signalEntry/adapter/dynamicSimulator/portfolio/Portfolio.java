@@ -18,11 +18,21 @@ public interface Portfolio {
     public Position position(String symbol);
 
     void closeAllPositions();
+    
+    int openPositionCount();
 
     BigDecimal cash();
 
     BigDecimal equity(DataProvider dataProvider);
 
     String statusMessage();
+
+    void addCash(BigDecimal value);
+    
+    /**
+     * pct of closed transactions resulting in loss
+     * @return
+     */
+    double pctLosses(); 
 
 }

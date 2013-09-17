@@ -45,7 +45,7 @@ public class Order implements Comparable<Order> {
     private long tradedWhen;
 
     public String toString() {
-        return id+" "+processor.toString();
+        return id+" "+action+" "+processor.toString();
     }
 
     public Order(SystemManager manager, int id, Instrument instrument, String symbol,

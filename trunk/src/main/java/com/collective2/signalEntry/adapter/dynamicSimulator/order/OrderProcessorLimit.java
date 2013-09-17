@@ -61,9 +61,11 @@ public class OrderProcessorLimit implements OrderProcessor {
 
             absoluteLimit = RelativeNumberHelper.toAbsolutePrice(symbol, relativeLimit, dataProvider, portfolio, dayOpenData);
 
-            if (BigDecimal.ZERO.compareTo(absoluteLimit)>=0) {
-                logger.warn("unable to build limit");
-                return true;
+            //log warning if the limit has become negative after conversion to an absolute value.  The actual value used is assigned
+            //to zero for reasons of sanity. A trace is recorded so system developers can make improvements.
+            if (BigDecimal.ZERO.compareTo(absoluteLimit)>0) {
+                logger.trace("unable to build limit, after conversion to absolute value it became "+absoluteLimit+" from relative limit of "+relativeLimit);
+                absoluteLimit = BigDecimal.ZERO;
             }
 
             BigDecimal myOpenPrice;
@@ -102,7 +104,7 @@ public class OrderProcessorLimit implements OrderProcessor {
 
                     //if limit is under low for the day this order does not trigger
                     if (absoluteLimit.compareTo(dataProvider.lowPrice(symbol))<0) {
-                        logger.trace("do not trigger "+action+" "+absoluteLimit+"  "+dataProvider.lowPrice(symbol));
+                        //logger.trace("do not trigger "+action+" limit:"+absoluteLimit+" low:"+dataProvider.lowPrice(symbol));
                         return false;// do not trigger can not get good deal under limit price.
                     }
 
@@ -144,7 +146,7 @@ public class OrderProcessorLimit implements OrderProcessor {
                     //must sell only above this price
 
                     if (absoluteLimit.compareTo(dataProvider.highPrice(symbol))>0) {
-                        logger.trace("do not trigger "+order.action+" "+absoluteLimit+"  "+dataProvider.highPrice(symbol));
+                        //logger.trace("do not trigger "+order.action+" "+absoluteLimit+"  "+dataProvider.highPrice(symbol));
                         return false;// do not trigger can not get good deal under limit price.
                     }
 

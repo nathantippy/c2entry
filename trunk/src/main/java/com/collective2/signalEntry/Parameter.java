@@ -17,10 +17,13 @@ public enum Parameter {
     // because it start with the query flag ? instead of & like the others
     SignalEntryCommand("?cmd=",             ParameterType.CommandType),
 
+    //TODO: when parsing how is the serialization supposed to know which one to use?
     SystemId("&systemid=",                  ParameterType.IntegerType),
     Systems("&systemid=",                   ParameterType.IntDotStringType),
 
-    Password("&pw=",                        ParameterType.StringType),
+    Password("&pw=",                        ParameterType.StringType) {
+        public boolean shouldEncode() {return false;};
+    },
     EMail("&c2email=",                      ParameterType.StringType),
     SignalId("&signalid=",                  ParameterType.IntegerType),
 
@@ -84,7 +87,7 @@ public enum Parameter {
     }
 
     public boolean shouldEncode() {
-        return type.isClass(String.class);
+        return String.class.isAssignableFrom(type.clazz());
     }
 
     public void validateValue(Object value) {
@@ -92,6 +95,6 @@ public enum Parameter {
     }
 
     public boolean isNumber() {
-        return type.isClass(Number.class);
+        return Number.class.isAssignableFrom(type.clazz());
     }
 }

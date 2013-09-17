@@ -126,12 +126,16 @@ public enum ParameterType {
         throw new C2ServiceException("Unable to find:"+stringValue+" in "+values.getClass(),false);
     }
 
-    private final Class clazz;
+    private final Class<?> clazz;
 
     private static final Logger logger = LoggerFactory.getLogger(ParameterType.class);
 
-    ParameterType(Class clazz) {
+    ParameterType(Class<?> clazz) {
         this.clazz = clazz;
+    }
+    
+    public Class<?> clazz() {
+        return clazz;
     }
 
     public abstract Object parse(String stringValue);
@@ -147,9 +151,5 @@ public enum ParameterType {
             logger.error(message);
             throw new C2ServiceException(message, false);
         }
-    };
-
-    public boolean isClass(Class clazz) {
-        return clazz.isAssignableFrom(this.clazz);
     }
 }

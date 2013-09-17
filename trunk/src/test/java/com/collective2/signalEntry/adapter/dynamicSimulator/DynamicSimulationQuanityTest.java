@@ -4,6 +4,8 @@ import com.collective2.signalEntry.*;
 import com.collective2.signalEntry.adapter.DynamicSimulationAdapter;
 import com.collective2.signalEntry.adapter.dynamicSimulator.portfolio.Portfolio;
 import com.collective2.signalEntry.adapter.dynamicSimulator.portfolio.SimplePortfolio;
+import com.collective2.signalEntry.adapter.dynamicSimulator.portfolio.SimplePortfolioFactory;
+
 import org.junit.Test;
 
 import java.math.BigDecimal;
@@ -30,7 +32,7 @@ public class DynamicSimulationQuanityTest {
 
         String password = "P455w0rd";
         String eMail = "someone@somewhere.com";
-        Portfolio portfolio = new SimplePortfolio(new BigDecimal("10000"));
+        Portfolio portfolio = new SimplePortfolioFactory().createPortfolio(new BigDecimal("10000"));
         BigDecimal commission = new BigDecimal("10.00");
         Integer systemId = simulationAdapter.createSystem("first system",password,portfolio,commission);
         simulationAdapter.subscribe(eMail,systemId,password);
@@ -82,6 +84,8 @@ public class DynamicSimulationQuanityTest {
                         checkedElements.add(element);
                         assertEquals(0d, Double.parseDouble(data), DELTA);
                         break;
+                    default:
+                        //nothing
                 }
             }
         },C2Element.ElementTotalEquityAvail,
@@ -99,7 +103,7 @@ public class DynamicSimulationQuanityTest {
 
         String password = "P455w0rd";
         String eMail = "someone@somewhere.com";
-        Portfolio portfolio = new SimplePortfolio(new BigDecimal("10000"));
+        Portfolio portfolio = new SimplePortfolioFactory().createPortfolio(new BigDecimal("10000"));
         BigDecimal commission = new BigDecimal("10.00");
         Integer systemId = simulationAdapter.createSystem("first system",password,portfolio,commission);
         simulationAdapter.subscribe(eMail,systemId,password);
@@ -152,6 +156,8 @@ public class DynamicSimulationQuanityTest {
                         checkedElements.add(element);
                         assertEquals(0d, Double.parseDouble(data), DELTA);
                         break;
+                     default:
+                        //nothing
                 }
             }
         },C2Element.ElementTotalEquityAvail,

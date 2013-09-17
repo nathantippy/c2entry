@@ -1,17 +1,17 @@
 package com.collective2.signalEntry.adapter.dynamicSimulator.order;
 
+import java.math.BigDecimal;
+import java.util.Date;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.collective2.signalEntry.BasePrice;
 import com.collective2.signalEntry.adapter.dynamicSimulator.DataProvider;
 import com.collective2.signalEntry.adapter.dynamicSimulator.portfolio.Portfolio;
 import com.collective2.signalEntry.adapter.dynamicSimulator.quantity.QuantityComputable;
 import com.collective2.signalEntry.implementation.RelativeNumber;
 import com.collective2.signalEntry.implementation.SignalAction;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.swing.plaf.basic.BasicToggleButtonUI;
-import java.math.BigDecimal;
-import java.util.Date;
 
 /**
  * This notice shall not be removed.
@@ -41,7 +41,7 @@ public class OrderProcessorStop implements OrderProcessor {
     }
 
     public String toString() {
-        return "LimitOrder transactionPrice:"+transactionPrice+" absoluteStop:"+absoluteStop+" relativeStop:"+relativeStop+" transactionQuanity:"+transactionQuantity;
+        return "StopOrder transactionPrice:"+transactionPrice+" absoluteStop:"+absoluteStop+" relativeStop:"+relativeStop+" transactionQuanity:"+transactionQuantity;
     }
 
     public long time() {
@@ -58,12 +58,14 @@ public class OrderProcessorStop implements OrderProcessor {
 
     public boolean process(DataProvider dataProvider, Portfolio portfolio, BigDecimal commission, Order order, SignalAction action,
                            QuantityComputable computableQuantity, DataProvider dayOpenData) {
-        logger.trace("process StopOrder");
-
+            logger.trace("process StopOrder");
 
             absoluteStop = RelativeNumberHelper.toAbsolutePrice(symbol, relativeStop, dataProvider, portfolio, dayOpenData);
-            if (BigDecimal.ZERO.compareTo(absoluteStop)>=0) {
-                logger.warn("absolute stop value was "+absoluteStop+" from "+relativeStop);
+            
+            //if converted stop price is negative set it to zero for reasons of sanity. Record trace so system developers can make improvements
+            if (BigDecimal.ZERO.compareTo(absoluteStop)>0 /*&& (null != order.conditionalUpon()) && order.conditionalUpon().isProcessed()  */) {
+                logger.trace("absolute stop value was "+absoluteStop+" from "+relativeStop);//+" condUpon:"+order.conditionalUpon().symbol()+" "+order.conditionalUpon().tradeQuantity()+" "+order.conditionalUpon().tradePrice()+" "+order.conditionalUpon().action());
+                absoluteStop = BigDecimal.ZERO;
             }
 
             BigDecimal myOpenPrice;
@@ -74,14 +76,17 @@ public class OrderProcessorStop implements OrderProcessor {
             if (null != order.conditionalUpon() && order.conditionalUpon().isTradedThisSession(dataProvider)) {
                 myOpenPrice = order.conditionalUpon().tradePrice();
                 assert(myOpenPrice.compareTo(BigDecimal.ZERO)>0);
-            }
+            } else {
+             //TODO: confirm this else need be here because without it we are writing over the trade price
                 //can not allow position open if the price as dropped to zero
                 myOpenPrice = dataProvider.openingPrice(symbol);
-                if (BigDecimal.ZERO.compareTo(myOpenPrice)>=0 && (SignalAction.BTO == action || SignalAction.STO == action) ) {
-                    logger.trace("missing opening price for "+symbol()+" on "+new Date(dataProvider.startingTime())+" "+dataProvider.startingTime());
-                    order.cancelOrder(dataProvider.startingTime());
-                    return true;
-                }
+            }    
+                
+            if (BigDecimal.ZERO.compareTo(myOpenPrice)>=0 && (SignalAction.BTO == action || SignalAction.STO == action) ) {
+                logger.trace("missing opening price for "+symbol()+" on "+new Date(dataProvider.startingTime())+" "+dataProvider.startingTime());
+                order.cancelOrder(dataProvider.startingTime());
+                return true;
+            }
 
 
             switch(action) {

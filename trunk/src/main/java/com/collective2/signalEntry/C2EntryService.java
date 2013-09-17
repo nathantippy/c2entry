@@ -216,7 +216,7 @@ public class C2EntryService {
     }
 
     public Response sendCloseAllPositionsRequest(final Integer signalId) {
-        Request request = new Request(Command.CloseAllPositions);
+        Request request = new Request(Command.CloseAllPositions); //TODO: this should just close these not all??
         request.put(Parameter.SignalId, signalId);
         request.put(Parameter.SystemId, commonSystemId);
         request.put(Parameter.Password, commonPassword);

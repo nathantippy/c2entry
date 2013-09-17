@@ -67,6 +67,9 @@ public class ImplResponse implements Response {
         }
     }
 
+    public String toString() {
+        return getXML();
+    }
 
     public Integer getInteger(C2Element element) {
         String value = getString(element).trim();
@@ -166,38 +169,53 @@ public class ImplResponse implements Response {
 
     @Override
     public void visitC2Elements(C2ElementVisitor c2ElementVisitor, C2Element ... expected) {
-        if (expected.length == 0) {
-            logger.warn("expected types can not be checked unless they are passed in",new Exception());
-        } else {
-            for(C2Element element: expected) {
-                request.command().validate(element);
-            }
-        }
-        XMLEventReader reader = getXMLEventReader();
+        assert(validate(expected));
+        
+        IterableXMLEventReader reader = getXMLEventReader();
         try {
-            Deque<String> stack = new ArrayDeque<String>();
+            Deque<C2Element> stack = new ArrayDeque<C2Element>();
             while (reader.hasNext()) {
                 XMLEvent event =  reader.nextEvent();
                 if (event.isEndElement()) {
                     stack.pop();
                 } else if (event.isStartElement()) {
-                    stack.push(event.asStartElement().getName().getLocalPart());
+                    
+                    String name = event.asStartElement().getName().getLocalPart();
+                    int i =expected.length;
+                    C2Element found = C2Element.None;
+                    while(--i>=0) {
+                        if (name.equals(expected[i].localElementName())) {
+                            found = expected[i];
+                            break;
+                        }
+                    }
+                    stack.push(found);
                 } else if (event.isCharacters()) {
-                    String data = event.asCharacters().getData().trim();
-                    C2Element element = C2Element.binaryLookup(stack.peek());
-                    if (element != null) {
-                        c2ElementVisitor.visit(element, data);
+                    if (C2Element.None != stack.peek()) {
+                        c2ElementVisitor.visit(stack.peek(), event.asCharacters().getData().trim());
                     }
                 }
             }
         } catch (XMLStreamException e) {
-            logger.warn("visitC2Elements",e);
+            logger.warn("visitC2Elements: \n"+request.buildURL(),e);
         } finally {
             try {
                 reader.close();
             } catch (XMLStreamException e) {
                 logger.warn("Unable to close xml stream", e);
             }
+        }
+    }
+
+    private boolean validate(C2Element... expected) {
+        if (expected.length == 0) {
+            logger.warn("expected types can not be checked unless they are passed in",new Exception());
+            return false;
+        } else {
+            for(C2Element element: expected) {
+                request.command().validate(element);
+            }
+            return true;
         }
     }
 

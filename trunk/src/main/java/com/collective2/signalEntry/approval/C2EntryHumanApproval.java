@@ -7,10 +7,9 @@
 
 package com.collective2.signalEntry.approval;
 
-import com.collective2.signalEntry.implementation.Request;
-
-import java.util.Date;
 import java.util.Iterator;
+
+import com.collective2.signalEntry.implementation.Request;
 
 public interface C2EntryHumanApproval {
     C2EntryHumanApproval ApproveAll = new C2EntryHumanApproval() {

@@ -115,9 +115,7 @@ public class GainListenerManager {
                     */
                     public double computeDiscountRate(double pV, double fV, double years) {
                         assert(years>0);
-                        double result = Math.pow(fV/pV, (1d/years))-1d;
-                        logger.trace("compute discount rate from pv:{} fv:{} years:{} result:{}",new Object[]{pV, fV, years, result});
-                        return result;
+                        return Math.pow(fV/pV, (1d/years))-1d;
                     }
                 });
             }

@@ -11,6 +11,10 @@ import java.util.Arrays;
 
 public class DotString<T extends Serializable> implements Serializable {
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 5533962589955858983L;
     final T[] data;
 
     public DotString(T ... data) {
@@ -34,7 +38,7 @@ public class DotString<T extends Serializable> implements Serializable {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        DotString dotString = (DotString) o;
+        DotString<?> dotString = (DotString<?>) o;
 
         if (!Arrays.equals(data, dotString.data)) return false;
 

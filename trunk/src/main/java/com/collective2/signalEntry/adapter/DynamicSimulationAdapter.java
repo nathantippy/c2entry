@@ -13,7 +13,7 @@ import com.collective2.signalEntry.adapter.dynamicSimulator.GainListenerManager;
 import com.collective2.signalEntry.adapter.dynamicSimulator.SystemManager;
 import com.collective2.signalEntry.adapter.dynamicSimulator.order.Order;
 import com.collective2.signalEntry.adapter.dynamicSimulator.portfolio.Portfolio;
-import com.collective2.signalEntry.adapter.dynamicSimulator.portfolio.SimplePortfolio;
+import com.collective2.signalEntry.adapter.dynamicSimulator.portfolio.SimplePortfolioFactory;
 import com.collective2.signalEntry.adapter.simulationXML.*;
 import com.collective2.signalEntry.implementation.Command;
 import com.collective2.signalEntry.implementation.Request;
@@ -55,11 +55,13 @@ public class DynamicSimulationAdapter implements C2EntryServiceAdapter {
     private static final Logger logger = LoggerFactory.getLogger(DynamicSimulationAdapter.class);
     private static final String OK = "ok";
     private static final String ERROR = "error";
-    private long time;
+    
     private final List<SystemManager> systems = new ArrayList<SystemManager>();
     private final Object lock = new Object();
-    private DataProvider lastTickDataProvider;
     private final boolean marginAccount;
+    
+    private DataProvider lastTickDataProvider;
+    private long time;
 
     private final List<GainListenerManager> gainListeners = new ArrayList<GainListenerManager>();
     private final static ThreadFactory threadFactory = new ThreadFactory() {
@@ -77,8 +79,8 @@ public class DynamicSimulationAdapter implements C2EntryServiceAdapter {
 
     //C2 always uses margin but simulator can also be run without margin.
     public DynamicSimulationAdapter(boolean marginAccount) {
-       this.marginAccount = marginAccount;
-    }
+        this.marginAccount = marginAccount;
+     }
 
     public void tick(DataProvider dataProvider, C2EntryService entryService) {
 
@@ -91,13 +93,14 @@ public class DynamicSimulationAdapter implements C2EntryServiceAdapter {
         synchronized(lock) {
                //look at ordered list of signals for each system and do all those older than time now.
             this.time = dataProvider.endingTime();
-            system.tick(time,dataProvider);
+            system.tick(time, dataProvider);
             lastTickDataProvider = dataProvider;
         }
 
         for(GainListenerManager manager:gainListeners) {
             manager.send(gainExecutor, dataProvider, system);
         }
+        
     };
 
     public void sendFinalGainEvent(DataProvider dataProvider, C2EntryService entryService) {
@@ -178,6 +181,8 @@ public class DynamicSimulationAdapter implements C2EntryServiceAdapter {
                 case Cancel:
 
                     Integer id = (Integer)request.get(Parameter.SignalId);
+                    assert(id>=0) : "DynamicSimulator only uses positive signalIds";
+
                     system.cancelSignal(id,time);
                     return new SimulatedResponseCancel(OK);
 
@@ -372,7 +377,7 @@ public class DynamicSimulationAdapter implements C2EntryServiceAdapter {
     }
 
     public Integer createSystem(BigDecimal buyPower, String name, String password, BigDecimal commission) {
-        Portfolio portfolio = new SimplePortfolio(buyPower);
+        Portfolio portfolio = new SimplePortfolioFactory().createPortfolio(buyPower);
         return createSystem(name,password, portfolio, commission);
     }
 
